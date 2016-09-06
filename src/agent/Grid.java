@@ -16,6 +16,7 @@ public class Grid {
 
     
     public static final int MAX_DIRECTIONS = 4;
+    private static final int EMPTY = 0;
     
 
     // direction starts at 0 degrees (vertical)
@@ -25,7 +26,7 @@ public class Grid {
     public static String[] shortDirectionString = {"N","E","S","W","r","s"};
     
     private int[][] grid;
-    private ArrayList<Agent> agent;
+    private ArrayList<Agent> agentList;
     private int timeGoalAgentObserved;
     private int totalTimeGoalAgentObserved;
     
@@ -35,15 +36,18 @@ public class Grid {
         totalTimeGoalAgentObserved = 0;
         for(int i = 0; i < Configuration.getMaxX(); i++) {
             for(int j = 0; j < Configuration.getMaxY(); j++) {
-                grid[i][j] = 0;
+                grid[i][j] = EMPTY;
             }
         }
-        agent = new ArrayList<Agent>();
+        agentList = new ArrayList<Agent>();
     }
     
     void checkGoalAgentInSight() {
         totalTimeGoalAgentObserved++;
-        for(Agent a : agent) {
+        for(Agent a : agentList) {
+            if(a.isGoalAgent()) {
+                continue;
+            }
             if(a.isGoalAgentInSight()) {
                 timeGoalAgentObserved++;
                 return;
@@ -161,13 +165,14 @@ public class Grid {
             min_distance[i] = Configuration.getMaxX() + Configuration.getMaxY();
         }
         
-        for(int i=0; i < agent.size(); i++) {
-            if(self_id == agent.get(i).getID()) {
+        for(Agent a : agentList) {
+            
+            if(a.getID() == self_id || a.isGoalAgent()) {
                 continue;
             }
             
-            double distance = getAgentDistance(position, agent.get(i).getPosition());
-            int direction = getAgentDirection(position, agent.get(i).getPosition());
+            double distance = getAgentDistance(position, a.getPosition());
+            int direction = getAgentDirection(position, a.getPosition());
             
             if(min_distance[direction] > distance ) {
                 min_distance[direction] = distance;
@@ -177,46 +182,86 @@ public class Grid {
     }
     
     public void addAgent(Agent a) throws Exception {
-        if(grid[a.getX()][a.getY()] != 0) {
+        if(grid[a.getX()][a.getY()] != EMPTY) {
             throw new Exception("Grid at position " + a.getX() + "/" + a.getY() + " already used by ID " + a.getID());
         }
         grid[a.getX()][a.getY()] = a.getID();
-        agent.add(a);
+        agentList.add(a);
     }
     
     public boolean isFreeField(Point p) {
-        return ( grid[p.x][p.y] == 0 );
+        return ( grid[p.x][p.y] == EMPTY );
     }
     
-    public boolean moveAgent(Agent a, int direction) throws Exception {
-        if(direction == Action.RANDOM_DIRECTION) {
-            direction = Misc.nextInt(MAX_DIRECTIONS);
-        }
+    public boolean isDirectionInvalid(Agent a, int direction) {
+        // 'no action' always succeeds
         if(direction == Action.NO_DIRECTION) {
-            return true;
+            return false;
         }
-
-        if(direction < 0 || direction >= MAX_DIRECTIONS) {
-            throw new Exception("Grid.moveAgent(): Direction " + direction + " of Agent " + a.getID() + " at " + a.getX() + "/" + a.getY() + " out of range.");
-        }
-
         
+        if(direction < 0 || direction >= MAX_DIRECTIONS) {
+            Log.errorLog("Grid.isDirectionInvalid(): Direction " + direction + " of Agent " + a.getID() + " at " + a.getX() + "/" + a.getY() + " out of range.");
+        }
+        int goal_x = a.getX() + dx[direction];
+        int goal_y = a.getY() + dy[direction];
+        
+        if(Configuration.isIsTorus()) {
+            goal_x = correctTorusX(goal_x);
+            goal_y = correctTorusY(goal_y);
+        }
+        
+        return isMovementInvalid(a, goal_x, goal_y);
+    }
+    
+    public boolean isMovementInvalid(Agent a, int goal_x, int goal_y) {
+        // did we hit a wall?
+        if(goal_x < 0 || goal_x >= Configuration.getMaxX() ||
+           goal_y < 0 || goal_y >= Configuration.getMaxY()) {
+           return true;
+        }
+        if(grid[goal_x][goal_y] == EMPTY) {
+            return false;
+        }
+        return true;
+    }
+    
+    public static int correctTorusX(int x) {
+        if(x < 0) {
+            return Configuration.getMaxX() - 1;
+        } else if(x >= Configuration.getMaxX()) {
+            return 0;
+        }
+        return x;
+    }
+    
+    public static int correctTorusY(int y) {
+        if(y < 0) {
+            return Configuration.getMaxY() - 1;
+        } else if(y >= Configuration.getMaxY()) {
+            return 0;
+        }
+        return y;
+    }  
+    
+    public boolean moveAgent(Agent a, int direction) throws Exception {
+/*        if(direction == Action.RANDOM_DIRECTION) {
+            direction = Misc.nextInt(MAX_DIRECTIONS);
+        }*/
+        
+        if(isDirectionInvalid(a, direction)) {
+            return false;
+        }
+       
         int goal_x = a.getX() + dx[direction];
         int goal_y = a.getY() + dy[direction];
 // TORUS        
-        if(goal_x < 0) {
-            goal_x = Configuration.getMaxX() - 1;
-        } else if(goal_x >= Configuration.getMaxX()) {
-            goal_x = 0;
-        }
-        if(goal_y < 0) {
-            goal_y = Configuration.getMaxY() - 1;
-        } else if(goal_y >= Configuration.getMaxY()) {
-            goal_y = 0;
-        }
+        if(Configuration.isIsTorus()) {
+            goal_x = correctTorusX(goal_x);
+            goal_y = correctTorusY(goal_y);
+        } 
 
-        if(grid[goal_x][goal_y] == 0) {
-            grid[a.getX()][a.getY()] = 0;
+        if(grid[goal_x][goal_y] == EMPTY) {
+            grid[a.getX()][a.getY()] = EMPTY;
             grid[goal_x][goal_y] = a.getID();
             a.setPosition(new Point(goal_x, goal_y));
             return true;
@@ -225,18 +270,6 @@ public class Grid {
         }
     }
     
-    public String getInputStrings() throws Exception {
-        String input_strings = new String();
-        NumberFormat nf=NumberFormat.getInstance(); // Get Instance of NumberFormat
-        nf.setMinimumIntegerDigits(3);  // The minimum Digits required is 3
-        nf.setMaximumIntegerDigits(3); // The maximum Digits required is 3
-        
-        for(int i = 1; i < agent.size(); i++) {
-            String sb="ID " + (nf.format((long)i)) + " ";
-            input_strings += sb + agent.get(i).getInputString() + "\n";
-        }   
-        return input_strings;
-    }
     
     public String getGridString() {
         String grid_string = new String();
@@ -246,8 +279,10 @@ public class Grid {
         
         for(int i = 0; i < Configuration.getMaxY(); i++) {
             for(int j = 0; j < Configuration.getMaxX(); j++) {
-                if(grid[j][i] == 0) {
-                    grid_string += "  0 ";
+                if(grid[j][i] == EMPTY) {
+                    grid_string += "  . ";
+                } else if(grid[j][i] == Agent.GOAL_AGENT_ID) {
+                    grid_string += " [X]";
                 } else {
                     grid_string += " " + (nf.format(grid[j][i]));
                 }
@@ -256,20 +291,6 @@ public class Grid {
         }
         grid_string += "\n";
         return grid_string;
-    }
-    
-    public String getAgentStrings() {
-        String agent_strings = new String();
-        NumberFormat nf=NumberFormat.getInstance(); // Get Instance of NumberFormat
-        nf.setMinimumIntegerDigits(3);  // The minimum Digits required is 3
-        nf.setMaximumIntegerDigits(3); // The maximum Digits required is 3
-        
-        for(int i = 1; i < agent.size(); i++) {
-            String sb="ID " + (nf.format((long)i)) + "\n";
-            agent_strings += sb + " " + agent.get(i).toString() + "\n\n";
-        }       
-        
-        return agent_strings;
     }
 
     public int getTimeGoalAgentObserved() {

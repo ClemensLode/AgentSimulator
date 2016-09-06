@@ -219,10 +219,10 @@ public class Condition extends GeneticData {
         String input = new String();
 
         if(goal_direction == -1) {
-            input += "0";
+            input += "0.";
             goal_direction = 0;
         } else {
-            input += "1";
+            input += "1.";
         }
         
       //  ???

@@ -234,6 +234,8 @@ public class Configuration {
     
     private static boolean doGASubsumption = true;
     
+    private static boolean allowRandomMovement = false;
+    
     static void initialize(String file_name) {
         // load old settings if file exists
         File my_file = new File(file_name);
@@ -310,6 +312,10 @@ public class Configuration {
 
     public static double getFitnessReduction() {
         return fitnessReduction;
+    }
+
+    public static boolean isAllowRandomMovement() {
+        return allowRandomMovement;
     }
     
 }

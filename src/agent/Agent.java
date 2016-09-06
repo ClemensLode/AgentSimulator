@@ -8,6 +8,7 @@
 package agent;
 import java.awt.Point;
 import java.util.LinkedList;
+import java.text.NumberFormat;
 
 /**
  *
@@ -35,6 +36,8 @@ public class Agent {
     public static Grid grid;
     public static Agent goalAgent;
     
+    Action calculatedAction;
+    
     
     // TODO: Log timestamp of last GA run
     // Evolute agent with a certain probability depending on lastGATimeStamp whenever an event happens
@@ -54,6 +57,14 @@ public class Agent {
     
 //    TODO welchen Classifier wähle ich bei BLANKS?
 //    Ich wähle aus allen verfügbaren Classifieren den mit der höchsten Fitness!
+    
+    public static void resetID() {
+        global_id = GOAL_AGENT_ID;
+    }
+    
+    public boolean isGoalAgent() {
+        return id == GOAL_AGENT_ID;
+    }
     
     public Agent(Point p) throws Exception {
         this.p = p;
@@ -130,29 +141,25 @@ public class Agent {
 
     public void calculateNextMove(boolean do_explore, long gaTimestep) throws Exception {
         // lastMatchSet: temporary save for log output
-        lastMatchSet.clear();
-        Action action = classifierSet.chooseAction(do_explore, lastMatchSet, getCurrentState(), gaTimestep);
+        lastMatchSet = new ClassifierSet(getCurrentState(), classifierSet, gaTimestep);
+        lastMatchSet.removeInvalidActions(this);
+        
+        calculatedAction = classifierSet.chooseAction(do_explore, lastMatchSet);
         // TODO Zuordnung zu Classifierset oder so... muss ja vom Stack wieder auf das tatsächliche Objekt zurückgeführt werden ??
-        int direction = action.getDirection();
 
-        grid.moveAgent(this, direction);
-
-        
-        // get all classifiers from the matching Set with the same action as the action winner
-        lastActionSet = new ClassifierSet(lastMatchSet, direction);
+        lastActionSet = new ClassifierSet(lastMatchSet, calculatedAction.getDirection());
         lastActionSet.updateSet();
-        
-        
-        /*       
-		prevActionSet.updateSet(predictionArray.getBestValue(), prevReward);
-                prevActionSet.runGA(stepCounter+steps, prevState, env.getNrActions());        
-        */
                 
         // max steps in the past, ideally getMaxStackSize is infinite
         if(actionSet.size() >= Configuration.getMaxStackSize()) {
             actionSet.removeFirst();
         }
-        actionSet.addLast(lastActionSet);
+        actionSet.addLast(lastActionSet);        
+    }
+        // get all classifiers from the matching Set with the same action as the action winner
+    
+    public void doNextMove() throws Exception {
+        grid.moveAgent(this, calculatedAction.getDirection());
     }
     
     private double calculatePositiveReward(int step, int size) {
@@ -211,21 +218,39 @@ public class Agent {
             
     }       
     
-    @Override
-    public String toString() {
-        String output = new String();
-        output += " - Population:\n";
-        output += classifierSet.toString();
-        
-        output += " - MatchSet:\n";
-        output += lastMatchSet.toString();
-                
-        output += " - ActionSet:\n";
-        output += lastActionSet.toString();
-        
-        return output;
+    public void printMatching() {
+        try {
+            Log.log("# grid\n");
+            Log.log(Agent.grid.getGridString() + "\n");
+            Log.log("# input\n");
+            Log.log(getInputString() + "\n\n");
+            Log.log("# classifiers\n");
+            Log.log(" - Population:\n");
+            Log.log(classifierSet.toString() + "\n");
+            Log.log(" - MatchSet:\n");
+            Log.log(lastMatchSet.toString() + "\n\n");
+        } catch(Exception e) {
+            Log.errorLog("Error creating input string for log file: ", e);
+        }        
     }
+    
+    public void printHeader() {
+        Log.log("# AGENT\n");
+        NumberFormat nf=NumberFormat.getInstance(); // Get Instance of NumberFormat
+        nf.setMinimumIntegerDigits(3);  // The minimum Digits required is 3
+        nf.setMaximumIntegerDigits(3); // The maximum Digits required is 3
+        
+        String sb="ID " + (nf.format((long)getID()));
+        Log.log(sb + "\n\n");
+    }
+    
+    public void printAction() {
+        Log.log("# action set\n");
+        Log.log(" - ActionSet:\n");
+        Log.log(lastActionSet.toString() + "\n\n");
+    }    
 
+    
     public double getTotalPoints() {
         return totalPoints;
     }

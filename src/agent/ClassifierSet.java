@@ -48,7 +48,7 @@ public class ClassifierSet {
      */
     public ClassifierSet(ClassifierSet matchSet, int action)
     {
-        parentSet=matchSet;
+        parentSet = matchSet;
         for(Classifier c : matchSet.classifiers) {
             if(c.getNumerosity() > 0 && c.getAction().getDirection() == action ) {
                 addClassifier(c);
@@ -132,14 +132,26 @@ public class ClassifierSet {
             // repeat until we have deleted a classifier that is not in the current set
         }while(again);
     }
+
+    /**
+     * remove actions that cannot be executed on the current grid (i.e. blocked spaces)
+     */
+    public void removeInvalidActions(Agent a) {
+        ArrayList<Classifier> to_delete = new ArrayList<Classifier>();
+        for(Classifier c : classifiers) {
+            if(Agent.grid.isDirectionInvalid(a, c.getAction().getDirection())) {
+                to_delete.add(c);
+            }
+        }
+        classifiers.removeAll(to_delete);
+    }
     
-    public Action chooseAction(boolean do_explore, ClassifierSet matchSet, final Condition condition, final long gaTimestep) throws Exception {
+    public Action chooseAction(boolean do_explore, ClassifierSet matchSet) throws Exception {
         // determine all matching classifiers
         // create new classifiers if some or all actions were not matched
 
-        matchSet = new ClassifierSet(condition, this, gaTimestep);
         Classifier c;
-
+        
         // choose random classifier from classifierArray randomly by fitness
         if(do_explore) {
             c = matchSet.chooseRandom();

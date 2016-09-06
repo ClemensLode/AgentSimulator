@@ -22,7 +22,7 @@ public class Main {
         for(int experiment_nr = 0; experiment_nr < Configuration.getNumberOfExperiments(); experiment_nr++) {
             Log.initialize(true);
             
-            Log.log("# Experiment Nr. " + (experiment_nr+1));
+            Log.log("# Experiment Nr. " + (experiment_nr+1) + "\n");
             System.out.println("Experiment Nr."+(experiment_nr+1));
             
             try {

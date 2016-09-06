@@ -13,7 +13,8 @@ public class LCS_Engine {
 
     public LCS_Engine() throws Exception {
         Agent.grid = new Grid();
-        Agent.goalAgent = new GoalAgent(new Point(Configuration.getMaxX() / 2, Configuration.getMaxY() / 2));
+        Agent.resetID();
+        Agent.goalAgent = new Agent(new Point(Configuration.getMaxX() / 2, Configuration.getMaxY() / 2));
 
         agentList = new ArrayList<Agent>();
 
@@ -49,13 +50,34 @@ public class LCS_Engine {
             a.calculateReward();
         }
     }
-
-    private void calculateNextMove(boolean do_explore, long gaTimestep) throws Exception {
+    
+    private void calculateAgents(boolean do_explore, long gaTimestep) {
         for(Agent a : agentList) {
-            a.calculateNextMove(do_explore, gaTimestep);
-        }
-    }
+            try {
+                a.calculateNextMove(do_explore, gaTimestep);
+            } catch (Exception e) {
+                Log.errorLog("Problem calculating next move: ", e);
+            }
 
+            a.printHeader();
+            a.printMatching();
+            
+            try {
+                a.doNextMove();            
+            } catch (Exception e) {
+                Log.errorLog("Problem executing next move: ", e);
+            }
+            
+            a.printAction();
+            
+            try {
+                calculateIndividualRewards();
+            } catch (Exception e) {
+                Log.errorLog("Problem calculating reward:", e);
+            }
+        }
+    }    
+    
     /*
      * Parameter list:
      * Number of agents
@@ -79,7 +101,7 @@ public class LCS_Engine {
             // switch parameter for exploiting and exploring for each problem
             // TODO Literatur!?
             
-            Log.log("# Problem Nr. " + (i+1));
+            Log.log("# Problem Nr. " + (i+1) + "\n");
             System.out.println("Problem Nr."+(i+1));
             
             do_explore = !do_explore;
@@ -88,33 +110,23 @@ public class LCS_Engine {
         }
         
         Agent.grid.checkGoalAgentInSight();
-        // also print final step
-        printStep(currentTimestep);
+        // also print final step TODO
     }
+
 
 
     private int doOneMultiStepProblem(boolean do_explore, int stepCounter) {
 
         // number of steps a problem should last
         for (int currentTimestep = stepCounter; currentTimestep < Configuration.getNumberOfSteps() + stepCounter; currentTimestep++) {
-
+            printHeader(currentTimestep);
             // update the quality of the run
             Agent.grid.checkGoalAgentInSight();
 
-            printStep(currentTimestep);
-
-            try {
-                calculateNextMove(do_explore, currentTimestep);
-            } catch (Exception e) {
-                Log.errorLog("Problem calculating next move: ", e);
-            }
-
-            try {
-                calculateIndividualRewards();
-            } catch (Exception e) {
-                Log.errorLog("Problem calculating reward:", e);
-            }
-
+            calculateAgents(do_explore, currentTimestep);
+            
+            // move the goal agent after we moved the agents and calculated the reward
+            // easier for the agents? TODO
             try {
                 moveGoalAgent();
             } catch (Exception e) {
@@ -134,24 +146,11 @@ public class LCS_Engine {
     }
     
     
-    /**
-     * Log the current time step
-     * @param currentTimestep
-     */
-    private void printStep(long currentTimestep) {
+    private void printHeader(long currentTimestep) {
         Log.log("# -------------------------\n");
         Log.log("iteration " + currentTimestep + "\n");
-        Log.log("# -------------------------\n");
-        try {
-            Log.log("# input\n");
-            Log.log(Agent.grid.getInputStrings() + "\n");
-            Log.log("# grid\n");
-            Log.log(Agent.grid.getGridString() + "\n");
-        } catch(Exception e) {
-            Log.errorLog("Error creating input string for log file: ", e);
-        }
-        
-        Log.log("# agents\n");
-        Log.log(Agent.grid.getAgentStrings() + "\n");
-    }    
+        Log.log("# -------------------------\n\n");
+    }
+    
+ 
 }

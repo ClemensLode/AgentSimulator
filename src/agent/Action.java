@@ -11,16 +11,16 @@ package agent;
  */
 public class Action extends GeneticData {
     public static final int ACTION_SIZE = 1;
-    public static final int MAX_ACTIONS = Grid.MAX_DIRECTIONS + 2;
+    public static final int MAX_ACTIONS = Grid.MAX_DIRECTIONS + 1; //2;
     
     public static final int NORTH = 0;
     public static final int EAST = 1;
     public static final int SOUTH = 2;
     public static final int WEST = 3;
     public static final int NO_DIRECTION = 4;
-    public static final int RANDOM_DIRECTION = 5;    
+    // public static final int RANDOM_DIRECTION = 5;    
     
-    private static String[] actionString = {"North", "East", "South", "West", "Random", "No direction"};
+    private static String[] actionString = {"North", "East", "South", "West", "No direction"};//, "Random"};
     
     public Action() {
         super(ACTION_SIZE);
