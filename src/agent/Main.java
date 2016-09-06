@@ -17,14 +17,15 @@ public class Main {
         }
         Configuration.initialize(args[0]);
         
-        // each experiment can be parallelized
-        for(int experiment_nr = 0; experiment_nr < Configuration.getTotalExperiments(); experiment_nr++) {
+        // number of experiments with the same configuration
+        for(int experiment_nr = 0; experiment_nr < Configuration.getNumberOfExperiments(); experiment_nr++) {
             Log.initialize(true);
             
             Log.log("# Experiment Nr. " + (experiment_nr+1));
             System.out.println("Experiment Nr."+(experiment_nr+1));
             
             try {
+                // Reset population before each experiment
                 LCS_Engine engine = new LCS_Engine();
                 engine.doOneMultiStepExperiment();
             } catch(Exception e) {

@@ -15,13 +15,26 @@ import java.io.IOException;
  */
 public class Configuration {
 
+    public static int getMaxClassifiers() {
+        return maxClassifiers;
+    }
+
     public static boolean isEventDriven() {
         return eventDriven;
     }
 
-    public static int getTotalExperiments() {
-        return totalExperiments;
+    public static int getNumberOfExperiments() {
+        return numberOfExperiments;
     }
+
+    public static int getNumberOfProblems() {
+        return numberOfProblems;
+    }    
+    
+    public static int getNumberOfSteps() {
+        return numberOfSteps;
+    }
+    
     public static boolean isDoGASubsumption() {
         return doGASubsumption;
     }
@@ -94,10 +107,6 @@ public class Configuration {
         return crossoverMutationProbability;
     }
 
-    public static int getGaSteps() {
-        return gaSteps;
-    }
-
     public static int getMaxX() {
         return maxX;
     }
@@ -146,14 +155,32 @@ public class Configuration {
         return doEvolutionaryAlgorithm;
     }
 
-    public static int getTotalRuns() {
-        return totalRuns;
-    }
     
     private static boolean eventDriven = true;
-    private static int totalExperiments = 10;
-    private static int totalRuns = 500;
-    private static int gaSteps = 20;
+
+    /**
+     * The number of experiments that are calculated for each configuration
+     */
+    private static int numberOfExperiments = 10;
+
+    /**
+     * The number of problems that a single population of agents should be tested on
+     */
+    private static int numberOfProblems = 100;
+    
+    /**
+     * The maximal number of steps executed in one trial in a multi-step problem.
+     */    
+    private static int numberOfSteps = 500;
+    
+    /**
+     * The maximal number of (micro-)classifiers of one rule set of an agent
+     * If the maximum number is reached when a classifier was inserted determine which micro-classifier to delete
+     * A deletion can be a removal of a whole classifier with numerosity = 1 or the decrease of the numberosity of a classifier by 1
+     * 
+     */
+    private static int maxClassifiers = 100;
+    
     private static int maxX = 40;
     private static int maxY = 40;
     private static double rewardDistance = 4.0;
@@ -187,6 +214,10 @@ public class Configuration {
     
     private static double alpha = 0.1;
     private static double nu = 0.1;
+    
+    /**
+     * The threshold for the GA application in an action set.
+     */
     private static double thetaGA = 25.0;
     
     private static double predictionErrorReduction = 0.1;
@@ -203,9 +234,11 @@ public class Configuration {
             try {
                 BufferedReader p = new BufferedReader(new FileReader(my_file.getAbsoluteFile()));
                 
-                totalExperiments = Integer.valueOf(p.readLine());
-                totalRuns = Integer.valueOf(p.readLine());
-                gaSteps = Integer.valueOf(p.readLine());
+                numberOfExperiments = Integer.valueOf(p.readLine());
+                numberOfProblems = Integer.valueOf(p.readLine());
+                numberOfSteps = Integer.valueOf(p.readLine());
+                
+                maxClassifiers = Integer.valueOf(p.readLine());                
                 
                 eventDriven = Boolean.valueOf(p.readLine());
                 

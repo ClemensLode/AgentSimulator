@@ -11,7 +11,7 @@ package agent;
  */
 public class Action extends GeneticData {
     public static final int ACTION_SIZE = 1;
-    private static final int MAX_ACTIONS = Grid.MAX_DIRECTIONS + 1;
+    public static final int MAX_ACTIONS = Grid.MAX_DIRECTIONS + 2;
     
     public static final int NORTH = 0;
     public static final int EAST = 1;

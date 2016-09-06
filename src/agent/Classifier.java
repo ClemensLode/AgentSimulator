@@ -45,12 +45,20 @@ public class Classifier {
     // number of times this classifier was updated
     private int experience;
     
+
+    /**
+     * The action set size estimate of the classifier.
+     */
+    private double actionSetSize;    
+    
     private long gaTimestamp;
     
     private double fitness;
     
     private Action action;
     private Condition condition;
+    
+    private int numerosity;
     
 
     /*
@@ -67,14 +75,14 @@ public class Classifier {
         setGaTimestamp(gaTimestamp);
     }*/
     
-    public Classifier(Condition condition, long gaTimestamp) throws Exception {
-        classifierSetVariables(gaTimestamp);
+    public Classifier(Condition condition, double set_size, long gaTimestamp) throws Exception {
+        classifierSetVariables(set_size, gaTimestamp);
                 
         this.condition = condition.clone();
     }
     
-    public Classifier(Condition condition, Action action, long gaTimestamp) {
-        classifierSetVariables(gaTimestamp);
+    public Classifier(Condition condition, Action action, double set_size, long gaTimestamp) {
+        classifierSetVariables(set_size, gaTimestamp);
 
         this.condition = condition.clone();
         this.action = action.clone();
@@ -118,18 +126,19 @@ public class Classifier {
      * However, the experience of the copy is set to 0 and the numerosity is set to 1 since this is indeed 
      * a new individual in a population.
      *
-     * @param clOld The to be copied classifier.
+     * @param old_classifier The to be copied classifier.
      */
-    public Classifier(Classifier clOld)
+    public Classifier(Classifier old_classifier)
     {
-	condition=new Condition(clOld.condition);
-	action=clOld.action;	
-	this.prediction=clOld.prediction;
-	this.predictionError=clOld.predictionError;
+	condition=new Condition(old_classifier.condition);
+	action=old_classifier.action;	
+	this.prediction=old_classifier.prediction;
+	this.predictionError=old_classifier.predictionError;
 	// Here we should divide the fitness by the numerosity to get a accurate value for the new one!
-	this.fitness=clOld.fitness;
+	this.fitness=old_classifier.fitness;
+        this.actionSetSize = old_classifier.actionSetSize;
 	this.experience=0;
-	this.gaTimestamp=clOld.gaTimestamp;
+	this.gaTimestamp=old_classifier.gaTimestamp;
     }    
     
   
@@ -142,7 +151,7 @@ public class Classifier {
      * @param setSize The size of the set the classifier is created in. ???????? TODO
      * @param time The actual number of instances the XCS learned from so far.
      */
-    private void classifierSetVariables(long time)
+    private void classifierSetVariables(double set_size, long time)
     {		
         action = new Action();
         condition = new Condition();
@@ -150,6 +159,8 @@ public class Classifier {
 	this.setPrediction(Configuration.getPredictionInitialization());
 	this.setPredictionError(Configuration.getPredictionErrorInitialization());
 	this.setFitness(Configuration.getFitnessInitialization());
+        
+        this.setActionSetSize(set_size);
     
 	this.experience=0;
 	this.gaTimestamp=time;
@@ -167,13 +178,6 @@ public class Classifier {
     @Override
     public Classifier clone() {
         return new Classifier(this);
-    }      
-    
-    public static Classifier createCoveringClassifier(final Grid grid, final double wildcard_probability, final int id, final Point position, final long gaTimestamp) throws Exception {
-        double[] direction_agent_distance = grid.getDirectionAgentDistances(position, id);
-        int direction_goal_agent = grid.getAgentDirectionRange(position, Agent.goalAgent.getPosition());
-        
-        return (new Classifier(Condition.createCoveringCondition(direction_agent_distance, direction_goal_agent, wildcard_probability), gaTimestamp));
     }      
     
     public int[] createGeneticString() {
@@ -246,9 +250,9 @@ public class Classifier {
         return this.condition.equals(condition);
     }
      
-    public boolean isMatched(final Grid grid, final int id, final Point position) {
-        double[] direction_agent_distance = grid.getDirectionAgentDistances(position, id);
-        int direction_goal_agent = grid.getAgentDirectionRange(position, Agent.goalAgent.getPosition());
+    public boolean isMatched(final int id, final Point position) {
+        double[] direction_agent_distance = Agent.grid.getDirectionAgentDistances(position, id);
+        int direction_goal_agent = Agent.grid.getAgentDirectionRange(position, Agent.goalAgent.getPosition());
                 
         return(condition.isMatched(direction_agent_distance, direction_goal_agent));
     }
@@ -299,13 +303,13 @@ public class Classifier {
      * @see XCSConstants#theta_del
      * @param meanFitness The mean fitness in the population.
      */
-/*    public double getDelProp(double mean_fitness)
+    public double getDelProp(double mean_fitness)
     {
 	if(fitness/numerosity >= Configuration.getDelta()*mean_fitness || experience < Configuration.getDeltaDel()) {
-	    return actionSetSize*numerosity;
+	    return getActionSetSize() * numerosity;
         }
-	return actionSetSize*numerosity*mean_fitness / ( fitness/numerosity);
-    }    */
+	return getActionSetSize()*numerosity*mean_fitness / ( fitness/numerosity);
+    }
     
     public final Action getAction() {
         return action;
@@ -458,14 +462,38 @@ public class Classifier {
      *
      * @param num The added numerosity (can be negative!).
      */
-/*    public void addNumerosity(int num)
+    public void addNumerosity(int num)
     {
 	numerosity+=num;
-    }*/
+    }
 
     public void setFitness(double fitness) {
         this.fitness = fitness;
     }
-    
+
+    public double getActionSetSize() {
+        return actionSetSize;
+    }
+
+    public void setActionSetSize(double actionSetSize) {
+        this.actionSetSize = actionSetSize;
+    }
+
+
+    /**
+     * Updates the action set size.
+     *
+     * @see XCSConstants#beta
+     * @param numeriositySum The number of micro-classifiers in the population
+     */
+    public double updateActionSetSize(double numerositySum)
+    {
+	if(experience < 1./Configuration.getBeta()){
+	    actionSetSize= (actionSetSize * (double)(experience-1)+ numerositySum) / (double)experience;
+	}else{
+	    actionSetSize+= Configuration.getBeta() * (numerositySum - actionSetSize);
+	}
+	return actionSetSize*numerosity;
+    }    
                 
 }

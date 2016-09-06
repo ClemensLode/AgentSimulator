@@ -5,6 +5,8 @@
 
 package agent;
 
+import java.awt.Point;
+
 /**
  *
  * @author Clemens Lode, 1151459, University Karlsruhe (TH)
@@ -28,6 +30,54 @@ public class Condition extends GeneticData {
     public Condition(Condition c) {
         super(c.data);
     }
+    
+    public Condition(final int id, final Point position) {
+        super(calculateConditionArray(id, position));
+    }
+
+
+    private static int[] calculateConditionArray(final int id, final Point position) {
+        int[] condition = new int[CONDITION_SIZE];
+
+        
+        double[] direction_agent_distance = Agent.grid.getDirectionAgentDistances(position, id);
+        int goal_agent_direction = Agent.grid.getAgentDirectionRange(position, Agent.goalAgent.getPosition());   
+        
+             
+        for(int i = 0; i < Grid.MAX_DIRECTIONS; i++) {            
+            if(direction_agent_distance[i] <= Configuration.getSightRange()) {
+                condition[(goal_agent_direction + i)%Grid.MAX_DIRECTIONS + AGENT_DISTANCE_INDEX] = 1;
+            } else {
+                condition[(goal_agent_direction + i)%Grid.MAX_DIRECTIONS + AGENT_DISTANCE_INDEX] = 0;
+            }
+        }
+        
+        if(goal_agent_direction == -1) {
+            condition[GOAL_AGENT_DISTANCE_INDEX] = 0;
+        } else {
+            condition[GOAL_AGENT_DISTANCE_INDEX] = 1;
+        }
+        
+        return condition;
+    }
+    
+    /**
+     * Creates a covering condition
+     * @param direction_agent_distance
+     * @param goal_agent_direction
+     * @return
+     */
+    public static Condition createCoveringCondition(final int id, final Point position) {
+        int[] condition = calculateConditionArray(id, position);
+        
+                // flip some of the condition bits to # with a probability p
+        for(int i = AGENT_DISTANCE_INDEX; i < condition.length; i++) {
+            if(Misc.nextDouble() < Configuration.getCoveringWildcardProbability()) {
+                condition[i] = Condition.DONTCARE;
+            }
+        }        
+        return new Condition(condition);
+    }    
     
     @Override
     public Condition clone() {
@@ -127,32 +177,8 @@ public class Condition extends GeneticData {
             return true;        
         }
     }
+    
 
-    public static Condition createCoveringCondition(double[] direction_agent_distance, int goal_agent_direction, double wildcard_probability) {
-        int[] condition = new int[CONDITION_SIZE];
-             
-        for(int i = 0; i < Grid.MAX_DIRECTIONS; i++) {            
-            if(direction_agent_distance[i] <= Configuration.getSightRange()) {
-                condition[(goal_agent_direction + i)%Grid.MAX_DIRECTIONS + AGENT_DISTANCE_INDEX] = 1;
-            } else {
-                condition[(goal_agent_direction + i)%Grid.MAX_DIRECTIONS + AGENT_DISTANCE_INDEX] = 0;
-            }
-        }
-        
-        if(goal_agent_direction == -1) {
-            condition[GOAL_AGENT_DISTANCE_INDEX] = 0;
-        } else {
-            condition[GOAL_AGENT_DISTANCE_INDEX] = 1;
-        }
-        
-                // flip some of the condition bits to # with a probability p
-        for(int i = AGENT_DISTANCE_INDEX; i < condition.length; i++) {
-            if(Misc.nextDouble() < wildcard_probability) {
-                condition[i] = Condition.DONTCARE;
-            }
-        }        
-        return new Condition(condition);
-    }
     
     @Override
     public String toString() {

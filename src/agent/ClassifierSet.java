@@ -16,6 +16,14 @@ import java.io.*;
 public class ClassifierSet {
 
 
+    private int numerositySum = 0;
+
+    /**
+     * Each set keeps a reference to the parent set out of which it was generated. In the population itself
+     * this pointer is set to zero.
+     */
+    private ClassifierSet parentSet = null;   
+    
     private ArrayList<Classifier> classifiers;
         
     
@@ -33,6 +41,23 @@ public class ClassifierSet {
     }
     
     /**
+     * Constructs an action set out of the given match set. 
+     * 
+     * @param matchSet The current match set
+     * @param action The chosen action for the action set.
+     */
+    public ClassifierSet(ClassifierSet matchSet, int action)
+    {
+        parentSet=matchSet;
+        numerositySum=0;
+        classifiers.clear();
+        for(Classifier c : matchSet.classifiers) {
+            if(c.getNumerosity() > 0 && c.getAction().getDirection() == action ) {
+                addClassifier(c);
+            }
+        }
+    }    
+    /**
      * Constructs a match set out of the population. After the creation, it is checked if the match set covers all possible actions
      * in the environment. If one or more actions are not present, covering occurs, generating the missing action(s). If maximal 
      * population size is reached when covering, deletion occurs.
@@ -45,19 +70,21 @@ public class ClassifierSet {
      * @param time  The actual number of instances the XCS learned from so far.
      * @param numberOfActions The number of actions possible in the environment.     
      */
-    /*
-    public ClassifierSet(Condition state, int time, int numberOfActions)
+    
+    public ClassifierSet(final Condition state, ClassifierSet parent_pop, final long gaTime)
     {
-//      numerositySum=0;
         classifiers = new ArrayList<Classifier>();
-        classifiers.clear();
+        numerositySum = 0;
+        parentSet = parent_pop;
         
-        boolean[] actionCovered =  new boolean[numberOfActions];
+        boolean[] actionCovered =  new boolean[Action.MAX_ACTIONS];
+        
         for(int i=0; i<actionCovered.length; i++) {
             actionCovered[i]=false;
         }
 
-        for(Classifier c : pop.classifiers) {
+        // If we have matching classifiers in the original population then include it here so that they are not generated twice
+        for(Classifier c : parent_pop.classifiers) {
             if(c.isMatched(state)) {
                 addClassifier(c);
                 actionCovered[c.getAction().getDirection()] = true;
@@ -66,52 +93,82 @@ public class ClassifierSet {
 
         //Check if each action is covered. If not -> generate covering XClassifier and delete if the population is too big
         boolean again;
+        
         do{
             again=false;
             for(int i=0; i<actionCovered.length; i++){
                 if(!actionCovered[i]){
-                    Classifier newCl=new Classifier(state, new Action(i), time);
+                    Classifier newCl=new Classifier(state, new Action(i), numerositySum+1, gaTime);
                     
                     addClassifier(newCl);
-                    pop.addClassifier(newCl);
+                    // add new covering classifier to the original population
+                    parent_pop.addClassifier(newCl);
                 }
             }
-            while(pop.numerositySum > Configuration.getMaxPopSize()){
-                Classifier cdel=pop.deleteFromPopulation();
+            
+            while(parent_pop.numerositySum > Configuration.getMaxPopSize()){
+                
+                // delete a random classifier (decrease numerosity or remove it from parent_pop)
+                Classifier delete_classifier = parent_pop.deleteFromPopulation();
+                
+                
                 // update the current match set in case a classifier was deleted out of that 
                 // and redo the loop if now another action is not covered in the match set anymore.
 
                 int pos = -1;
-                if(cdel!=null && (pos=containsClassifier(cdel)) != -1) {
+                
+                    // deleted classifier from the set we've just created?
+                    // then remove classifier also from this set and try again.
+                if(delete_classifier != null && (pos = containsClassifier(delete_classifier)) != -1) {
 		    numerositySum--;
-		    if(cdel.getNumerosity()==0){
+                    // did the classifier have numerosity 1 before we deleted it?
+		    if(delete_classifier.getNumerosity() == 0){
+                        // then also remove it from this set
 			removeClassifier(pos);
-			if( !isActionCovered(cdel.getAction().getDirection())){
+                        // end recheck covered actions
+			if( !isActionCovered(delete_classifier.getAction().getDirection())){
 			    again=true;
-			    actionCovered[cdel.getAction().getDirection()]=false;
+			    actionCovered[delete_classifier.getAction().getDirection()]=false;
 			}
 		    }
 		}
             }
+            // repeat until we have deleted a classifier that is not in the current set
         }while(again);
-    }*/    
+    }
     
-    public Classifier chooseClassifier(ClassifierSet matchSet, final Grid grid, final int id, final Point p, final long gaTimestep) throws Exception {
-        for(int i = 0; i < classifiers.size(); i++) {
-            if(classifiers.get(i).isMatched(grid, id, p)) {
-                matchSet.addClassifier(classifiers.get(i));
-            }
-        }
-        
-        if(matchSet.isEmpty()) {
-            // choose random classifier from all classifiers  TODO, evtl auch neuen Classifier kreieren oder alten verallgemeinern...
-            Classifier c = Classifier.createCoveringClassifier(grid, Configuration.getCoveringWildcardProbability(), id, p, gaTimestep);
-            matchSet.addClassifier(c);
-            addClassifier(c);
-        }
-        
+    public Action chooseAction(boolean do_explore, ClassifierSet matchSet, final int id, final Point position, final long gaTimestep) throws Exception {
+        // determine all matching classifiers
+        // create new classifiers if some or all actions were not matched
+        matchSet = new ClassifierSet(Condition(id, position), this, gaTimestep);
+        Classifier c;
+
         // choose random classifier from classifierArray randomly by fitness
-        return matchSet.chooseRandom();
+        if(do_explore) {
+            c = matchSet.chooseRandom();
+        } else {
+            c = matchSet.chooseBest();
+        }
+        return c.getAction();
+  
+//            double reward = env.executeAction( actionWinner );
+
+
+            
+		// prevActionSet.confirmClassifiersInSet(); => REWARD!
+		// prevActionSet.updateSet(predictionArray.getBestValue(), prevReward);
+                // prevActionSet.runGA(stepCounter+steps, prevState, env.getNrActions());
+                
+    }
+    
+    public Classifier chooseBest() {
+        Classifier best_classifier = null;
+        for(Classifier c : classifiers) {
+            if(best_classifier == null || c.getFitness() > best_classifier.getFitness()) {
+                best_classifier = c;
+            }            
+        }
+        return best_classifier;
     }
     
     public Classifier chooseRandom() {
@@ -125,7 +182,7 @@ public class ClassifierSet {
         }
         return null;
     }
-    
+    /*
     public void loadClassifiersFromFile(String file_name) {
         // load old settings if file exists
         File my_file = new File(file_name);
@@ -173,7 +230,7 @@ public class ClassifierSet {
                 System.out.println("loadClassifiersFromFile(): NumberFormatException: Error " + e + " (line " + n + ") reading from file " + my_file.getAbsoluteFile());
             }
         }        
-    }
+    }*/
     
     /**
      * Returns the sum of the time stamps of all classifiers in the set.
@@ -192,10 +249,10 @@ public class ClassifierSet {
     /**
      * Returns the average of the time stamps in the set.
      */
-    /*private double getTimeStampAverage()
+    private double getTimeStampAverage()
     {
         return getTimeStampSum()/numerositySum;
-    }*/
+    }
     
     /**
      * Returns the sum of the prediction values of all classifiers in the set.
@@ -251,23 +308,7 @@ public class ClassifierSet {
         return -1;
     }    
     
-    /**
-     * Constructs an action set out of the given match set. 
-     * 
-     * @param matchSet The current match set
-     * @param action The chosen action for the action set.
-     */
-/*    public ClassifierSet(ClassifierSet matchSet, int action)
-    {
-        parentSet=matchSet;
-//        numerositySum=0;
-        classifiers.clear();
-        for(Classifier c : matchSet.classifiers) {
-            if(c.getAction().getDirection() == action) {
-                addClassifier(c);
-            }
-        }
-    }    */
+
     
 
     /**
@@ -309,14 +350,14 @@ public class ClassifierSet {
     }
 
     
-/*    public double getDelPropSum(double mean_fitness) {
+    public double getDelPropSum(double mean_fitness) {
         double sum = 0.;
         
         for(Classifier c : classifiers) {
             sum += c.getDelProp(mean_fitness);
         }
         return sum;
-    }*/
+    }
     
     public int checkDegreeOfRelationship(final ClassifierSet other) {
         int degree = 0;
@@ -340,7 +381,7 @@ public class ClassifierSet {
         }
         return degree;
     }
-    /*
+    
     public Classifier getRouletteSelectedClassifier() {     
         double roulettePoint = getSumFitness() * Misc.nextDouble();
         double currentRoulettePoint = 0.0;       
@@ -378,19 +419,21 @@ public class ClassifierSet {
         return chosen_classifiers;
     }  
 
-    */
+    
     /**
      * Deletes one classifier in the population.
      * The classifier that will be deleted is chosen by roulette wheel selection 
      * considering the deletion vote. Returns the macro-classifier which got decreased by one micro-classifier.
      * 
      * @see XClassifier#getDelProp    
-     *//*
+     */
     private Classifier deleteFromPopulation()
     {
-        double meanFitness= getFitnessSum()/(double)getNumerositySum();
+        // get average fitness of classifiers
+        double meanFitness = getFitnessSum() / (double)getNumerositySum();
         double sum = getDelPropSum(meanFitness);
         
+        // roulette
         double choicePoint=sum*Misc.nextDouble();
         sum=0.;
         for(Classifier c : classifiers) {
@@ -407,64 +450,46 @@ public class ClassifierSet {
         }
         
         return null;
-    }    */
-    /*
-    public void evolutionaryAlgorithm(double elite, double mu) throws Exception {
-        int n = (int)(this.size() * elite);
+    }
+    
+    
+    // TODO Replace?
+    // Oder über numerosity? TODO!
+ //   insertDiscoveredXClassifiers benutzen
+   //         nicht ersetzen
+            
+    public void evolutionaryAlgorithm() throws Exception {
+        int n = (int)(this.size() * Configuration.getElitistSelection());
         ArrayList<Classifier> selected_classifiers = getRouletteSelectedClassifiers(n);
-        if(selected_classifiers.size() * 2 > classifiers.size()) {
-            throw new Exception("ClassifierSet.evolutionaryAlgorithm() : elite parameter out of range (" + elite + ").");
-        }
         ArrayList<Classifier> replaced_classifiers = getInverseRouletteSelectedClassifiers(n, selected_classifiers);
-        if(replaced_classifiers.size() * 2 > classifiers.size()) {
-            throw new Exception("ClassifierSet.evolutionaryAlgorithm() : elite parameter out of range (" + elite + ").");
-        }        
-        if(replaced_classifiers.size() != selected_classifiers.size()) {
-            throw new Exception("ClassifierSet.evolutionaryAlgorithm() : number of selected and number of replaced classifiers do not match (" + selected_classifiers.size() + "!=" + replaced_classifiers.size() + ").");
-        }
         Iterator<Classifier> i = replaced_classifiers.listIterator();
         
 //        TODO remove replaced classifiers and create new classifiers
-                
-        
         for(Classifier c : selected_classifiers) {
             Classifier j = i.next();
-            j.copyAndMutate(c, mu);
+            j.copyAndMutate(c, Configuration.getEvolutionaryMutationProbability());
         }
-    }*/
+    }
     
     /**
      * 
-     * @param chi crossover probability
-     * @param mu mutation probability
      *//*
-    public void panmicticGeneticAlgorithm(double chi, double mu) {
+    public void panmicticGeneticAlgorithm() {
         Classifier mom = getRouletteSelectedClassifier();
         Classifier dad = getRouletteSelectedClassifier();
-        Log.log("------------ GENETIC ALGORITHM");
-        Log.log("mom = " + mom);
-        Log.log("dad = " + dad);
-        
+
         // clone the classifiers      
         Classifier childA = mom.clone();
         Classifier childB = dad.clone();        
       
         // crossover chi
-        if(Misc.nextDouble() < chi) {
-            Log.log("Performing crossover...");
+        if(Misc.nextDouble() < Configuration.getCrossoverProbability()) {
             Classifier.crossoverClassifiers(childA, childB);
         }       
-        Log.log("Before mutation...");
-        Log.log("childA = " + childA);
-        Log.log("childB = " + childB);
         
         // mutation mu          
-        childA.mutate(mu);
-        childB.mutate(mu);
-        
-        Log.log("After mutation...");
-        Log.log("childA = " + childA);
-        Log.log("childB = " + childB);
+        childA.mutate(Configuration.getCrossoverMutationProbability());
+        childB.mutate(Configuration.getCrossoverMutationProbability());
         
         // remove weakest two from population first?
         Classifier r1 = getInverseRouletteSelectedClassifier();
@@ -472,13 +497,10 @@ public class ClassifierSet {
         Classifier r2 = getInverseRouletteSelectedClassifier();        
         removeClassifier(r2);
         
-        Log.log("r1 = " + r1);
-        Log.log("r2 = " + r2);
-        
         // add children to population
         addClassifier(childA);
         addClassifier(childB);
-    }   */ 
+    } */
         
     
     public static Classifier findMostRelatedClassifier(ArrayList<Classifier> list, final Classifier c) {
@@ -555,13 +577,16 @@ public class ClassifierSet {
      *
      * @param classifier The to be added classifier.
      */
-    public void addClassifier(Classifier c)
+    public void addClassifier(Classifier classifier)
     {
-        classifiers.add(c);
+        classifiers.add(classifier);
+        numerositySum += classifier.getNumerosity();
     }
 
     
-    /**
+
+        
+            /**
      * Updates all parameters in the current set (should be the action set).
      * Essentially, reinforcement Learning as well as the fitness evaluation takes place in this set.
      * Moreover, the prediction error and the action set size estimate is updated. Also, 
@@ -581,24 +606,29 @@ public class ClassifierSet {
      * (should be set to zero in single step environments).
      * @param reward The actual resulting reward after the execution of an action.
      */
-    /*
-    public void updateSet(double maxPrediction, double reward)
+    public void updateSet()
     {
-    
-        double P=reward + Configuration.getGamma()*maxPrediction;
-    
         for(Classifier c : classifiers) {
             c.increaseExperience();
-            c.updatePreError(P);
-            c.updatePrediction(P);
-//          c.updateActionSetSize(numerositySum); ??
+//            c.updatePreError(P);
+//            c.updatePrediction(P);
+            c.updateActionSetSize(numerositySum);
         }
-        updateFitnessSet();
+      //  updateFitnessSet(); ?
 
         if(Configuration.isActionSetSubsumption()) {
             doActionSetSubsumption();
         }
-    }*/
+    }
+    
+    public void updateReward(double maxPrediction, double reward) {
+        double P=reward + Configuration.getGamma()*maxPrediction;
+        for(Classifier c : classifiers) {
+            c.updatePreError(P);
+            c.updatePrediction(P);
+        }
+        updateFitnessSet();
+    }
     
     private double getAccuracySum() {
         double sum = 0.;
@@ -687,7 +717,7 @@ public class ClassifierSet {
      * @param cl1P The first parent of the two new classifiers.
      * @param cl2P The second classifier of the two new classifiers.
      */
-    /*
+    
     private void insertDiscoveredClassifiers(Classifier cl1, Classifier cl2, Classifier cl1P, Classifier cl2P)
     {
         ClassifierSet pop=this;
@@ -706,7 +736,7 @@ public class ClassifierSet {
         while(pop.numerositySum > Configuration.getMaxPopSize()) {
             pop.deleteFromPopulation();
         }
-    }    */
+    } 
 
     /**
      * Selects one classifier using roulette wheel selection according to the fitnesses of the classifiers.
@@ -732,7 +762,7 @@ public class ClassifierSet {
      *
      * @see #subsumeXClassifier(XClassifier)
      */
-    /*private void subsumeClassifier(Classifier cl, Classifier cl1P, Classifier cl2P)
+    private void subsumeClassifier(Classifier cl, Classifier cl1P, Classifier cl2P)
     {
         if(cl1P!=null && cl1P.subsumes(cl)){
             increaseNumerositySum(1);
@@ -755,7 +785,7 @@ public class ClassifierSet {
      * @param cl The classifier that may be subsumed.
      * @see #addXClassifierToPopulation
      */
-    /*private void subsumeClassifier(Classifier cl)
+    private void subsumeClassifier(Classifier cl)
     {
         //Open up a new Vector in order to chose the subsumer candidates randomly
         ArrayList<Classifier> choices = new ArrayList<Classifier>();
@@ -782,7 +812,7 @@ public class ClassifierSet {
      * @see XClassifier#isSubsumer
      * @see XClassifier#isMoreGeneral
      */
-    /*private void doActionSetSubsumption()
+    private void doActionSetSubsumption()
     {
         ClassifierSet pop=this;
         while(pop.parentSet!=null) {
@@ -823,7 +853,7 @@ public class ClassifierSet {
      * @see #getIdenticalClassifier
      * @param cl The to be added classifier.
      */
-    /*private void addClassifierToPopulation(Classifier cl)
+    private void addClassifierToPopulation(Classifier cl)
     {
         // set pop to the actual population
         ClassifierSet pop=this;
@@ -846,13 +876,13 @@ public class ClassifierSet {
      * This function should be called when the numerosity of a classifier in some set is increased in 
      * order to keep the numerosity sums of all sets and essentially the population up to date.
      */
-    /*private void increaseNumerositySum(int nr)
+    private void increaseNumerositySum(int nr)
     {
         numerositySum+=nr;
         if(parentSet!=null) {
             parentSet.increaseNumerositySum(nr);
         }
-    }    */
+    }
     
     @Override
     public String toString() {
@@ -866,8 +896,8 @@ public class ClassifierSet {
         return output;
     }
 
-    /*public int getNumerositySum() {
+    public int getNumerositySum() {
         return numerositySum;
-    }*/
+    }
 
 }

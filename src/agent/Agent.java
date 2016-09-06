@@ -17,7 +17,7 @@ public class Agent {
     
     
 // previous actions    
-    private LinkedList<Classifier> actionSet;
+    private LinkedList<ClassifierSet> actionSet;
 // previous rewards
     private boolean lastReward = false;
     
@@ -60,7 +60,7 @@ public class Agent {
         id = global_id;
         global_id++;
         
-        actionSet = new LinkedList<Classifier>();
+        actionSet = new LinkedList<ClassifierSet>();
 
         grid.addAgent(this);
     }
@@ -105,33 +105,40 @@ public class Agent {
     
     public void evolutionaryAlgorithm(long gaTimeStamp) throws Exception {
 
-        if (Configuration.isDoEvolutionaryAlgorithm()) {        
-            classifierSet.evolutionaryAlgorithm(Configuration.getElitistSelection(), Configuration.getEvolutionaryMutationProbability());
+        if (Configuration.isDoEvolutionaryAlgorithm()) { 
+            // only copy, mutate and replace
+            classifierSet.evolutionaryAlgorithm();
         } else {
-            classifierSet.panmicticGeneticAlgorithm(Configuration.getCrossoverProbability(), Configuration.getCrossoverMutationProbability());    
+            // parent selection, one-point crossing over (with obstacles later: two point crossing over)
+            classifierSet.panmicticGeneticAlgorithm();
         }
     }
 
-
-    
-    
-    public void calculateNextMove(long gaTimestep) throws Exception {
+    public void calculateNextMove(boolean do_explore, long gaTimestep) throws Exception {
         // lastMatchSet: temporary save for log output
         lastMatchSet.clear();
-        Classifier classifier = classifierSet.chooseClassifier(lastMatchSet, grid, id, p, gaTimestep);
-        
-        lastActionSet.clear();
-        lastActionSet.addClassifier(classifier);
-        
-        if(actionSet.size() >= Configuration.getMaxStackSize()) {
-            actionSet.pop();
-        }
-        actionSet.push(classifier);
-        // TODO Zuordnung zu Classifierset oder so... muss ja vom Stack wieder auf das tatsächliche Objekt zurückgeführt werden
-        Action action = classifier.getAction();
+        Action action = classifierSet.chooseAction(do_explore, lastMatchSet, id, p, gaTimestep);
+        // TODO Zuordnung zu Classifierset oder so... muss ja vom Stack wieder auf das tatsächliche Objekt zurückgeführt werden ??
         int direction = action.getDirection();
 
         grid.moveAgent(this, direction);
+
+        
+        // get all classifiers from the matching Set with the same action as the action winner
+        lastActionSet = new ClassifierSet(lastMatchSet, direction);  
+        lastActionSet.updateSet();
+        
+        
+        /*       
+		prevActionSet.updateSet(predictionArray.getBestValue(), prevReward);
+                prevActionSet.runGA(stepCounter+steps, prevState, env.getNrActions());        
+        */
+                
+        // max steps in the past, ideally getMaxStackSize is infinite
+        if(actionSet.size() >= Configuration.getMaxStackSize()) {
+            actionSet.removeFirst();
+        }
+        actionSet.addLast(lastActionSet);
     }
     
     private double calculatePositiveReward(int step, int size) {
@@ -159,13 +166,13 @@ public class Agent {
         if(Configuration.isEventDriven() && reward != lastReward) {
             if(reward) {
                 for(int i = 0; i < actionSet.size(); i++) {
-                    double corrected_reward = calculatePositiveReward(i, actionSet.size());                            
-                    actionSet.get(i).updateClassifier(corrected_reward);
+                    double corrected_reward = calculatePositiveReward(i, actionSet.size());
+                    actionSet.get(i).updateReward(corrected_reward);
                 }
             } else {
                 for(int i = 0; i < actionSet.size(); i++) {
                     double corrected_reward = calculateNegativeReward(i, actionSet.size());
-                    actionSet.get(i).updateClassifier(corrected_reward);
+                    actionSet.get(i).updateReward(corrected_reward);
                 }
             }
             // clear action set

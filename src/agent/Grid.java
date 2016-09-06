@@ -15,7 +15,7 @@ import java.text.NumberFormat;
 public class Grid {
 
     
-    public static final int MAX_DIRECTIONS = 5;
+    public static final int MAX_DIRECTIONS = 4;
     
 
     // direction starts at 0 degrees (vertical)
