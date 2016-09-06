@@ -1,5 +1,8 @@
 package lcs;
 
+import Misc.Misc;
+import agent.Configuration;
+
 /**
  * Base class of an action
  * 
@@ -46,7 +49,21 @@ public class Action {
 
     public int getDirection() {
         return action;
-    }    
+    }
+
+    public boolean mutateAction()
+    {
+        boolean changed = false;
+        if(Misc.nextDouble() < Configuration.getMutationProbability()) {
+            int act = 0;
+            do {
+                act = Misc.nextInt(Action.MAX_DIRECTIONS);
+            } while(act == action);
+            action = act;
+            changed = true;
+        }
+        return changed;
+	}
 
     @Override
     public Action clone() {

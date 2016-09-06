@@ -40,7 +40,6 @@ public class AppliedClassifierSet {
                 classifiers.add(c);
             }
         }
-        //TODO doch Originalversion nehmen... dort aber mit richtigem Wert evtl...kA
         /**
          * needs to be executed because choseAbsoluteDirection is called immediately after
          * creation while 'getBestValue' will be called in a later time step
@@ -216,7 +215,6 @@ Proc. Genetic and Evol. Comput., pp. 1857–1869.
             array[i] = i;
         }
 
-        double p = 0.6;
         while(array.length > 1) {
             int ret = 0;
             int j = 0;
@@ -226,7 +224,7 @@ Proc. Genetic and Evol. Comput., pp. 1857–1869.
                     j = i;
                 }
             }
-            if(Misc.nextDouble() <= p) {
+            if(Misc.nextDouble() <= Configuration.getTournamentProbability()) {
                 return ret;
             }
             

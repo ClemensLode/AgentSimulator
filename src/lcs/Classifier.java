@@ -391,14 +391,17 @@ public class Classifier {
      * This method calls mutateCondition(state) and mutateAction(numberOfActions) and returns 
      * if at least one bit or the action was mutated.
      * @param state The current state
-     * @param direction The direction of the action set
      * @return true if the condition was changed
      */
     public boolean applyMutation(Sensors state) {
-        if (Configuration.getCoveringWildcardProbability() == 0.0) {
-            return false;
+        boolean changed = false;
+        if(action.mutateAction()) {
+            changed = true;
         }
-        return condition.mutateCondition(state);
+        if(condition.mutateCondition(state)) {
+            changed = true;
+        }
+        return changed;
     }
 
     /**
@@ -450,7 +453,7 @@ public class Classifier {
             throw new Exception("Fitness out of range " + fitness);
         }
 
-        if (fitness > 0.0 && fitness <= getNumerosity()) {
+        if ((fitness > 0.0) && (fitness <= getNumerosity())) {
             this.fitness = fitness;
             if (this.fitness < 0.01) {
                 this.fitness = 0.01;

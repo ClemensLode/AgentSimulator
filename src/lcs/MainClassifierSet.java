@@ -92,7 +92,6 @@ public class MainClassifierSet extends ClassifierSet {
      * @param cl1P First parent classifier
      * @param cl2P Second parent classifier
      * @param state Current sensor state 
-     * @param action The actual action taken by the applied classifier set that called this function
      * @throws java.lang.Exception For various reasons (error creating classifier, setting fitness and prediction, subsumation and addition of classifiers)
      */
     protected void crossOverClassifiers(Classifier cl1P, Classifier cl2P, Sensors state) throws Exception {
@@ -100,19 +99,18 @@ public class MainClassifierSet extends ClassifierSet {
         Classifier cl1 = new Classifier(cl1P);
         Classifier cl2 = new Classifier(cl2P);
 
-        // passt cl1, cl2 überhaupt auf den aktuellen Status? NEIN!
-        // Status muss gespeichert sein! evtl sogar Richtung!
+        Classifier.crossOverClassifiers(cl2, cl2);
+
         cl1.applyMutation(state);
         cl2.applyMutation(state);
 
-        cl1.setPrediction((cl1.getPrediction() + cl2.getPrediction()) / 2.);
-        cl1.setPredictionError(Configuration.getPredictionErrorReduction() * (cl1.getPredictionError() + cl2.getPredictionError()) / 2.);
-        cl1.setFitness(Configuration.getFitnessReduction() * (cl1.getFitness() + cl2.getFitness()) / 2.);
+        cl1.setPrediction((cl1.getPrediction() + cl2.getPrediction()) / 2.0);
+        cl1.setPredictionError(Configuration.getPredictionErrorReduction() * (cl1.getPredictionError() + cl2.getPredictionError()) / 2.0);
+        cl1.setFitness(Configuration.getFitnessReduction() * (cl1.getFitness() + cl2.getFitness()) / 2.0);
+
         cl2.setPrediction(cl1.getPrediction());
         cl2.setPredictionError(cl1.getPredictionError());
         cl2.setFitness(cl1.getFitness());
-
-        // TODO crossover wieder rein!!!!
 
         /**
          * Inserts both discovered classifiers keeping the maximal size of the population and possibly doing GA subsumption.

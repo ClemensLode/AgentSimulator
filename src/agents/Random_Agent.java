@@ -11,7 +11,7 @@ import java.util.ArrayList;
  * @author Clemens Lode, 1151459, University Karlsruhe (TH)
  */
 public class Random_Agent extends BaseAgent {
-
+// TODO vielleicht DO_JUMP erst nach einem Bonustimeout von 4 oder so
     /**
      * only for goal agent
      */
@@ -54,6 +54,7 @@ public class Random_Agent extends BaseAgent {
         if(is_goal_agent && BaseAgent.grid.getAvailableDirections(getPosition()).isEmpty()) {
             calculatedAction = Action.DO_JUMP;
             System.out.println("DO_JUMP called");
+            TODO
             return;
         }
         
@@ -67,19 +68,20 @@ public class Random_Agent extends BaseAgent {
                         available_actions.remove(opposing_dir);
                     break;
                 case Configuration.INTELLIGENT_MOVEMENT_OPEN:
-                    BaseAgent.grid.maybeRemoveAgentDirections(this, available_actions, 0.5);
-                    BaseAgent.grid.maybeRemoveObstacleDirections(this, available_actions, 0.2);
+                    BaseAgent.grid.maybeRemoveAgentDirections(this, available_actions, 1.5);
+                    BaseAgent.grid.maybeRemoveObstacleDirections(this, available_actions, 0.25);
                    
                     // move away from agents
                     // tend to move away from walls
                     break;
                 case Configuration.INTELLIGENT_MOVEMENT_HIDE:
-                    BaseAgent.grid.maybeRemoveAgentDirections(this, available_actions, 0.5);
-                    BaseAgent.grid.maybeRemoveOpenDirections(this, available_actions, 0.2);
+                    BaseAgent.grid.maybeRemoveAgentDirections(this, available_actions, 1.5);
+                    BaseAgent.grid.maybeRemoveOpenDirections(this, available_actions, 0.25);
                     // move away from agents
                     // tend to move to walls
                     break;
                 case Configuration.ALWAYS_SAME_DIRECTION:
+                   // TODO laeuft nicht nach links
                         BaseAgent.grid.removeExceptThisDirection(lastDirection, available_actions);
                         if(available_actions.isEmpty()) {
                             available_actions = BaseAgent.grid.getSideDirections(lastDirection);

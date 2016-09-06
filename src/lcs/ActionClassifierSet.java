@@ -29,6 +29,10 @@ public class ActionClassifierSet extends ClassifierSet {
      */
     private AppliedClassifierSet matchSet;
 
+    public Sensors getLastState() {
+        return state;
+    }
+
     /**
      * Constructs an action set out of the given match set. 
      * @param current_state The current state

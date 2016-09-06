@@ -66,6 +66,7 @@ public class Statistics {
             double spread_goal_agent_distance,
             double covered_area_factor,
             double wasted_coverage,
+            double goal_jumps,
             double wasted_movements,
             double average_individual_points,
             double spread_individual_total_points,
@@ -81,6 +82,7 @@ public class Statistics {
                 spread_goal_agent_distance,
                 covered_area_factor,
                 wasted_coverage,
+                goal_jumps,
                 wasted_movements,
                 average_individual_points,
                 spread_individual_total_points,
@@ -216,6 +218,7 @@ public class Statistics {
         entry += average_average_stat.getAveragePredictionError() + "\n";
         entry += average_average_stat.getCoveredAreaFactor() + "\n";
         entry += average_average_stat.getWastedCoverage()*100.0 + "\n";
+        entry += average_average_stat.getGoalJumps() * 100.0 + "\n";
         entry += average_average_stat.getWastedMovements()*100.0 + "\n";
         entry += average_average_stat.getGoalAgentObserved()*100.0 + "\n";
         Log.customLog(entry);
@@ -242,6 +245,7 @@ public class Statistics {
         entry += average_average_stat.getAveragePredictionError() + "\n";
         entry += average_average_stat.getCoveredAreaFactor() + "\n";
         entry += average_average_stat.getWastedCoverage()*100.0 + "\n";
+        entry += average_average_stat.getGoalJumps() * 100.0 + "\n";
         entry += average_average_stat.getWastedMovements() * 100.0 + "\n";
         entry += average_average_stat.getGoalAgentObserved()*100.0 + "\n";
         Log.customLog(entry);

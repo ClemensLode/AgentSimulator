@@ -67,8 +67,6 @@ public class LCS_Agent extends Base_LCS_Agent {
         // (im gedrehten Zustand) gewählt hätten
         lastActionSet = new ActionClassifierSet(lastState, lastMatchSet, calculatedAction);
 
-
-
         actionSetSize++;
 
         historicActionSet.addLast(lastActionSet);
@@ -196,8 +194,8 @@ public class LCS_Agent extends Base_LCS_Agent {
         classifierSet.updateEgoFactor();
         // event?
         if (reward != lastReward) {
-            //todo testen
-            if(Configuration.getExplorationMode() == Configuration.SWITCH_EXPLORATION_MODE) {
+            if(Configuration.getExplorationMode() == Configuration.SWITCH_EXPLORATION_START_EXPLORE_MODE ||
+               Configuration.getExplorationMode() == Configuration.SWITCH_EXPLORATION_START_EXPLOIT_MODE) {
             // new problem!
                 lastExplore = !lastExplore;
             }

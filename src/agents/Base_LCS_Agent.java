@@ -102,36 +102,22 @@ abstract public class Base_LCS_Agent extends BaseAgent {
          * - first explore, then exploit (50/50) (2)
          * - linear reduction of exploration probability (100..0/0..100)
          */
+
         double exploration_probability = 0.0;
         switch (Configuration.getExplorationMode()) {
-            case Configuration.NO_EXPLORATION_MODE:
+            case Configuration.ALWAYS_EXPLOIT_MODE:
                 return false;
-            case Configuration.ALWAYS_EXPLORATION_MODE:
+            case Configuration.ALWAYS_EXPLORE_MODE:
                 return true;
                 /**
                  * will be switched by the agent if the reward was positive
                  */
-            case Configuration.SWITCH_EXPLORATION_MODE:
+            case Configuration.SWITCH_EXPLORATION_START_EXPLOIT_MODE:
+            case Configuration.SWITCH_EXPLORATION_START_EXPLORE_MODE:
                 return last_explore;
             case Configuration.RANDOM_EXPLORATION_MODE:
                 exploration_probability = 0.5;
                 break;
-            case Configuration.EXPLORE_THEN_EXPLOIT_MODE:
-                if (gaTimestep % Configuration.getNumberOfSteps() < Configuration.getNumberOfSteps() / 2.0) {
-                    exploration_probability = 1.0;
-                } else {
-                    exploration_probability = 0.05;
-                }
-                break;
-            case Configuration.LINEAR_REDUCTION_EXPLORE_MODE:
-                 {
-                    exploration_probability = 1.0 - (double) (gaTimestep % Configuration.getNumberOfSteps()) / (double) Configuration.getNumberOfSteps();
-                }
-                break;
-            case Configuration.GOAL_DIRECTED_EXPLOITATION_MODE:
-            {
-                return !reward;
-            }
         }
         if (Misc.nextDouble() <= exploration_probability) {
             return true;
@@ -145,8 +131,10 @@ abstract public class Base_LCS_Agent extends BaseAgent {
      */
     @Override
     public void resetBeforeNewProblem() throws Exception {
-        lastReward = grid.isGoalAgentInRewardRange(this);
-        lastExplore = lastReward;
+        lastReward = grid.isGoalAgentInRewardRange(this); // TODO?
+        lastExplore = 
+                Configuration.getExplorationMode() == Configuration.SWITCH_EXPLORATION_START_EXPLORE_MODE?
+                    !lastReward : lastReward;
         lastMatchSet = null;
         lastActionSet = null;
         lastPredictionError = 0.0;

@@ -98,13 +98,15 @@ public class Condition {
      * This mutation is a niche mutation. It assures that the resulting classifier
      * still matches the current situation.
      * @param state current state
-     * @param rotation difference between the actual action and the classifier action
      * @return true if something was changed
      */
     public boolean mutateCondition(final Sensors state) {
         boolean changed = false;
         // determine in which direction the sensor data relative to the condition data is rotated
 
+        if (Configuration.getCoveringWildcardProbability() == 0.0) {
+            return false;
+        }
         
         boolean[] sensors = state.getCompressedSensorData();
         for (int i = 0; i < sensors.length; i++) {

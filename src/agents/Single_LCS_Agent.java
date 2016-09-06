@@ -158,13 +158,15 @@ public class Single_LCS_Agent extends BaseAgent {
     @Override
     public void calculateReward(final long gaTimestep) throws Exception {
         boolean reward = checkRewardPoints();
-        if(reward && Configuration.getExplorationMode() == Configuration.SWITCH_EXPLORATION_MODE) {
-            // new problem!
-            lastExplore = !lastExplore;
-        }
 
         // event?
         if (reward != lastReward) {
+            if(Configuration.getExplorationMode() == Configuration.SWITCH_EXPLORATION_START_EXPLORE_MODE ||
+               Configuration.getExplorationMode() == Configuration.SWITCH_EXPLORATION_START_EXPLOIT_MODE) {
+            // new problem!
+                lastExplore = !lastExplore;
+            }
+
             int start_index = historicActionSet.size() - 1;
             collectReward(start_index, actionSetSize, reward, 1.0, true);
             // remove all classifier sets

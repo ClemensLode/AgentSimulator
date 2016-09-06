@@ -1,6 +1,8 @@
 package lcs;
 
 import java.util.ArrayList;
+import lcs.AppliedClassifierSet;
+import agent.Sensors;
 
 /**
  *
@@ -35,7 +37,12 @@ public class HistoryActionClassifierSet {
         return actionClassifierSet.getMatchSet().getBestValue();
     }
 
-    public void processReward(double max_prediction) throws Exception {
+    public void processReward(MainClassifierSet main, double max_prediction) throws Exception {
+        int calculatedAction = actionClassifierSet.getAction();
+        Sensors lastState = actionClassifierSet.getLastState();
+        AppliedClassifierSet lastMatchSet = new AppliedClassifierSet(lastState, main);
+        actionClassifierSet = new ActionClassifierSet(lastState, lastMatchSet, calculatedAction);
+        
         if(reward.isEmpty()) {
             // empty results => Apply 0 reward
             // so that no 0-reward needs to be distributed when no agent is in sight in the LCS Agent code

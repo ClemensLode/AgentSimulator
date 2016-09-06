@@ -118,9 +118,12 @@ public class Multistep_LCS_Agent extends Base_LCS_Agent {
     @Override
     public void calculateReward(final long gaTimestep) throws Exception {
         boolean reward = checkRewardPoints();
-        if((reward != lastReward) && Configuration.getExplorationMode() == Configuration.SWITCH_EXPLORATION_MODE) {
+        if(reward != lastReward) {
+            if(Configuration.getExplorationMode() == Configuration.SWITCH_EXPLORATION_START_EXPLORE_MODE ||
+               Configuration.getExplorationMode() == Configuration.SWITCH_EXPLORATION_START_EXPLOIT_MODE) {
             // new problem!
-            lastExplore = !lastExplore;
+                lastExplore = !lastExplore;
+            }
         }
 
         if(prevActionSet!=null){

@@ -26,19 +26,20 @@ public class LCS_Goal_Agent extends LCS_Agent {
      */
     @Override
     public void calculateReward(final long gaTimestep) throws Exception {
-        boolean reward = !grid.isGoalAgentInRewardRangeByAnyAgent();
-        if(reward && Configuration.getExplorationMode() == Configuration.SWITCH_EXPLORATION_MODE) {
-            // new problem!
-            lastExplore = !lastExplore;
-        }
+        boolean reward = checkRewardPoints();
 
         // event?
         if (reward != lastReward) {
+            if(Configuration.getExplorationMode() == Configuration.SWITCH_EXPLORATION_START_EXPLORE_MODE ||
+               Configuration.getExplorationMode() == Configuration.SWITCH_EXPLORATION_START_EXPLOIT_MODE) {
+            // new problem!
+                lastExplore = !lastExplore;
+            }
+
             int start_index = historicActionSet.size() - 1;
             collectReward(start_index, actionSetSize, reward, 1.0, true);
             // remove all classifier sets
             actionSetSize = 0;
-            lastReward = reward;
         }
         // ausschliesslich
         else if(actionSetSize >= Configuration.getMaxStackSize())
@@ -47,11 +48,34 @@ public class LCS_Goal_Agent extends LCS_Agent {
             int length = actionSetSize - start_index;
             collectReward(start_index, length, reward, 1.0, false);
             actionSetSize = start_index;
-            lastReward = reward;
         }
+        lastReward = reward;
         evolutionaryAlgorithm(gaTimestep);
     }
 
+    /**
+     * @return true if the goal agent currently is not in sight
+     */
+    @Override
+    public boolean checkRewardPoints() {
+        if(lastState == null) {
+            return false;
+        }
+        boolean[] sensor_agent = lastState.getSensorAgent();
+        boolean reward = true;
+        for(int i = 0; i < Action.MAX_DIRECTIONS; i++) {
+            if(!sensor_agent[2*i+1]) {
+                reward = false;
+            }
+        }
+
+        // goal agent is in sight?
+        if (grid.isGoalAgentInRewardRange(this)) {
+            totalPoints = totalPoints + 1.0;
+        }
+
+        return reward;
+    }
 
     /**
      * Determines the matching classifiers and chooses one action from this set

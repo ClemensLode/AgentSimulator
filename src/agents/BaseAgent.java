@@ -31,7 +31,7 @@ public abstract class BaseAgent {
     /**
      * statistical value
      */
-    private double totalPoints = 0;
+    protected double totalPoints = 0;
     
     /**
      * instance of the grid
@@ -131,6 +131,7 @@ public abstract class BaseAgent {
         for(int i = 0; i < Action.MAX_DIRECTIONS; i++) {
             if((sensor_goal[2*i]) && (!sensor_agent[2*i+1])) {
                 reward = true;
+                break;
             }
         }
 

@@ -518,6 +518,7 @@ public class Grid extends BaseGrid {
                 getSpreadGoalAgentDistance(average_goal_distance),
                 getCoveredAreaFactor()*100.0,
                 getWastedCoverage(),
+                getGoalJumps(),
                 getWastedMovements(),
                 average_points,
                 getSpreadIndividualTotalPoints(average_points),
