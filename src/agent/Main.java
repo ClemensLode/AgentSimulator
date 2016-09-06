@@ -40,28 +40,41 @@ public class Main {
             long time = System.currentTimeMillis();
             BaseGrid.invalidActions = 0;
             BaseGrid.goalJumps = 0;
+            double[] average_cover_actions = new double[Configuration.getNumberOfProblems()];
+            for(int t = 0; t < Configuration.getNumberOfProblems(); t++) {
+                average_cover_actions[t] = 0.0;
+            }
+
             for (int experiment_nr = 1; experiment_nr <= Configuration.getNumberOfExperiments(); experiment_nr++) {
                 Log.initialize(false);
             
                 Configuration.printConfiguration();
                 Log.log("# Experiment Nr. " + experiment_nr);
                 System.out.println("Experiment Nr. " + experiment_nr);
-                
+
+
                 try {
                 // Reset population before each experiment
                     LCS_Engine engine = new LCS_Engine(experiment_nr);
 //                    System.out.println("initialized");
-                    engine.doOneMultiStepExperiment(experiment_nr);
+                    engine.doOneMultiStepExperiment(average_cover_actions, experiment_nr);
 //                    System.out.println("done");
                 } catch (Exception e) {
                     e.printStackTrace();
                     Log.errorLog("Error initializing agents: ", e);
                 }
+
                 Log.finalise();
                 //Statistics.printStatistics(false);
                 Misc.nextExperiment();
                 Statistics.nextExperiment();
             }
+            for(int t = 0; t < Configuration.getNumberOfProblems(); t++) {
+                average_cover_actions[t] /= ((double)(Configuration.getMaxAgents() * Configuration.getNumberOfExperiments()));
+                System.out.println(average_cover_actions[t]);
+            }
+35
+
             System.out.println((System.currentTimeMillis() - time) + "ms");
             Statistics.printAverageStatistics();     
             Misc.appendPlotFile();

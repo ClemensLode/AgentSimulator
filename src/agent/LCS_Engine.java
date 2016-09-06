@@ -56,13 +56,14 @@ public class LCS_Engine {
      * @param experiment_nr Number of experiment, important for initializing the random seed
      * @throws java.lang.Exception if there was an error creating the gif file or calculating the problem
      */
-    public void doOneMultiStepExperiment(int experiment_nr) throws Exception {
+    public void doOneMultiStepExperiment(double[] average_cover_actions, int experiment_nr) throws Exception {
         int currentTimestep = 0;
 
         if(Configuration.isGifOutput()) {
             BaseAgent.grid.startGIF(experiment_nr);
         }
         // number of problems for the same population
+
         for (int i = 0; i < Configuration.getNumberOfProblems(); i++) {
 
             //Log.log("# Problem Nr. " + (i + 1));
@@ -72,10 +73,10 @@ public class LCS_Engine {
              */
             BaseAgent.grid.resetState();
 
-            /**
-             * Unterschied zu XCS: Läuft weiter...~
-             */
+            Base_XCS_Agent.cover_actions = 0;
             currentTimestep = doOneMultiStepProblem(currentTimestep);
+            average_cover_actions[i] += Base_XCS_Agent.cover_actions;
+
             Misc.initSeed(Configuration.getRandomSeed() + experiment_nr * Configuration.getNumberOfProblems() + 1 + i);
         }
         if(Configuration.isGifOutput()) {
@@ -92,6 +93,7 @@ public class LCS_Engine {
         // number of steps a problem should last
         int steps_next_problem = Configuration.getNumberOfSteps() + stepCounter;
         //System.out.println(stepCounter);
+
         for (int currentTimestep = stepCounter; currentTimestep < steps_next_problem; currentTimestep++) {
             BaseAgent.grid.updateSight();
             // update the quality of the run

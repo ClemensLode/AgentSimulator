@@ -4,6 +4,7 @@ package lcs;
 import agent.*;
 import Misc.*;
 import java.util.ArrayList;
+import agents.Base_XCS_Agent;
 
 /**
  * Main classifier set of each agent, provides covering, crossing over, subsumation, adding/removing and relationship functionality
@@ -19,12 +20,6 @@ public class MainClassifierSet extends ClassifierSet {
             for(int i = 0; i < Configuration.getMaxPopSize(); i++) {
                 this.addClassifier(new Classifier());
             }
-            /*addClassifier(new Classifier(0));
-            addClassifier(new Classifier(1));
-            addClassifier(new Classifier(2));
-            addClassifier(new Classifier(3));*/
-            //this.addClassifier(new Classifier(false));
-            //this.addClassifier(new Classifier(true));
         }
     }
 
@@ -67,6 +62,7 @@ public class MainClassifierSet extends ClassifierSet {
                     addClassifier(newCl);
                     // newCl.setMatchingActions(action_covered, state); TODO maybe optimize....
                     // wenn ein neuer Classifier spaeter gepruefte actions schon abdeckt, muessen insgesamt weniger Classifier hinzugefuegt werden
+                    Base_XCS_Agent.cover_actions++;
                 }
             }
 

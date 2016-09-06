@@ -243,20 +243,23 @@ public class Configuration {
      */
     public static final int ALWAYS_EXPLORE_MODE = 0;
 
+    public static final int ALWAYS_EXPLORE_RANDOM_MODE = 1;
+
     /**
      * Exploration probability 0
      */
-    public static final int ALWAYS_EXPLOIT_MODE = 1;
+    public static final int ALWAYS_EXPLOIT_MODE = 2;
+    public static final int ALWAYS_EXPLOIT_BEST_MODE = 3;
 
     /**
      * Exploration probability 
      */
-    public static final int SWITCH_EXPLORATION_START_EXPLORE_MODE = 2;
+    public static final int SWITCH_EXPLORATION_START_EXPLORE_MODE = 4;
 
-    public static final int SWITCH_EXPLORATION_START_EXPLOIT_MODE = 3;
+    public static final int SWITCH_EXPLORATION_START_EXPLOIT_MODE = 5;
 
 
-    public static final int RANDOM_EXPLORATION_MODE = 4;
+    public static final int RANDOM_EXPLORATION_MODE = 6;
 
     /**
      * When to explore and when to exploit the classifiers

@@ -27,7 +27,7 @@ public class Condition {
     /**
      * Raw data, matching condition
      */
-    protected int[] data;
+    private int[] data;
 
     /**
      * Creates a new condition based on the given data
@@ -82,7 +82,7 @@ public class Condition {
 
     public double getEgoFactor(final int action) {
 
-            switch (data[8 + 2*action]) {
+            switch (data[Condition.AGENT_DISTANCE_INDEX + 2*action]) {
                 case DONTCARE:
                     return 0.5;
                 case 1:
@@ -132,14 +132,33 @@ public class Condition {
 
         boolean[] sensors = s.getCompressedSensorData();
             boolean matched = true;
-            for (int i = 0; i < sensors.length; i++) {
-                if(i%2 == 1 && sensors[i-1]) {
-                    continue;
+            for (int i = 0; i < sensors.length; i+=2) {
+
+                /**
+                 * 0/0
+                 * 1/0
+                 * 1/1
+                 */
+
+                if(!sensors[i] && !sensors[i+1]) {
+                    if(data[i] == 1 || data[i+1] == 1) {
+                        matched = false;
+                        break;
+                    }
                 }
-                if( (sensors[i] && (data[i] == 0)) ||
-                    ((!sensors[i]) && (data[i] == 1))) {
-                    matched = false;
-                    break;
+
+                if(sensors[i] && !sensors[i+1]) {
+                    if(data[i] == 0 || data[i+1] == 1) {
+                        matched = false;
+                        break;
+                    }
+                }
+
+                if(sensors[i] && sensors[i+1]) {
+                    if(data[i+1] == 0) {
+                        matched = false;
+                        break;
+                    }
                 }
             }
             return matched;
@@ -158,32 +177,40 @@ public class Condition {
 
     /**
      * @param c The other classifier
-     * @param rotation The rotation of the other condition
-     * @return True if this classifier is identical with the other classifier with the given rotation
+     * @return True if this classifier is identical with the other classifier
      */
     public boolean equals(final Condition c) {
-        for(int i = 0; i < data.length; i++) {
-            if(data[i] != c.data[i]) {
+        for(int i = 0; i < data.length; i+=2) {
+/*          if(data[i] == 0 && data[i+1] == DONTCARE && c.data[i] == DONTCARE && c.data[i+1] == DONTCARE) {
+                continue;
+            }
+            if(c.data[i] == 0 && c.data[i+1] == DONTCARE && data[i] == DONTCARE && data[i+1] == DONTCARE) {
+                continue;
+            }
+            if(data[i] == 0 && data[i+1] == 1 && c.data[i] == 1 && c.data[i+1] == 1) {
+                continue;
+            }
+            if(c.data[i] == 0 && c.data[i+1] == 1 && data[i] == 1 && data[i+1] == 1) {
+                continue;
+            }
+*/
+
+            if(data[i] != c.data[i] || data[i+1] != c.data[i+1]) {
                 return false;
             }
         }
         return true;
     }
 
-   /* public boolean isGoalCondition() {
-        return data[GOAL_DISTANCE_INDEX] == 1;
-    }*/
-
-
     /**
      * @param c The condition to compare to
-     * @param rotation The rotation of the other condition
      * @return true if this classifier is more general (i.e. equal or equal and more wildcards)
      */
     public boolean isMoreGeneral(final Condition c) {
         boolean really_more_general = false;
         
         for (int i = 0; i < data.length; i++) {
+
             if ((data[i] != DONTCARE) && (data[i] != c.data[i])) {
                 return false;
             } else
@@ -199,11 +226,7 @@ public class Condition {
      */
     private void randomize() {
         for (int i = 0; i < data.length; i++) {
-            /*if(Misc.nextDouble() < Configuration.getCoveringWildcardProbability()) {
-                data[i] = DONTCARE;
-            } else {*/
-                data[i] = Misc.nextInt(3)-1;
-            //}
+            data[i] = Misc.nextInt(3)-1;
         }
     }
 

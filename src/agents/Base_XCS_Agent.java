@@ -12,6 +12,9 @@ import agent.Configuration;
  * @author Clemens Lode, 1151459, University Karlsruhe (TH)
  */
 abstract public class Base_XCS_Agent extends BaseAgent {
+
+    static public long cover_actions = 0;
+
     /**
      * Reward of the last time step (in order to recognize events)
      */
@@ -95,8 +98,10 @@ abstract public class Base_XCS_Agent extends BaseAgent {
 
         double exploration_probability = 0.0;
         switch (Configuration.getExplorationMode()) {
+            case Configuration.ALWAYS_EXPLOIT_BEST_MODE:
             case Configuration.ALWAYS_EXPLOIT_MODE:
                 return false;
+            case Configuration.ALWAYS_EXPLORE_RANDOM_MODE:
             case Configuration.ALWAYS_EXPLORE_MODE:
                 return true;
                 /**

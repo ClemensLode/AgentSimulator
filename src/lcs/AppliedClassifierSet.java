@@ -92,11 +92,18 @@ public class AppliedClassifierSet {
     public int chooseAbsoluteDirection(boolean do_explore) {
         // choose random classifier from classifierArray randomly by fitness * prediction
         if (do_explore) {
-            return rouletteActionWinner();
+            if(Configuration.getExplorationMode() == Configuration.ALWAYS_EXPLORE_RANDOM_MODE) {
+                return randomActionWinner();
+            } else {
+                return rouletteActionWinner();
+            }
         } else {
             // choose best classifier determined by fitness * prediction
-            //return bestActionWinner();
-            return tournamentActionWinner();
+            if(Configuration.getExplorationMode() == Configuration.ALWAYS_EXPLOIT_BEST_MODE) {
+                return bestActionWinner();
+            } else{
+                return tournamentActionWinner();
+            }
         }
     }
 
