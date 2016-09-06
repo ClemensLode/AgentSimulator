@@ -1,9 +1,10 @@
 package lcs;
 
-import agents.LCS_Agent;
 import agent.Configuration;
 import agent.Sensors;
 import Misc.Misc;
+import Misc.Log;
+import java.text.DecimalFormat;
 
 import java.util.ArrayList;
 
@@ -65,6 +66,7 @@ public class Classifier {
      * @param state The current state
      * @param action The action this classifier should cover
      * @param gaTimestamp The current time step
+     * @param action_set_size Size of the action set
      * @see MainClassifierSet#coverAllValidActions
      * @throws java.lang.Exception if there was an error setting prediction, fitness or action set size
      */
@@ -86,9 +88,8 @@ public class Classifier {
      * However, the experience of the copy is set to 0 and the numerosity is set to 1 since this is indeed 
      * a new individual in a population.
      * @param old_classifier The classifier we want to copy
-     * @throws java.lang.Exception if there was an error setting prediction, fitness or action set size
      */
-    public Classifier(final Classifier old_classifier) {
+    public Classifier(final Classifier old_classifier) throws Exception {
 
         setGaTimestamp(old_classifier.gaTimestamp);
         condition = old_classifier.condition.clone();
@@ -97,15 +98,49 @@ public class Classifier {
         prediction = old_classifier.prediction;
         predictionError = old_classifier.predictionError;
         // Here we should divide the fitness by the numerosity to get a accurate value for the new one!
-        fitness = old_classifier.fitness / ((double) old_classifier.getNumerosity());
+        setFitness(old_classifier.getFitness() / ((double) old_classifier.getNumerosity()));
         actionSetSize = old_classifier.actionSetSize;
     }
 
-    public Classifier clone(ClassifierSet cs) {
+    /**
+     * generate a random classifier
+     * @throws java.lang.Exception if there was an error setting prediction, fitness or action size
+     * @see MainClassifierSet#MainClassifierSet(int)
+     */
+    public Classifier() throws Exception {
+        setGaTimestamp(0);
+
+        setPrediction(Configuration.getPredictionInitialization());
+        setPredictionError(Configuration.getPredictionErrorInitialization());
+        setFitness(Configuration.getFitnessInitialization());
+        // will later (in the actionClassifierSet) be resetted to the actual value
+        setActionSetSize(Configuration.getMaxPopSize() / Action.MAX_DIRECTIONS);
+
+        this.condition = new Condition();
+        this.action = new Action(Misc.nextInt(Action.MAX_DIRECTIONS));
+
+    }
+
+    public Classifier(int dir) throws Exception {
+        setGaTimestamp(0);
+
+        setPrediction(2.0);
+        setPredictionError(Configuration.getPredictionErrorInitialization());
+        setFitness(0.5);
+        // will later (in the actionClassifierSet) be resetted to the actual value
+        setActionSetSize(Configuration.getMaxPopSize() / Action.MAX_DIRECTIONS);
+
+        numerosity = 32;
+        this.condition = new Condition(dir);
+        this.action = new Action(dir);
+
+    }
+
+    public Classifier clone(ClassifierSet cs) throws Exception{
         Classifier new_cl = new Classifier(this);
-        new_cl.addParent(cs);
-        new_cl.fitness *= getNumerosity();
+        new_cl.setNumerosity(getNumerosity());
         new_cl.experience = experience;
+        new_cl.addParent(cs);
         return new_cl;
     }
 
@@ -164,8 +199,6 @@ public class Classifier {
                 }
                 break;
         }
-
-
         childA.condition.setData(newChildAStr);
         childB.condition.setData(newChildBStr);
     }
@@ -176,38 +209,11 @@ public class Classifier {
      * @see MainClassifierSet#coverAllActions
      * @see AppliedClassifierSet#AppliedClassifierSet
      */
-    public ArrayList<Integer> getMatchingActions(Sensors s) {
-        ArrayList<Integer> correct_list = new ArrayList<Integer>(1 + Action.MAX_DIRECTIONS);
-
-        if (action.getDirection() == Action.NO_DIRECTION) {
-            correct_list.add(new Integer(Action.NO_DIRECTION));
-        } else {
-            // determine the rotation list of the condition
-            ArrayList<Integer> list = condition.getMatchingDirections(s);
-
-            // apply the rotation list on the action
-            for (Integer i : list) {
-                correct_list.add(new Integer(action.getRotated(i)));
-            }
-        }
-        return correct_list;
+    public boolean isMatchingState(Sensors s) {
+        return condition.isMatchingState(s);
     }
 
-    public void setMatchingActions(boolean[] actions, Sensors s) {
-        if (action.getDirection() == Action.NO_DIRECTION) {
-            actions[Action.NO_DIRECTION] = true;
-        } else {
-            // determine the rotation list of the condition
-            ArrayList<Integer> list = condition.getMatchingDirections(s);
-
-            // apply the rotation list on the action
-            for (Integer i : list) {
-                actions[action.getRotated(i)] = true;
-            }
-        }
-    }
-
-    public double getEgoFactor() {
+    public double getEgoFactor() throws Exception {
         return getCondition().getEgoFactor(action.getDirection()) * this.getFitness() * this.getPrediction();
     }
 
@@ -230,14 +236,9 @@ public class Classifier {
      * @see Classifier#isMoreGeneral
      */
     public boolean subsumes(Classifier c) {
-        for (int rotation = 0; rotation < Action.MAX_DIRECTIONS; rotation++) {
-            if (condition.isMoreGeneral(c.getCondition(), rotation)) {
-                if (action.getDirection() == c.getAction().getRotated(rotation)) {
-                    return true;
-                }
-            }
-            if (!Configuration.isDoAllowRotation()) {
-                return false;
+        if (condition.isMoreGeneral(c.getCondition())) {
+            if (action.getDirection() == c.getDirection()) {
+                return true;
             }
         }
 
@@ -250,16 +251,11 @@ public class Classifier {
      * @return true if both classifiers are phenotypical equal
      */
     public boolean equals(Classifier c) {
-        for (int rotation = 0; rotation < Action.MAX_DIRECTIONS; rotation++) {
-            if (condition.equals(c.getCondition(), rotation)) {
-                if (action.getDirection() == c.getAction().getRotated(rotation)) {
+            if (condition.equals(c.getCondition())) {
+                if (action.getDirection() == c.getDirection()) {
                     return true;
                 }
             }
-            if (!Configuration.isDoAllowRotation()) {
-                return false;
-            }
-        }
         return false;
     }
 
@@ -304,7 +300,12 @@ public class Classifier {
      * @see Configuration#beta
      */
     public void updateFitness(double accSum, double accuracy, double factor) throws Exception {
-        setFitness(getFitness() + factor * Configuration.getBeta() * ((accuracy * (double) getNumerosity()) / accSum - getFitness()));
+        try {
+            setFitness(getFitness() + factor * Configuration.getBeta() * ((accuracy * (double) getNumerosity()) / accSum - getFitness()));
+        } catch(Exception e) {
+            Log.errorLog("" + accSum + " / " + accuracy + " / " + factor + " / " + getFitness());
+            throw e;
+        }
     }
 
     /**
@@ -317,6 +318,9 @@ public class Classifier {
         if (getExperience() < 1. / Configuration.getBeta()) {
             setPredictionError((getPredictionError() * (getExperience() - 1.0) + Math.abs(P - prediction)) / getExperience());
         } else {
+            if(Double.isNaN(getPredictionError() + factor * Configuration.getBeta() * (Math.abs(P - prediction) - getPredictionError()))) {
+                throw new Exception("prediction error out of range " + getPredictionError() + " + " + factor + " * " + P + " - " + prediction);
+            }
             setPredictionError(getPredictionError() + factor * Configuration.getBeta() * (Math.abs(P - prediction) - getPredictionError()));
         }
     }
@@ -328,11 +332,12 @@ public class Classifier {
      * @see Configuration#beta
      */
     public void updatePrediction(double P, double factor) throws Exception {
-        if (getExperience() < 1. / Configuration.getBeta()) {
-            setPrediction((prediction * (getExperience() - 1.0) + P) / getExperience());
-        } else {
+
+    //    if (getExperience() < 1. / Configuration.getBeta()) {
+//            setPrediction((prediction * (getExperience() - 1.0) + P) / getExperience());
+//        } else {
             setPrediction(prediction + factor * Configuration.getBeta() * (P - prediction));
-        }
+//        }
     }
 
     /**
@@ -371,6 +376,10 @@ public class Classifier {
      * @throws java.lang.Exception If the prediction is out of range
      */
     public void setPrediction(double predicted_payoff) throws Exception {
+            if(Double.isNaN(predicted_payoff) || Double.isInfinite(predicted_payoff)) {
+                throw new Exception("Prediction out of range " + predicted_payoff);
+            }
+
     //    if(predicted_payoff < 0.0 || predicted_payoff > (10.0 * LCS_Agent.MAX_REWARD * getNumerosity())) {
 //            throw new Exception("Prediction out of range: " + predicted_payoff + " [num: " + getNumerosity() + "] from " + prediction + ")");
 //        }
@@ -385,17 +394,11 @@ public class Classifier {
      * @param direction The direction of the action set
      * @return true if the condition was changed
      */
-    public boolean applyMutation(Sensors state, int direction) {
+    public boolean applyMutation(Sensors state) {
         if (Configuration.getCoveringWildcardProbability() == 0.0) {
             return false;
         }
-        /**
-         * rotation denotes the margin by what the condition of the classifier
-         * has to be rotated in order to match the actual action
-         */
-        // works for NO_DIRECTION, too, because in that case action.direction is equal to direction
-        int rotation = (Action.MAX_DIRECTIONS + direction - this.action.getDirection()) % Action.MAX_DIRECTIONS;
-        return condition.mutateCondition(state, rotation);
+        return condition.mutateCondition(state);
     }
 
     /**
@@ -404,8 +407,15 @@ public class Classifier {
      * @see ClassifierSet#changeNumerositySum
      * @see ClassifierSet#removeClassifier
      */
-    public void addNumerosity(int num) {
+    public void addNumerosity(int num) throws Exception {
+        int old_num = numerosity;
         numerosity += num;
+        if(numerosity == 0) {
+            fitness = 0.01;
+        } else
+        if(old_num > 0) {
+            setFitness(getFitness() * ((double)numerosity) / ((double)old_num));
+        }
         for (ClassifierSet p : parents) {
             p.changeNumerositySum(num);
             if (numerosity == 0) {
@@ -418,9 +428,9 @@ public class Classifier {
      * Register a parent to the classifier (important to update numerosity)
      * @param p The parent
      */
-    public void addParent(ClassifierSet p) {
+    public void addParent(ClassifierSet p) throws Exception {
         parents.add(p);
-        p.changeNumerositySum(numerosity);
+        p.changeNumerositySum(getNumerosity());
     }
 
     /**
@@ -436,6 +446,10 @@ public class Classifier {
      * @throws java.lang.Exception If the fitness was out of range
      */
     public void setFitness(double fitness) throws Exception {
+        if(Double.isNaN(fitness) || Double.isInfinite(fitness)) {
+            throw new Exception("Fitness out of range " + fitness);
+        }
+
         if (fitness > 0.0 && fitness <= getNumerosity()) {
             this.fitness = fitness;
             if (this.fitness < 0.01) {
@@ -468,7 +482,7 @@ public class Classifier {
         experience += factor;
     }
 
-    public void setPredictionError(double error) {
+    public void setPredictionError(double error) throws Exception {
         this.predictionError = error;
     }
 
@@ -476,8 +490,8 @@ public class Classifier {
         this.gaTimestamp = gaTimestamp;
     }
 
-    public final int getDirection(int goal_direction) {
-        return action.getRotated(goal_direction);
+    public final int getDirection() {
+        return action.getDirection();
     }
 
     public final Action getAction() {
@@ -488,7 +502,10 @@ public class Classifier {
         return condition;
     }
 
-    public double getFitness() {
+    public double getFitness() throws Exception {
+        if(Double.isNaN(fitness) || Double.isInfinite(fitness)) {
+            throw new Exception("Fitness out of range " + fitness);
+        }
         return fitness;
     }
 
@@ -499,10 +516,7 @@ public class Classifier {
     /**
      * @return number of times the classifier was in the action set TODO
      */
-    public double getExperience() throws Exception {
-        /*if(experience == 0.0) {
-        throw new Exception("Experience was 0.0 when called.");
-        }*/
+    public double getExperience() {
         return experience;
     }
 
@@ -510,15 +524,28 @@ public class Classifier {
         return gaTimestamp;
     }
 
-    public int getNumerosity() {
+    public int getNumerosity() throws Exception {
+        if(numerosity == 0) {
+            throw new Exception("Numerosity == 0");
+        }
         return numerosity;
+    }
+
+    public void setNumerosity(int numerosity) throws Exception {
+        if(numerosity == 0) {
+            throw new Exception("Numerosity == 0");
+        }
+        this.numerosity = numerosity;
     }
 
     public double getPredictionError() {
         return predictionError;
     }
 
-    public double getPrediction() {
+    public double getPrediction() throws Exception {
+        if(Double.isNaN(prediction) || Double.isInfinite(prediction)) {
+            throw new Exception("Prediction out of range " + prediction);
+        }
         return prediction;
     }
 
@@ -526,18 +553,19 @@ public class Classifier {
     public String toString() {
         String output = new String();
         output += condition.toString();
-
+        try{
         output += "-";
         output += action.toString();
         output += " :";
-
-        output += " [Pr: " + Misc.round(getPrediction(), 0.01) + "]";
-        output += " [PE: " + Misc.round(getPredictionError(), 0.01) + "]";
-        output += " [Fi: " + Misc.round(getFitness(), 0.01) + "]";
-        output += " [AS: " + Misc.round(getActionSetSize(), 0.01) + "]";
-        output += " [Ti: " + getGaTimestamp() + "]";
-        output += " [Nu: " + getNumerosity() + "]";
-        output += " [Par=" + parents.size() + "]";
+        output += " [Fi: " + new DecimalFormat("0.00").format(getFitness()) + "]";
+        output += " [Ex: " + new DecimalFormat("00000.0").format(getExperience()) + "]";
+        output += " [Pr: " + new DecimalFormat("0.00").format(getPrediction()) + "]";
+        output += " [PE: " + new DecimalFormat("0.00").format(getPredictionError()) + "]";
+        output += " [AS: " + new DecimalFormat("000.0").format(getActionSetSize()) + "]";
+        output += " [Ti: " + new DecimalFormat("00000").format(getGaTimestamp()) + "]";
+        output += " [Nu: " + new DecimalFormat("000").format(getNumerosity()) + "]";
+        output += " [Pa: " + new DecimalFormat("000").format(parents.size()) + "]";
+        }catch(Exception e) {}
 
 
         return output;

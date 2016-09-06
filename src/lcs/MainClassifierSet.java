@@ -13,8 +13,19 @@ import java.util.ArrayList;
 public class MainClassifierSet extends ClassifierSet {
 
 
-    public MainClassifierSet(int n) {
+    public MainClassifierSet(int n) throws Exception {
         super(n);
+        if(Configuration.isRandomStart()) {
+            for(int i = 0; i < Configuration.getMaxPopSize(); i++) {
+                this.addClassifier(new Classifier());
+            }
+            /*addClassifier(new Classifier(0));
+            addClassifier(new Classifier(1));
+            addClassifier(new Classifier(2));
+            addClassifier(new Classifier(3));*/
+            //this.addClassifier(new Classifier(false));
+            //this.addClassifier(new Classifier(true));
+        }
     }
 
     /**
@@ -26,16 +37,16 @@ public class MainClassifierSet extends ClassifierSet {
      * @throws java.lang.Exception If there was an error creating or adding the classifiers
      */
     public void coverAllValidActions(final Sensors state, final Point position, final long gaTime) throws Exception {
-        boolean[] action_covered = new boolean[Action.MAX_ACTIONS];
+        boolean[] action_covered = new boolean[Action.MAX_DIRECTIONS];
 
-        for(int i = 0; i < Action.MAX_ACTIONS; i++) {
+        for(int i = 0; i < action_covered.length; i++) {
             action_covered[i] = false;
         }
         // check all classifiers that match to the current sensor state
         // rotated variants will be tested, too
 
         for (Classifier c : getClassifiers()) {
-            c.setMatchingActions(action_covered, state);
+            action_covered[c.getDirection()] = true;
         }
         /**
          * loop until all actions are covered 
@@ -58,7 +69,9 @@ public class MainClassifierSet extends ClassifierSet {
                 action_covered[i] = false;
             }
             for (Classifier c : getClassifiers()) {
-                c.setMatchingActions(action_covered, state);
+                if(c.isMatchingState(state)) {
+                    action_covered[c.getDirection()] = true;
+                }
             }
 
             /**
@@ -82,15 +95,15 @@ public class MainClassifierSet extends ClassifierSet {
      * @param action The actual action taken by the applied classifier set that called this function
      * @throws java.lang.Exception For various reasons (error creating classifier, setting fitness and prediction, subsumation and addition of classifiers)
      */
-    protected void crossOverClassifiers(Classifier cl1P, Classifier cl2P, Sensors state, int action) throws Exception {
+    protected void crossOverClassifiers(Classifier cl1P, Classifier cl2P, Sensors state) throws Exception {
         // children
         Classifier cl1 = new Classifier(cl1P);
         Classifier cl2 = new Classifier(cl2P);
 
         // passt cl1, cl2 überhaupt auf den aktuellen Status? NEIN!
         // Status muss gespeichert sein! evtl sogar Richtung!
-        cl1.applyMutation(state, action);
-        cl2.applyMutation(state, action);
+        cl1.applyMutation(state);
+        cl2.applyMutation(state);
 
         cl1.setPrediction((cl1.getPrediction() + cl2.getPrediction()) / 2.);
         cl1.setPredictionError(Configuration.getPredictionErrorReduction() * (cl1.getPredictionError() + cl2.getPredictionError()) / 2.);
@@ -159,7 +172,7 @@ public class MainClassifierSet extends ClassifierSet {
             classifier.addParent(this);
         }
 
-        while (getNumerositySum() > Configuration.getMaxPopSize() + Action.MAX_ACTIONS) {
+        while (getNumerositySum() > Configuration.getMaxPopSize() + Action.MAX_DIRECTIONS) {
             Classifier c = getDeleteCandidate();
             removeMicroClassifier(c);
         }
@@ -340,48 +353,6 @@ public class MainClassifierSet extends ClassifierSet {
     //
 
     /**
-     * Relation of this classifier set (the active agent classifier set, 
-     * e.g. the set that received a reward) to another classifier set
-     * @param other The other set we want to compare with
-     * @return degree of relationship (0.0 - 1.0)
-     */
-    public double checkComplexDegreeOfRelationship(final MainClassifierSet other) throws Exception {
-        double degree = 0.0;
-        int size = 0;
-//        for(Classifier c : getClassifiers()) {
-        // if c.isPossible subsumer
-//            AppliedClassifierSet match_set = new AppliedClassifierSet(c, this);
-        //
-//        }
-
-        int max_states = 512;
-
-        // problem vielleicht: Druck, möglichst viele Situationen abzudecken
-        for(int i = 0; i < max_states; i++) {
-            Sensors s = new Sensors(i);
-            AppliedClassifierSet match_set = new AppliedClassifierSet(s, this);
-            if(match_set.isEmpty()) {
-                continue;
-            }
-            size++;
-            AppliedClassifierSet match_set_other = new AppliedClassifierSet(s, other);
-            if(match_set_other.isEmpty()) {
-                continue;
-            }
-            if(match_set.chooseAbsoluteDirection(false) == match_set_other.chooseAbsoluteDirection(false)) {
-                degree += 1.0;
-            }
-        }
-        degree /= (double)size;
-
-        if (degree >= 0.01 && degree <= 1.0) {
-            return degree;
-        } else {
-            return 0.0;
-        }
-    }
-
-    /**
      * Relation of this classifier set (the active agent classifier set,
      * e.g. the set that received a reward) to another classifier set
      * @param other The other set we want to compare with
@@ -406,9 +377,13 @@ public class MainClassifierSet extends ClassifierSet {
         double factor = 0.0;
         double pred_sum = 0.0;
         for(Classifier c : getClassifiers()) {
-            if(!c.isPossibleSubsumer()) {
-                continue;
-            }
+//            if(!c.isPossibleSubsumer()) {
+//                continue;
+//            }
+            // ignore behavior if goal agent is near
+//            if(c.getCondition().isGoalCondition()) {
+//                continue;
+ //           }
             factor += c.getEgoFactor();
             pred_sum += c.getFitness() * c.getPrediction();
         }
@@ -417,16 +392,7 @@ public class MainClassifierSet extends ClassifierSet {
         } else {
             factor = 0.0;
         }
-        if(factor < 0.0 || factor > 1.0) {
-            String t = new String("");
-            for(Classifier c : getClassifiers()) {
-                if(c.getExperience() < Configuration.getThetaSubsumer()) {
-                    continue;
-                }
-                t += "" + c.getEgoFactor() + "/" + (c.getFitness() * c.getPrediction());
-            }
-            throw new Exception("error bla bla " + pred_sum + " : " + t);
-        }
+
         return factor;
     }
 

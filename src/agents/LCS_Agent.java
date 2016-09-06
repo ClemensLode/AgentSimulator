@@ -18,7 +18,7 @@ public class LCS_Agent extends Base_LCS_Agent {
      */
     protected LinkedList<ActionClassifierSet> historicActionSet = new LinkedList<ActionClassifierSet>();
 
-    public LCS_Agent(int n) {
+    public LCS_Agent(int n) throws Exception {
         super(n);
     }
 
@@ -57,13 +57,17 @@ public class LCS_Agent extends Base_LCS_Agent {
          */
         lastMatchSet = new AppliedClassifierSet(lastState, classifierSet);
         // Wir holen uns einen zufälligen / den besten Classifier
-        lastExplore = checkIfExplore(lastState.getSensorGoalAgent(), lastExplore, gaTimestep);
+        lastExplore = checkIfExplore(lastState.isGoalInRewardRange(), lastExplore, gaTimestep);
 
         calculatedAction = lastMatchSet.chooseAbsoluteDirection(lastExplore);
+
+        lastPrediction = lastMatchSet.getValue(calculatedAction);
 
         // wir holen uns alle passenden Classifier, die ebenfalls diese Action
         // (im gedrehten Zustand) gewählt hätten
         lastActionSet = new ActionClassifierSet(lastState, lastMatchSet, calculatedAction);
+
+
 
         actionSetSize++;
 
@@ -106,7 +110,7 @@ public class LCS_Agent extends Base_LCS_Agent {
                 collectReward(start_index, action_set_size, reward, classifierSet.checkDegreeOfRelationship(((LCS_Agent)other_agent).classifierSet), is_event);
                 break;
             case Configuration.REWARD_COMPLEX:
-                collectReward(start_index, action_set_size, reward, classifierSet.checkComplexDegreeOfRelationship(((LCS_Agent)other_agent).classifierSet), is_event);
+//                collectReward(start_index, action_set_size, reward, classifierSet.checkComplexDegreeOfRelationship(((LCS_Agent)other_agent).classifierSet), is_event);
                 break;
             case Configuration.REWARD_NEW:
                 collectReward(start_index, action_set_size, reward, classifierSet.checkDegreeOfRelationshipNew(((LCS_Agent)other_agent).classifierSet), is_event);
@@ -135,16 +139,19 @@ public class LCS_Agent extends Base_LCS_Agent {
 
         for(int i = 0; i < action_set_size; i++) {
             if(is_event) {
-                corrected_reward = reward ? calculateReward(i, action_set_size) : calculateReward(action_set_size - i, action_set_size);
+                corrected_reward = reward ? calculateReward(action_set_size - i, action_set_size) : calculateReward(i, action_set_size);
             }
 
             ActionClassifierSet action_classifier_set = historicActionSet.get(start_index - i);
             action_classifier_set.updateReward(corrected_reward, max_prediction, factor);
-            if(Configuration.isUseMaxPrediction()) {
-                max_prediction = action_classifier_set.getMatchSet().getBestValue();
-            }
+            if(is_event) {
+                if(Configuration.isUseMaxPrediction()) {
+                    max_prediction = action_classifier_set.getMatchSet().getBestValue();
+                    }
+                }
         }
-    }
+
+        }
 
     /**
      * resets the historic action set and initialized lastReward
@@ -169,13 +176,16 @@ public class LCS_Agent extends Base_LCS_Agent {
     @Override
     public void calculateReward(final long gaTimestep) throws Exception {
         boolean reward = checkRewardPoints();
-        if(reward && Configuration.getExplorationMode() == Configuration.SWITCH_EXPLORATION_MODE) {
-            // new problem!
-            lastExplore = !lastExplore;
-        }
+
         classifierSet.updateEgoFactor();
         // event?
         if (reward != lastReward) {
+            //todo testen
+            if(Configuration.getExplorationMode() == Configuration.SWITCH_EXPLORATION_MODE) {
+            // new problem!
+                lastExplore = !lastExplore;
+            }
+
             int start_index = historicActionSet.size() - 1;
             collectReward(start_index, actionSetSize, reward, 1.0, true);
             if(reward || !grid.isGoalAgentInRewardRangeByAnyAgent()) {
@@ -183,7 +193,6 @@ public class LCS_Agent extends Base_LCS_Agent {
             }
             // remove all classifier sets
             actionSetSize = 0;
-            lastReward = reward;
         }
         // ausschliesslich
         else if(actionSetSize >= Configuration.getMaxStackSize())
@@ -197,8 +206,8 @@ public class LCS_Agent extends Base_LCS_Agent {
             }
 
             actionSetSize = start_index;
-            lastReward = reward;
         }
+        lastReward = reward;
         tryToExchangeRuleWithNeighbor();
         evolutionaryAlgorithm(gaTimestep);
     }

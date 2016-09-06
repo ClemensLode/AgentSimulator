@@ -55,7 +55,7 @@ public class ClassifierSet {
     /**
      * @return the sum of the fitnesses of all classifiers in the set.
      */
-    protected double getFitnessSum() {
+    protected double getFitnessSum() throws Exception {
         double sum = 0.;
 
         for (Classifier c : getClassifiers()) {
@@ -65,8 +65,7 @@ public class ClassifierSet {
         return sum;
     }
 
-    @Override
-    public ClassifierSet clone() {
+    public ClassifierSet clone_it() throws Exception {
         ClassifierSet cs = new ClassifierSet();
         for(Classifier c : getClassifiers()) {
             cs.classifiers.add(c.clone(cs));
@@ -79,7 +78,7 @@ public class ClassifierSet {
      * @param fitness_sum The sum of all fitness values
      * @return random classifier, classifiers with higher fitness are more probable
      */
-    public Classifier chooseRandomClassifier(double random, double fitness_sum) {
+    public Classifier chooseRandomClassifier(double random, double fitness_sum) throws Exception {
         double random_fitness = random * fitness_sum;
         double fitness = 0.0;
         for (Classifier c : getClassifiers()) {
@@ -142,7 +141,7 @@ public class ClassifierSet {
         numerositySum += n;
     }    
     
-    private double getAveragePrediction() {
+    private double getAveragePrediction() throws Exception {
         double prediction = 0.0;
         for (Classifier c : getClassifiers()) {
             prediction += c.getPrediction();
@@ -151,7 +150,7 @@ public class ClassifierSet {
         return prediction;
     }
 
-    public double getAverageFitness() {
+    public double getAverageFitness() throws Exception {
         double avg_fitness = 0.0;
         for (Classifier c : getClassifiers()) {
             avg_fitness += c.getFitness();
@@ -173,24 +172,32 @@ public class ClassifierSet {
     public String toString() {
         String output = new String();
         output += "   > Averages:\n";
+        try{
         output += "   > Pre: " + getAveragePrediction() + " Fit: " + getAverageFitness() + " Tss: " + getAverageTimestamp() + " Num: " + getNumerositySum() + " Size: " + size() + "\n";
 
         Collections.sort(classifiers, new Comparator() {
 
             public int compare(Object a, Object b) {
+                try{
                 double diff = ((Classifier) a).getFitness() - ((Classifier) b).getFitness();
-                if (diff > 0) {
+                if (diff < 0) {
                     return 1;
-                } else if (diff < 0) {
+                } else if (diff > 0) {
                     return -1;
                 } else {
                     return 0;
                 }
+                }catch(Exception e){}
+                return 0;
             }
         });  
         for (Classifier c : getClassifiers()) {
+            //if(c.getFitness() == 0.01) {
+            //    continue;
+            //}
             output += "     - " + c.toString() + "\n";
         }
+        }catch(Exception e) {}
         return output;
     }
     

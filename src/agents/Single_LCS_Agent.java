@@ -50,7 +50,7 @@ public class Single_LCS_Agent extends BaseAgent {
 
     private boolean lastExplore = false;
 
-    public static void initSingleLCSAgent(int n) {
+    public static void initSingleLCSAgent(int n) throws Exception {
         classifierSet = new MainClassifierSet(n);
     }
 
@@ -89,7 +89,7 @@ public class Single_LCS_Agent extends BaseAgent {
          */
         lastMatchSet = new AppliedClassifierSet(lastState, classifierSet);
         // Wir holen uns einen zufälligen / den besten Classifier
-        lastExplore = Base_LCS_Agent.checkIfExplore(lastState.getSensorGoalAgent(), lastExplore, gaTimestep);
+        lastExplore = Base_LCS_Agent.checkIfExplore(lastState.isGoalInRewardRange(), lastExplore, gaTimestep);
 
         calculatedAction = lastMatchSet.chooseAbsoluteDirection(lastExplore);
 

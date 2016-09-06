@@ -29,7 +29,7 @@ public class LCS_Engine {
         BaseAgent.grid = new Grid();
         BaseAgent.resetGlobalID();
 
-        final int max_classifiers = Configuration.getMaxPopSize()+Action.MAX_ACTIONS+1;
+        final int max_classifiers = Configuration.getMaxPopSize()+Action.MAX_DIRECTIONS;
 
         if(Configuration.getGoalAgentMovementType() == Configuration.LCS_MOVEMENT) {
             BaseAgent.goalAgent = new LCS_Goal_Agent(max_classifiers);
@@ -89,7 +89,6 @@ public class LCS_Engine {
 
     /**
      * Executes a number of steps on the grid
-     * @param do_explore whether to use the evolutionary algorithm
      * @param stepCounter current time step
      * @return the time step after the execution
      */
@@ -98,29 +97,45 @@ public class LCS_Engine {
         int steps_next_problem = Configuration.getNumberOfSteps() + stepCounter;
         System.out.println(stepCounter);
         for (int currentTimestep = stepCounter; currentTimestep < steps_next_problem; currentTimestep++) {
-            printHeader(currentTimestep);
+            BaseAgent.grid.updateSight();
+            // update the quality of the run
+            BaseAgent.grid.updateStatistics(currentTimestep, findBestAgent());
+
+            if(Log.isDoLog()) {
+                printHeader(currentTimestep);
+                BaseAgent.grid.printAgents();
+            }
 
             if(Configuration.isGifOutput()) {
                 BaseAgent.grid.addFrameToGIF();
             }
 
             calculateAgents(currentTimestep);
-            BaseAgent.grid.updateSight();
 
-            // calculate the reward of all agents
-            rewardAgents(currentTimestep);
-
-            // update the quality of the run
-            BaseAgent.grid.updateStatistics(currentTimestep, findBestAgent());
-            if(Log.isDoLog()) {
-                BaseAgent.grid.printAgents();
+            if(currentTimestep > stepCounter) {
+                // calculate the reward of all agents
+                rewardAgents(currentTimestep);
             }
+
+            moveAgents();
         }
+        BaseAgent.grid.updateSight();
+        rewardAgents(steps_next_problem);
 
         return steps_next_problem;
     }
 
-    private ClassifierSet findBestAgent() {
+    /**
+     * @param gaTimestep current time step
+     * @throws java.lang.Exception
+     */
+    private void calculateAgents(long gaTimestep) throws Exception {
+        for(BaseAgent a : agentList) {
+            a.aquireNewSensorData();
+            a.calculateNextMove(gaTimestep);
+        }
+    }
+    private ClassifierSet findBestAgent() throws Exception {
         ClassifierSet best = null;
         switch(Configuration.getAgentType()) {
             case Configuration.RANDOMIZED_MOVEMENT_AGENT_TYPE:
@@ -147,9 +162,8 @@ public class LCS_Engine {
     /**
      * Calculate the matchings and the action set of each agent and execute the
      * movement
-     * @param gaTimestep current time step
      */
-    private void calculateAgents(final long gaTimestep) throws Exception {
+    private void moveAgents() throws Exception {
         BaseAgent.mark = false;
 
         int goal_speed = Configuration.getGoalAgentMovementSpeed();
@@ -160,18 +174,12 @@ public class LCS_Engine {
             random_list.add(BaseAgent.goalAgent);
         }
 
-        for(BaseAgent a : random_list) {
-            a.aquireNewSensorData();
-            a.calculateNextMove(gaTimestep);
-        }
-
         int[] array = Misc.getRandomArray(random_list.size());
 
         for(int i = 0; i < array.length; i++) {
             BaseAgent a = random_list.get(array[i]);
             try {
                 a.doNextMove();
-
                 if(a.isGoalAgent()) {
                     a.aquireNewSensorData();
                     a.calculateNextMove(0);

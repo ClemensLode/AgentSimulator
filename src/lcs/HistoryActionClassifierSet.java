@@ -1,8 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package lcs;
 
 import java.util.ArrayList;
@@ -32,7 +27,11 @@ public class HistoryActionClassifierSet {
         this.reward.add(new RewardHelper(reward, factor));
     }
 
-    public double getBestValue() {
+    public void rewardPrematurely(double max_prediction) throws Exception {
+        actionClassifierSet.updateReward(1.0, max_prediction, 1.0);
+    }
+
+    public double getBestValue() throws Exception {
         return actionClassifierSet.getMatchSet().getBestValue();
     }
 
@@ -44,15 +43,19 @@ public class HistoryActionClassifierSet {
         } else {
             double max = 0.0;
             double max_factor = 0.0;
-//            bloed
             for(RewardHelper r : reward) {
-                //actionClassifierSet.updateReward(r.reward, max_prediction, r.factor);
+                // we already gave reward for this case
+                if(r.reward == 1.0 && r.factor == 1.0) {
+                    return;
+               }
+               //actionClassifierSet.updateReward(r.reward, max_prediction, r.factor);
+
                 if(r.reward >= max && r.factor >= max_factor) {
                     max = r.reward;
                     max_factor = r.factor;
                 }
             }
-            actionClassifierSet.updateReward(max, max_prediction, max_factor);
+            actionClassifierSet.updateReward(max, max_prediction, 1.0);//max_factor);
         }
     }
 

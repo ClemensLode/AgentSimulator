@@ -32,8 +32,8 @@ abstract public class Base_LCS_Agent extends BaseAgent {
     
     private Base_LCS_Agent() {}
     
-    public Base_LCS_Agent(int n) {            
-            classifierSet = new MainClassifierSet(n);
+    public Base_LCS_Agent(int n) throws Exception {
+        classifierSet = new MainClassifierSet(n);
     }
 
     /**
@@ -49,12 +49,16 @@ abstract public class Base_LCS_Agent extends BaseAgent {
      * This is necessary because potentially every classifier can execute
      * any action
      */
-    protected AppliedClassifierSet lastMatchSet;
+    protected AppliedClassifierSet lastMatchSet = null;
 
     /**
      * Last action set, for logging issues
      */
-    protected ActionClassifierSet lastActionSet;
+    protected ActionClassifierSet lastActionSet = null;
+
+    protected double lastPrediction = 0.0;
+
+    private double predictionError = 0.0;
 
     protected void tryToExchangeRuleWithNeighbor() throws Exception {
         if(!Configuration.isExchangeClassifiers()) {
@@ -129,15 +133,18 @@ abstract public class Base_LCS_Agent extends BaseAgent {
         }
     }
 
-
     /**
      * Resets the lastReward before a new problem
      */
     @Override
     public void resetBeforeNewProblem() throws Exception {
         lastReward = grid.isGoalAgentInRewardRange(this);
-        lastExplore = false;
+        lastExplore = lastReward;
+        lastMatchSet = null;
+        lastActionSet = null;
     }
+
+
 
 
     /**
@@ -150,14 +157,16 @@ abstract public class Base_LCS_Agent extends BaseAgent {
             Log.log("# classifiers");
             Log.log(" - Population:");
             Log.log(classifierSet.toString());
-            Log.log(" - MatchSet:");
-            Log.log(lastMatchSet.toString());
+            if(lastMatchSet != null) {
+                Log.log(" - MatchSet:");
+                Log.log(lastMatchSet.toString());
+            }
         } catch (Exception e) {
             Log.errorLog("Error creating input string for log file: ", e);
         }
     }
 
-    public double getFitnessNumerosity() {
+    public double getFitnessNumerosity() throws Exception {
         return classifierSet.getAverageFitness();
     }
     
@@ -196,8 +205,18 @@ abstract public class Base_LCS_Agent extends BaseAgent {
      */
     @Override
     public void printActionSet() {
+        if(lastActionSet == null) {
+            return;
+        }
         Log.log("# action set");
         Log.log(" - ActionSet:  [ total action set size: " + actionSetSize + " ]");
         Log.log(lastActionSet.toString());
+    }
+
+    /**
+     * @return the predictionError
+     */
+    public double getPredictionError() {
+        return predictionError;
     }
 }

@@ -13,7 +13,7 @@ import lcs.Action;
 
 public class LCS_Goal_Agent extends LCS_Agent {
 
-    public LCS_Goal_Agent(int n) {
+    public LCS_Goal_Agent(int n) throws Exception {
         super(n);
     }
 
@@ -76,6 +76,8 @@ public class LCS_Goal_Agent extends LCS_Agent {
 
         calculatedAction = lastMatchSet.chooseAbsoluteDirection(lastExplore);
 
+        lastPrediction = lastMatchSet.getValue(calculatedAction);
+
         // wir holen uns alle passenden Classifier, die ebenfalls diese Action
         // (im gedrehten Zustand) gewählt hätten
         lastActionSet = new ActionClassifierSet(lastState, lastMatchSet, calculatedAction);
@@ -91,6 +93,7 @@ public class LCS_Goal_Agent extends LCS_Agent {
 
         if(BaseAgent.grid.getAvailableDirections(getPosition()).isEmpty()) {
             calculatedAction = Action.DO_JUMP;
+            System.out.println("DO_JUMP called");
         }
     }
 

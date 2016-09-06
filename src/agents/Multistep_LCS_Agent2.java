@@ -12,9 +12,9 @@ import Misc.Log;
 import lcs.ActionClassifierSet;
 import lcs.AppliedClassifierSet;
 
-public class Multistep_LCS_Agent extends Base_LCS_Agent {
+public class Multistep_LCS_Agent2 extends Base_LCS_Agent {
 
-    public Multistep_LCS_Agent(int n) throws Exception {
+    public Multistep_LCS_Agent2(int n) throws Exception {
         super(n);
     }
 
@@ -41,8 +41,6 @@ public class Multistep_LCS_Agent extends Base_LCS_Agent {
 
         calculatedAction = lastMatchSet.chooseAbsoluteDirection(lastExplore);
 
-        lastPrediction = lastMatchSet.getValue(calculatedAction);
-
         // wir holen uns alle passenden Classifier, die ebenfalls diese Action
         // (im gedrehten Zustand) gewählt hätten
         lastActionSet = new ActionClassifierSet(lastState, lastMatchSet, calculatedAction);
@@ -68,16 +66,16 @@ public class Multistep_LCS_Agent extends Base_LCS_Agent {
                 collectReward(reward, best_value, 1.0, is_event);
                 break;
             case Configuration.REWARD_SIMPLE:
-                collectReward(reward, best_value, classifierSet.checkDegreeOfRelationship(((Multistep_LCS_Agent)other_agent).classifierSet), is_event);
+                collectReward(reward, best_value, classifierSet.checkDegreeOfRelationship(((Multistep_LCS_Agent2)other_agent).classifierSet), is_event);
                 break;
             case Configuration.REWARD_COMPLEX:
-                //collectReward(reward, best_value, classifierSet.checkComplexDegreeOfRelationship(((Multistep_LCS_Agent)other_agent).classifierSet), is_event);
+                //collectReward(reward, best_value, classifierSet.checkComplexDegreeOfRelationship(((Multistep_LCS_Agent2)other_agent).classifierSet), is_event);
                 break;
             case Configuration.REWARD_NEW:
-                collectReward(reward, best_value, classifierSet.checkDegreeOfRelationshipNew(((Multistep_LCS_Agent)other_agent).classifierSet), is_event);
+                collectReward(reward, best_value, classifierSet.checkDegreeOfRelationshipNew(((Multistep_LCS_Agent2)other_agent).classifierSet), is_event);
                 break;
             case Configuration.REWARD_EGOISM:
-                collectReward(reward, best_value, classifierSet.checkEgoisticDegreeOfRelationship(((Multistep_LCS_Agent)other_agent).classifierSet), is_event);
+                collectReward(reward, best_value, classifierSet.checkEgoisticDegreeOfRelationship(((Multistep_LCS_Agent2)other_agent).classifierSet), is_event);
                 break;
         }
 
@@ -118,7 +116,7 @@ public class Multistep_LCS_Agent extends Base_LCS_Agent {
     @Override
     public void calculateReward(final long gaTimestep) throws Exception {
         boolean reward = checkRewardPoints();
-        if((reward != lastReward) && Configuration.getExplorationMode() == Configuration.SWITCH_EXPLORATION_MODE) {
+        if(reward && Configuration.getExplorationMode() == Configuration.SWITCH_EXPLORATION_MODE) {
             // new problem!
             lastExplore = !lastExplore;
         }
@@ -126,21 +124,21 @@ public class Multistep_LCS_Agent extends Base_LCS_Agent {
         if(prevActionSet!=null){
             collectReward(lastReward, lastMatchSet.getBestValue(), 1.0, false);
             prevActionSet.evolutionaryAlgorithm(classifierSet, gaTimestep);
-            //grid.contactOtherAgents(this, 0, 0, lastReward, false);
+            grid.contactOtherAgents(this, 0, 0, lastReward, false);
         }
 
         // Ziel erreicht?
         if(reward) {
             collectReward(reward, 0.0, 1.0, true);
             lastActionSet.evolutionaryAlgorithm(classifierSet, gaTimestep);
-            prevActionSet = null;
-            //grid.contactOtherAgents(this, 0, 0, reward, true);
+            grid.contactOtherAgents(this, 0, 0, reward, true);
+            lastReward = false;
             return;
         }
         prevActionSet = lastActionSet;
         lastReward = reward;
         
-        //tryToExchangeRuleWithNeighbor();
+        tryToExchangeRuleWithNeighbor();
     }
 
 

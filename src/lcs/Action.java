@@ -14,12 +14,10 @@ public class Action {
    
     public static final int ACTION_SIZE = 1;
     public static final int MAX_DIRECTIONS = 4;
-    public static final int MAX_ACTIONS = 5;
     public static final int NORTH = 0;
     public static final int EAST = 1;
     public static final int SOUTH = 2;
     public static final int WEST = 3;
-    public static final int NO_DIRECTION = 4;
     
     // special, only for goal agents and special random agents
     public static final int DO_JUMP = -1;
@@ -45,16 +43,6 @@ public class Action {
         this.action = action;
     }
 
-    /**
-     * @param rotation Amount of rotation
-     * @return The rotated version of the action
-     */
-    public final int getRotated(final int rotation) {
-        if(action == NO_DIRECTION) {
-            return NO_DIRECTION;
-        }
-        return ((action + rotation) % MAX_DIRECTIONS);
-    }
 
     public int getDirection() {
         return action;

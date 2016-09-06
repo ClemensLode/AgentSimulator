@@ -65,6 +65,10 @@ public class Field {
         reward_for.clear();
     }
 
+    public int rewardedByCount() {
+        return reward_for.size();
+    }
+
 
     public boolean isSeen() {
         return !seen_by.isEmpty();

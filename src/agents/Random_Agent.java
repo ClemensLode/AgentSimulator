@@ -46,35 +46,31 @@ public class Random_Agent extends BaseAgent {
      */
     @Override
     public void calculateNextMove(final long gaTimestep) throws Exception {
-        checkRewardPoints();
-
-        if(is_goal_agent && BaseAgent.grid.getAvailableDirections(getPosition()).isEmpty()) {
-            calculatedAction = Action.DO_JUMP;
-            return;
-        }
-
         if(movementType == Configuration.TOTAL_RANDOM_MOVEMENT) {
             calculatedAction = Action.DO_JUMP;
             return;
         }
+
+        if(is_goal_agent && BaseAgent.grid.getAvailableDirections(getPosition()).isEmpty()) {
+            calculatedAction = Action.DO_JUMP;
+            System.out.println("DO_JUMP called");
+            return;
+        }
         
-        ArrayList<Integer> available_actions = BaseAgent.grid.getAvailableDirections2(getPosition());
+        ArrayList<Integer> available_actions = BaseAgent.grid.getAvailableDirections(getPosition());
         if(!available_actions.isEmpty()) {
             switch(movementType) {
                 case Configuration.RANDOM_MOVEMENT:
-                    available_actions.add(new Integer(Action.NO_DIRECTION));
                     break;
                 case Configuration.RANDOM_DIRECTION_CHANGE:
-                    if(lastDirection != Action.NO_DIRECTION) {
                         Integer opposing_dir = (lastDirection + (Action.MAX_DIRECTIONS / 2)) % Action.MAX_DIRECTIONS;
                         available_actions.remove(opposing_dir);
-                    }
                     break;
                 case Configuration.INTELLIGENT_MOVEMENT_OPEN:
                     BaseAgent.grid.maybeRemoveAgentDirections(this, available_actions, 1.5);
                     BaseAgent.grid.maybeRemoveObstacleDirections(this, available_actions, 0.2);
                     if(available_actions.isEmpty()) {
-                        available_actions = BaseAgent.grid.getAvailableDirections2(getPosition());
+                        available_actions = BaseAgent.grid.getAvailableDirections(getPosition());
                     }
                     
                     // move away from agents
@@ -84,17 +80,15 @@ public class Random_Agent extends BaseAgent {
                     BaseAgent.grid.maybeRemoveAgentDirections(this, available_actions, 1.5);
                     BaseAgent.grid.maybeRemoveOpenDirections(this, available_actions, 0.2);
                     if(available_actions.isEmpty()) {
-                        available_actions = BaseAgent.grid.getAvailableDirections2(getPosition());
+                        available_actions = BaseAgent.grid.getAvailableDirections(getPosition());
                     }
                     // move away from agents
                     // tend to move to walls
                     break;
                 case Configuration.ALWAYS_SAME_DIRECTION:
-                    if(lastDirection != Action.NO_DIRECTION) {
                         BaseAgent.grid.removeExceptThisDirection(lastDirection, available_actions);
                         if(available_actions.isEmpty()) {
-                            available_actions = BaseAgent.grid.getAvailableDirections(getPosition());
-                            BaseAgent.grid.removeExceptSideDirections(lastDirection, available_actions);
+                            available_actions = BaseAgent.grid.getSideDirections(lastDirection);
                             timeout++;
                         }
                         if(available_actions.isEmpty() || timeout > Configuration.getMaxX()) {
@@ -102,12 +96,17 @@ public class Random_Agent extends BaseAgent {
                             calculatedAction = Action.DO_JUMP;
                             return;
                         }
+                    break;
+                case Configuration.RANDOM_HIDE:
+                    BaseAgent.grid.maybeRemoveOpenDirections(this, available_actions, 0.5);
+                    if(available_actions.isEmpty()) {
+                        available_actions = BaseAgent.grid.getAvailableDirections(getPosition());
                     }
+                    // tend to move to walls
                     break;
             }
         }
 
-        calculatedAction = Action.NO_DIRECTION;
         if(!available_actions.isEmpty()) {
             calculatedAction = available_actions.get(Misc.nextInt(available_actions.size()));
         }

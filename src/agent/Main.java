@@ -37,6 +37,7 @@ public class Main {
             System.out.println("Running test with configuration " + args[i] + "...");
             Misc.initPlotFile();
         // number of experiments with the same configuration
+            long time = System.currentTimeMillis();
             for (int experiment_nr = 1; experiment_nr <= Configuration.getNumberOfExperiments(); experiment_nr++) {
                 Log.initialize(false);
             
@@ -47,9 +48,9 @@ public class Main {
                 try {
                 // Reset population before each experiment
                     LCS_Engine engine = new LCS_Engine(experiment_nr);
-                    System.out.println("initialized");
+//                    System.out.println("initialized");
                     engine.doOneMultiStepExperiment(experiment_nr);
-                    System.out.println("done");
+//                    System.out.println("done");
                 } catch (Exception e) {
                     e.printStackTrace();
                     Log.errorLog("Error initializing agents: ", e);
@@ -59,6 +60,7 @@ public class Main {
                 Misc.nextExperiment();
                 Statistics.nextExperiment();
             }
+            System.out.println((System.currentTimeMillis() - time) + "ms");
             Statistics.printAverageStatistics();     
             Misc.appendPlotFile();
             Misc.resetExperimentCounter();

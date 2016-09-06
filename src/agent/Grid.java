@@ -309,7 +309,7 @@ public class Grid extends BaseGrid {
     public void maybeRemoveAgentDirections(final BaseAgent a, ArrayList<Integer> available_directions, double probability) {
         boolean[] direction_agent_in_sight_list = getDirectionAgentInSightList(a.getPosition(), a.getID());
         for (int i = 0; i < Action.MAX_DIRECTIONS; i++) {
-            if (Misc.nextDouble() < probability && direction_agent_in_sight_list[i]) {
+            if (Misc.nextDouble() < probability && direction_agent_in_sight_list[2*i]) {
                 available_directions.remove(new Integer(i));
             }
         }
@@ -318,7 +318,7 @@ public class Grid extends BaseGrid {
     public void maybeRemoveObstacleDirections(final BaseAgent a, ArrayList<Integer> available_directions, double probability) {
         boolean[] direction_obstacle_in_sight_list = getDirectionObstacleInSightList(a.getPosition(), a.getID());
         for (int i = 0; i < Action.MAX_DIRECTIONS; i++) {
-            if (Misc.nextDouble() < probability && direction_obstacle_in_sight_list[i]) {
+            if (Misc.nextDouble() < probability && direction_obstacle_in_sight_list[2*i]) {
                 available_directions.remove(new Integer(i));
             }
         }
@@ -327,7 +327,7 @@ public class Grid extends BaseGrid {
     public void maybeRemoveOpenDirections(final BaseAgent a, ArrayList<Integer> available_directions, double probability) {
         boolean[] direction_obstacle_in_sight_list = getDirectionObstacleInSightList(a.getPosition(), a.getID());
         for (int i = 0; i < Action.MAX_DIRECTIONS; i++) {
-            if (Misc.nextDouble() < probability && !direction_obstacle_in_sight_list[i]) {
+            if (Misc.nextDouble() < probability && !direction_obstacle_in_sight_list[2*i]) {
                 available_directions.remove(new Integer(i));
             }
         }
@@ -363,7 +363,10 @@ public class Grid extends BaseGrid {
         if (a.isGoalAgent()) {
             return false;
         }
-        return grid[a.getX()][a.getY()].isRewardFor(Field.GOAL_AGENT_ID);
+        //return grid[a.getX()][a.getY()].isRewardFor(Field.GOAL_AGENT_ID);// && grid[BaseAgent.goalAgent.getX()][BaseAgent.goalAgent.getY()].
+        
+        
+        return grid[BaseAgent.goalAgent.getX()][BaseAgent.goalAgent.getY()].isRewardFor(a.getID());
     }
 
     /**
@@ -397,16 +400,27 @@ public class Grid extends BaseGrid {
      * @return the direction if position2 is in sight range of position1,
      * -1 otherwise
      */
-    private int getGoalAgentDirectionSightRange(final Point position, final int self_id) {
-        if (self_id == Field.GOAL_AGENT_ID) {
-            return -1;
+    private boolean[] getDirectionGoalInSightList(final Point position, final int self_id) {
+        boolean[] goal_in_sight = new boolean[2*Action.MAX_DIRECTIONS];
+        for (int i = 0; i < goal_in_sight.length; i++) {
+            goal_in_sight[i] = false;
         }
-        Point goal_position = BaseAgent.goalAgent.getPosition();
-        if (!grid[goal_position.x][goal_position.y].isSeenBy(self_id)) {
-            return -1;
+// TODO
+        if (self_id == Field.GOAL_AGENT_ID) {
+            return goal_in_sight;
         }
 
-        return Geometry.getDirection(position, goal_position);
+        Point goal_position = BaseAgent.goalAgent.getPosition();
+        if (grid[goal_position.x][goal_position.y].isSeenBy(self_id)) {
+            int direction_index = 2*Geometry.getDirection(position, goal_position);
+            goal_in_sight[direction_index] = true;
+
+            if (grid[goal_position.x][goal_position.y].isRewardFor(self_id)) {
+                goal_in_sight[direction_index+1] = true;
+            }
+        }
+
+        return goal_in_sight;
     }
 
     /**
@@ -416,19 +430,27 @@ public class Grid extends BaseGrid {
      * @return An array of minimal distances to other agents
      */
     private boolean[] getDirectionAgentInSightList(final Point position, final int self_id) {
-        boolean[] absolute_direction_agent_in_sight = new boolean[Action.MAX_DIRECTIONS];
-        for (int i = 0; i < Action.MAX_DIRECTIONS; i++) {
-            absolute_direction_agent_in_sight[i] = false;
+        boolean[] agent_in_sight = new boolean[2*Action.MAX_DIRECTIONS];
+        for (int i = 0; i < agent_in_sight.length; i++) {
+            agent_in_sight[i] = false;
         }
 
         for (BaseAgent a : agentList) {
-
-            if (a.getID() == self_id || a.isGoalAgent() || !grid[a.getX()][a.getY()].isSeenBy(self_id)) {
+            if (a.getID() == self_id || a.isGoalAgent()) {
                 continue;
             }
-            absolute_direction_agent_in_sight[Geometry.getDirection(position, a.getPosition())] = true;
+            Point agent_position = a.getPosition();
+
+            if (grid[agent_position.x][agent_position.y].isSeenBy(self_id)) {
+                int direction_index = 2*Geometry.getDirection(position, agent_position);
+                agent_in_sight[direction_index] = true;
+
+                if (grid[agent_position.x][agent_position.y].isRewardFor(self_id)) {
+                    agent_in_sight[direction_index+1] = true;
+                }
+            }
         }
-        return absolute_direction_agent_in_sight;
+        return agent_in_sight;
     }
 
     /**
@@ -437,20 +459,22 @@ public class Grid extends BaseGrid {
      * @return An array of minimal distances to obstacles
      */
     private boolean[] getDirectionObstacleInSightList(final Point position, final int self_id) {
-        boolean[] absolute_direction_obstacle_in_sight = new boolean[Action.MAX_DIRECTIONS];
-        for (int i = 0; i < Action.MAX_DIRECTIONS; i++) {
-            absolute_direction_obstacle_in_sight[i] = false;
+        boolean[] obstacle_in_sight = new boolean[2*Action.MAX_DIRECTIONS];
+        for (int i = 0; i < obstacle_in_sight.length; i++) {
+            obstacle_in_sight[i] = false;
         }
 
-        for (Point p : obstacleList) {
+        for (Point obstacle_position : obstacleList) {
+            if (grid[obstacle_position.x][obstacle_position.y].isSeenBy(self_id)) {
+                int direction_index = 2*Geometry.getDirection(position, obstacle_position);
+                obstacle_in_sight[direction_index] = true;
 
-            if (!grid[p.x][p.y].isSeenBy(self_id)) {
-                continue;
+                if (grid[obstacle_position.x][obstacle_position.y].isRewardFor(self_id)) {
+                    obstacle_in_sight[direction_index+1] = true;
+                }
             }
-            absolute_direction_obstacle_in_sight[Geometry.getDirection(position, p)] = true;
         }
-
-        return absolute_direction_obstacle_in_sight;
+        return obstacle_in_sight;
     }
 
     /**
@@ -463,7 +487,7 @@ public class Grid extends BaseGrid {
      * @see Sensors#Sensors
      */
     public Sensors getAbsoluteSensorInformation(final Point position, final int self_id) {
-        return new Sensors(getGoalAgentDirectionSightRange(position, self_id),
+        return new Sensors(getDirectionGoalInSightList(position, self_id),
                 getDirectionAgentInSightList(position, self_id),
                 getDirectionObstacleInSightList(position, self_id));
     }
@@ -476,7 +500,7 @@ public class Grid extends BaseGrid {
         agentList.add(a);
     }
 
-    public void updateStatistics(long currentTimestep, ClassifierSet c_set) {
+    public void updateStatistics(long currentTimestep, ClassifierSet c_set) throws Exception {
         /**
          * Check if any agent sees the goal agent
          */
@@ -492,9 +516,11 @@ public class Grid extends BaseGrid {
                 getSpreadAgentDistance(average_agent_distance),
                 average_goal_distance,
                 getSpreadGoalAgentDistance(average_goal_distance),
-                getCoveredAreaFactor(),
+                getCoveredAreaFactor()*100.0,
+                getWastedCoverage(),
                 average_points,
-                getSpreadIndividualTotalPoints(average_points));
+                getSpreadIndividualTotalPoints(average_points),
+                getAveragePredictionError());
 
     }
 
@@ -586,6 +612,24 @@ public class Grid extends BaseGrid {
         return 0.0;
     }
 
+    private double getWastedCoverage() {
+
+        int max_x = Configuration.getMaxX();
+        int max_y = Configuration.getMaxY();
+        int count = 0;
+        int n = 0;
+        for (int x = 0; x < max_x; x++) {
+            for (int y = 0; y < max_y; y++) {
+                int t = grid[x][y].rewardedByCount();
+                count += t;
+                if(t > 0) {
+                    n++;
+                }
+            }
+        }
+        return (double)(count - n) / (max_x * max_y);
+    }
+
     private double getCoveredAreaFactor() {
 
         int max_x = Configuration.getMaxX();
@@ -640,6 +684,22 @@ public class Grid extends BaseGrid {
         spread_individual_total_points /= (double) count;
         return Math.sqrt(spread_individual_total_points);
     }
+
+    public double getAveragePredictionError() {
+        int count = 0;
+        double average_prediction_error = 0.0;
+        for (BaseAgent a : agentList) {
+            if (a.isGoalAgent()) {
+                continue;
+            }
+            average_prediction_error += a.getLastPredictionError();
+            count++;
+        }
+        average_prediction_error /= (double) count;
+
+        return average_prediction_error;
+    }
+
 
     private void fillMaze() {
         {
@@ -753,10 +813,10 @@ public class Grid extends BaseGrid {
     public void printAgents() {
         for (BaseAgent a : agentList) {
             a.printHeader();
-            a.printMove();
-            a.printActionSet();
             a.printMatching();
-            a.printProjectedReward();
+            a.printActionSet();
+            a.printMove();
+            //a.printProjectedReward();
         }
     }
 }

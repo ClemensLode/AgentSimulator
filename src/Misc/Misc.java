@@ -90,7 +90,8 @@ public class Misc {
     }
 
     public static double round(final double d, final double increment) {
-        return ((int) ((d + 0.5 * increment) / increment) * increment);
+        return Math.rint(d / increment) * increment;
+        //return ((int) ((d + 0.5 * increment) / increment) * increment);
     }
 
     /**

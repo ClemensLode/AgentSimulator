@@ -59,11 +59,7 @@ public class BaseGrid {
             return randomJumpAgent(a);
         }
 
-        if(action == Action.NO_DIRECTION) {
-            return true;
-        }
-
-        if(action < 0 || action >= Action.MAX_ACTIONS) {
+        if(action < 0 || action >= Action.MAX_DIRECTIONS) {
             throw new Exception("Grid.moveAgent(): Action " + action + " of Agent at " + a.getX() + "/" + a.getY() + " out of range.");
         }
 
@@ -158,11 +154,10 @@ public class BaseGrid {
      * @throws java.lang.Exception
      */
     protected boolean[] getInvalidActions(final Point position) throws Exception {
-        boolean[] invalid_actions = new boolean[Action.MAX_ACTIONS];
+        boolean[] invalid_actions = new boolean[Action.MAX_DIRECTIONS];
         for(int i = 0; i < Action.MAX_DIRECTIONS; i++) {
             invalid_actions[i] = isDirectionInvalid(position, i);
         }
-        invalid_actions[Action.NO_DIRECTION] = false;
         return invalid_actions;
     }
 
@@ -170,7 +165,7 @@ public class BaseGrid {
      * @param p The position of the agent in question
      * @return An array of directions in which the agent can move
      */
-    public ArrayList<Integer> getAvailableDirections(final Point p) {
+    /*public ArrayList<Integer> getAvailableDirections(final Point p) {
         ArrayList<Integer> list = new ArrayList<Integer>(Action.MAX_DIRECTIONS);
         for(int i = 0; i < Action.MAX_DIRECTIONS; i++) {
             if(!isDirectionInvalid(p, i)) {
@@ -178,14 +173,14 @@ public class BaseGrid {
             }
         }
         return list;
-    }
+    }*/
 
     /**
      * @param p The position of the agent in question
      * @return An array of directions in which the agent can move
      */
     // TODO
-    public ArrayList<Integer> getAvailableDirections2(final Point p) {
+    public ArrayList<Integer> getAvailableDirections(final Point p) {
         ArrayList<Integer> list = new ArrayList<Integer>(Action.MAX_DIRECTIONS);
         for(int i = 0; i < Action.MAX_DIRECTIONS; i++) {
 //            if(!isDirectionInvalid(position(), i)) {
@@ -205,23 +200,15 @@ public class BaseGrid {
         }
     }
 
-    public void removeExceptSideDirections(int direction, ArrayList<Integer> available_directions) {
-        if(available_directions.contains(new Integer((direction+1)%Action.MAX_DIRECTIONS)) &&
-        available_directions.contains(new Integer((direction+Action.MAX_DIRECTIONS-1)%Action.MAX_DIRECTIONS))) {
-            available_directions.clear();
-            available_directions.add(new Integer((direction+1)%Action.MAX_DIRECTIONS));
-            available_directions.add(new Integer((direction+Action.MAX_DIRECTIONS-1)%Action.MAX_DIRECTIONS));
-        } else
-        if(available_directions.contains(new Integer((direction+1)%Action.MAX_DIRECTIONS))) {
-            available_directions.clear();
-            available_directions.add(new Integer((direction+1)%Action.MAX_DIRECTIONS));
-        } else
-        if(available_directions.contains(new Integer((direction+Action.MAX_DIRECTIONS-1)%Action.MAX_DIRECTIONS))) {
-            available_directions.clear();
-            available_directions.add(new Integer((direction+Action.MAX_DIRECTIONS-1)%Action.MAX_DIRECTIONS));
-        } else {
-            available_directions.clear();
+    public ArrayList<Integer> getSideDirections(int direction) {
+        ArrayList<Integer> list = new ArrayList<Integer>(Action.MAX_DIRECTIONS);
+        switch(direction) {
+            case 0:list.add(3);list.add(1);break;
+            case 1:list.add(0);list.add(2);break;
+            case 2:list.add(1);list.add(3);break;
+            case 3:list.add(0);list.add(2);break;
         }
+        return list;
     }
 
 
@@ -249,7 +236,12 @@ public class BaseGrid {
      * @return true if the jump was succesful
      */
     protected boolean randomJumpAgent(BaseAgent a) {
-        Point p = new Point(Misc.nextInt(Configuration.getMaxX()), Misc.nextInt(Configuration.getMaxY()));
+        Point p;
+        if(Configuration.getGoalAgentMovementType() == Configuration.TOTAL_RANDOM_MOVEMENT) {
+            p = new Point(Misc.nextInt(Configuration.getMaxX()), Misc.nextInt(Configuration.getMaxY()));
+        } else {
+            p = getFreeFieldNear(a.getPosition());
+        }
         return putAgentTo(a, p);
     }
 
@@ -258,11 +250,13 @@ public class BaseGrid {
      * @return A random empty neighbor of the bas epoint, null if all neighbors are occupied
      */
     protected Point getFreeFieldNear(Point p) {
-        for(int i = 0; i < 9; i++) {
-            int x = Geometry.correctX[128 + Misc.nextInt(3) - 1 + p.x];
-            int y = Geometry.correctY[128 + Misc.nextInt(3) - 1 + p.y];
-            if(!grid[x][y].isOccupied()) {
-                return new Point(x, y);
+        for(int j = 3; j < Configuration.getHalfMaxX();j++) {
+            for(int i = 0; i < 9; i++) {
+                int x = Geometry.correctX[128 + Misc.nextInt(1+2*j) - j + p.x];
+                int y = Geometry.correctY[128 + Misc.nextInt(1+2*j) - j + p.y];
+                if(!grid[x][y].isOccupied()) {
+                    return new Point(x, y);
+                }
             }
         }
         return null;

@@ -1,7 +1,8 @@
 package lcs;
 
-import agent.*;
-import Misc.*;
+import agent.Sensors;
+import agent.Configuration;
+import Misc.Misc;
 import java.util.ArrayList;
 
 /**
@@ -35,13 +36,12 @@ public class ActionClassifierSet extends ClassifierSet {
      * @param action Action that was taken in that state
      * @see Classifier#addParent
      */
-    public ActionClassifierSet(final Sensors current_state, final AppliedClassifierSet current_match_set, final int action) {
+    public ActionClassifierSet(final Sensors current_state, final AppliedClassifierSet current_match_set, final int action) throws Exception {
         super(10);
-        for (AppliedClassifier c : current_match_set.getClassifiers()) {
-            if (c.getAbsoluteDirection() == action) {
-                Classifier new_classifier = c.getOriginalClassifier();
-                getClassifiers().add(new_classifier);
-                new_classifier.addParent(this);
+        for (Classifier c : current_match_set.getClassifiers()) {
+            if (c.getDirection() == action) {
+                getClassifiers().add(c);
+                c.addParent(this);
             }
         }
 
@@ -79,7 +79,7 @@ public class ActionClassifierSet extends ClassifierSet {
          * don't add classifier to this classifier set (which is an action set)
          * but to the actual population (classifier_set)
          * */
-        main_classifier_set.crossOverClassifiers(cl1P, cl2P, state, action);
+        main_classifier_set.crossOverClassifiers(cl1P, cl2P, state);
     }
 
 
@@ -99,14 +99,14 @@ public class ActionClassifierSet extends ClassifierSet {
     /**
      * @return The average of the time stamps in the set.
      */
-    private double getTimeStampAverage() {
+    private double getTimeStampAverage() throws Exception {
         return getTimeStampSum() / getNumerositySum();
     }
 
     /**
      * @return The sum of the time stamps of all classifiers in the set.
      */
-    private double getTimeStampSum() {
+    private double getTimeStampSum() throws Exception {
         double sum = 0.;
         for (Classifier c : getClassifiers()) {
             sum += c.getGaTimestamp() * c.getNumerosity();
@@ -136,9 +136,15 @@ public class ActionClassifierSet extends ClassifierSet {
         double accuracy_sum = 0.;
         for (Classifier c : getClassifiers()) {
             accuracies[i] = c.getAccuracy();
+            if(Double.isNaN(accuracies[i])) {
+                throw new Exception("" + Configuration.getAlpha() + " * pow(" + c.getPredictionError() + " / " + Configuration.getEpsilon0() + " , " + (-Configuration.getNu()));
+            }
             accuracy_sum += accuracies[i] * c.getNumerosity();
         }
-        double P = reward + Configuration.getGamma() * max_prediction;
+        double P = (reward + Configuration.getGamma() * max_prediction);
+        if(Double.isNaN(P)) {
+            throw new Exception("" + reward + " + " + max_prediction);
+        }
 
         for (Classifier c : getClassifiers()) {
             c.increaseExperience(factor);

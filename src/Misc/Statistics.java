@@ -65,20 +65,24 @@ public class Statistics {
             double average_goal_agent_distance,
             double spread_goal_agent_distance,
             double covered_area_factor,
+            double wasted_coverage,
             double average_individual_points,
-            double spread_individual_total_points) {
+            double spread_individual_total_points,
+            double average_prediction_error) throws Exception {
 
         Stat t = new Stat(
                 current_time_step,
                 c_set,
-                in_sight?1:0,
+                in_sight? 1 : 0,
                 average_agent_distance,
                 spread_agent_distance,
                 average_goal_agent_distance,
                 spread_goal_agent_distance,
                 covered_area_factor,
+                wasted_coverage,
                 average_individual_points,
-                spread_individual_total_points);
+                spread_individual_total_points,
+                average_prediction_error);
         stats.add(t);
         // first experiment?
         if(average_stats.size() < stats.size()) {
@@ -168,7 +172,7 @@ public class Statistics {
         Log.newCustomLog(Misc.getBaseFileName("goal_percentage"));
         counter = 0;
         for(Stat s : average_stats) {
-            Log.customLog("" + counter + " " + s.getGoalAgentObserved() + "\n");
+            Log.customLog("" + counter + " " + s.getGoalAgentObserved()*100.0 + "\n");
             counter++;
         }
         Log.closeCustomLog();
@@ -180,8 +184,9 @@ public class Statistics {
         {
             String entry = new String("");
             for(int i = 0; i < Configuration.getNumberOfProblems(); i++) {
-                ClassifierSet t = average_stats.get(i * Configuration.getNumberOfSteps()).getBestLCS();
+                ClassifierSet t = average_stats.get(i * Configuration.getNumberOfSteps() + Configuration.getNumberOfSteps() - 1).getBestLCS();
                 if(t != null) {
+                    entry += "Best after " + (i * Configuration.getNumberOfSteps() + Configuration.getNumberOfSteps() - 1) + " steps\n\n";
                     entry += t.toString() + "\n\n\n";
                 }
             }
@@ -206,8 +211,10 @@ public class Statistics {
         entry += average_average_stat.getSpreadGoalAgentDistance() + "\n";
         entry += average_average_stat.getAverageAgentDistance() + "\n";
         entry += average_average_stat.getAverageGoalAgentDistance() + "\n";
+        entry += average_average_stat.getAveragePredictionError() + "\n";
         entry += average_average_stat.getCoveredAreaFactor() + "\n";
-        entry += average_average_stat.getGoalAgentObserved() + "\n";
+        entry += average_average_stat.getWastedCoverage() + "\n";
+        entry += average_average_stat.getGoalAgentObserved()*100.0 + "\n";
         Log.customLog(entry);
         Log.closeCustomLog();
 
@@ -229,15 +236,61 @@ public class Statistics {
         entry += average_average_stat.getSpreadGoalAgentDistance() + "\n";
         entry += average_average_stat.getAverageAgentDistance() + "\n";
         entry += average_average_stat.getAverageGoalAgentDistance() + "\n";
+        entry += average_average_stat.getAveragePredictionError() + "\n";
         entry += average_average_stat.getCoveredAreaFactor() + "\n";
-        entry += average_average_stat.getGoalAgentObserved() + "\n";
+        entry += average_average_stat.getWastedCoverage()*100.0 + "\n";
+        entry += average_average_stat.getGoalAgentObserved()*100.0 + "\n";
         Log.customLog(entry);
         Log.closeCustomLog();
+
+
+        entry = new String("");
+        ArrayList<Double> entry_list = new ArrayList<Double>();
+        double last = 0.0;
+        for(int i = 0; i < average_stats.size(); i++) {
+            average_average_stat = new Stat();
+            int max = Configuration.getNumberOfSteps() - 1 > i ? i : Configuration.getNumberOfSteps() - 1;
+            for(int j = 0; j < 1 + max; j++) {
+                average_average_stat.add(average_stats.get(i - j));
+            }
+            average_average_stat.divide(max+1);
+            double new_entry = average_average_stat.getGoalAgentObserved();
+//            if(last < new_entry) {
+                last = new_entry;
+//            }
+            entry_list.add(last);
+        }
+
+        Log.newCustomLog(Misc.getBaseFileName("100_goal_agent_observed"));
+        
+        /*entry += average_average_stat.getSpreadIndividualTotalPoints() + "\n";
+        entry += average_average_stat.getAverageIndividualTotalPoints() + "\n";
+        entry += average_average_stat.getSpreadAgentDistance() + "\n";
+        entry += average_average_stat.getSpreadGoalAgentDistance() + "\n";
+        entry += average_average_stat.getAverageAgentDistance() + "\n";
+        entry += average_average_stat.getAverageGoalAgentDistance() + "\n";
+        entry += average_average_stat.getCoveredAreaFactor() + "\n";*/
+//        for(int i = 0; i < average_average_stat_list.size(); i++) {
+//            entry += "" + i + " " + average_average_stat.getGoalAgentObserved() + "\n";
+//        }
+        int count = 0;
+        for(double d : entry_list) {
+            Log.customLog("" + count + " " + d + "\n");
+            count++;
+        }
+        Log.closeCustomLog();
+
+
+
+        average_stats.clear();
+
         } catch(Exception e) {
             Log.errorLog("Error printing statistics", e);
         }
 
+
         average_stats.clear();
+
 
         experiment_count = 0;        
         System.out.println("done printing stats.");

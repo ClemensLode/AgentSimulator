@@ -114,6 +114,11 @@ public class Configuration {
     public final static int DIFFICULT_SCENARIO = 6;
 
     /**
+     * start with maxPopSize random classifiers or with the empty set?
+     */
+    private static boolean randomStart = true;
+
+    /**
      * use evolutionary algorithm on the action sets
      */
     private static boolean doEvolutionaryAlgorithm = true;
@@ -299,11 +304,17 @@ public class Configuration {
      * Random goal agent movement, direction changes by max 1
      */
     public static final int RANDOM_DIRECTION_CHANGE = 4;
+    
+    /**
+     * Random agent that prefers obstacles
+     */
+    public static final int RANDOM_HIDE = 5;
     /**
      * Goal agent movement always in the same direction as last movement
      */
-    public static final int ALWAYS_SAME_DIRECTION = 5;
-    public static final int LCS_MOVEMENT = 6;
+    public static final int ALWAYS_SAME_DIRECTION = 6;
+
+    public static final int LCS_MOVEMENT = 7;
 
     /**
      * Number of times the goal agent executes its movement type
@@ -434,6 +445,7 @@ public class Configuration {
                 maxStackSize = Integer.valueOf(p.readLine());
 
                 coveringWildcardProbability = Double.valueOf(p.readLine());
+                randomStart = Boolean.valueOf(p.readLine());
                 doEvolutionaryAlgorithm = Boolean.valueOf(p.readLine());
 
                 thetaSubsumer = Double.valueOf(p.readLine());
@@ -530,6 +542,8 @@ public class Configuration {
         Log.log(maxStackSize);
         Log.log("# covering wildcard probability");
         Log.log(coveringWildcardProbability);
+        Log.log("# random start");
+        Log.log(randomStart);
         Log.log("# do evolutionary algorithm");
         Log.log(doEvolutionaryAlgorithm);
         Log.log("# theta subsumer");
@@ -869,5 +883,12 @@ public class Configuration {
      */
     public static boolean isUseQuadraticReward() {
         return useQuadraticReward;
+    }
+
+    /**
+     * @return the randomStart
+     */
+    public static boolean isRandomStart() {
+        return randomStart;
     }
 }

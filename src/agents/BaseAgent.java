@@ -12,6 +12,7 @@ import agent.Grid;
 import Misc.Log;
 import Misc.Point;
 import java.text.NumberFormat;
+import lcs.Action;
 
 public abstract class BaseAgent {
 
@@ -121,10 +122,19 @@ public abstract class BaseAgent {
      * @return true if the goal agent currently is in sight
      */
     public boolean checkRewardPoints() {
-        boolean reward = grid.isGoalAgentInRewardRange(this);
+        boolean[] sensor_agent = lastState.getSensorAgent();
+        boolean[] sensor_goal = lastState.getSensorGoal();
+        boolean reward = false;
+        for(int i = 0; i < Action.MAX_DIRECTIONS; i++) {
+            if((sensor_goal[2*i]) && (!sensor_agent[2*i+1])) {
+                reward = true;
+            }
+        }
+
+        //boolean reward = grid.isGoalAgentInRewardRange(this);
 
         // goal agent is in sight?
-        if (reward) {
+        if (grid.isGoalAgentInRewardRange(this)) {
             totalPoints = totalPoints + 1.0;
         }
 
@@ -149,6 +159,10 @@ public abstract class BaseAgent {
      */
     public double getTotalPoints() {
         return totalPoints;
+    }
+
+    public double getLastPredictionError() {
+        return 0.0;
     }
 
     /**
@@ -223,7 +237,9 @@ public abstract class BaseAgent {
         String sb = "ID " + (nf.format((long) getID()));
         Log.log(sb);
         Log.log("# input");
-        Log.log(lastState.getInputString());
+        if(lastState != null) {
+            Log.log(lastState.getInputString());
+        }
     }
 
     public void printMove() {

@@ -22,25 +22,31 @@ public class Good_AI_Agent extends BaseAgent {
          * agent and goal agent in the same direction => move randomly away from agents
          * goal agent not
          */
-        
-        calculatedAction = lastState.getSensorGoalAgentDirection();
-        boolean[] agent_sensors = lastState.getSensorAgent();
-        
-        boolean one_free = false;
-        for(boolean b : agent_sensors) {
-            if(!b) {
-                one_free = true;
+        boolean[] goal_sensor = lastState.getSensorGoal();
+        calculatedAction = -1;
+        for(int i = 0; i < Action.MAX_DIRECTIONS; i++) {
+            if(goal_sensor[2*i]) {
+                calculatedAction = i;
                 break;
-            } 
+            }
         }
 
-        // no goal agent in sight
-        if(calculatedAction == -1 || agent_sensors[calculatedAction]) {
+        if(calculatedAction == -1) {
             calculatedAction = Misc.nextInt(Action.MAX_DIRECTIONS);
+
+            boolean[] agent_sensors = lastState.getSensorAgent();
+            boolean one_free = false;
+            for(int i = 0; i < Action.MAX_DIRECTIONS; i++) {
+                if(!agent_sensors[2*i]) {
+                    one_free = true;
+                    break;
+                }
+            }
+
             if(one_free) {
-                while(agent_sensors[calculatedAction]) {
+                while(agent_sensors[2*calculatedAction]) {
                     calculatedAction = Misc.nextInt(Action.MAX_DIRECTIONS);
-                } 
+                }
             }
         } 
     }   
