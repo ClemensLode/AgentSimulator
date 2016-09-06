@@ -41,7 +41,7 @@ public class AppliedClassifierSet {
                 classifiers.add(new AppliedClassifier(c, i));
             }
         }
-        TODO doch Originalversion nehmen... dort aber mit richtigem Wert evtl...kA
+        //TODO doch Originalversion nehmen... dort aber mit richtigem Wert evtl...kA
         /**
          * needs to be executed because choseAbsoluteDirection is called immediately after
          * creation while 'getBestValue' will be called in a later time step

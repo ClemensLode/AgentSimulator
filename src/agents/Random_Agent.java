@@ -48,7 +48,7 @@ public class Random_Agent extends BaseAgent {
     public void calculateNextMove(final long gaTimestep) throws Exception {
         checkRewardPoints();
 
-        if(is_goal_agent && BaseAgent.grid.getAvailableDirections(this).isEmpty()) {
+        if(is_goal_agent && BaseAgent.grid.getAvailableDirections(getPosition()).isEmpty()) {
             calculatedAction = Action.DO_JUMP;
             return;
         }
@@ -58,7 +58,7 @@ public class Random_Agent extends BaseAgent {
             return;
         }
         
-        ArrayList<Integer> available_actions = BaseAgent.grid.getAvailableDirections2(this);
+        ArrayList<Integer> available_actions = BaseAgent.grid.getAvailableDirections2(getPosition());
         if(!available_actions.isEmpty()) {
             switch(movementType) {
                 case Configuration.RANDOM_MOVEMENT:
@@ -74,7 +74,7 @@ public class Random_Agent extends BaseAgent {
                     BaseAgent.grid.maybeRemoveAgentDirections(this, available_actions, 1.5);
                     BaseAgent.grid.maybeRemoveObstacleDirections(this, available_actions, 0.2);
                     if(available_actions.isEmpty()) {
-                        available_actions = BaseAgent.grid.getAvailableDirections2(this);
+                        available_actions = BaseAgent.grid.getAvailableDirections2(getPosition());
                     }
                     
                     // move away from agents
@@ -84,7 +84,7 @@ public class Random_Agent extends BaseAgent {
                     BaseAgent.grid.maybeRemoveAgentDirections(this, available_actions, 1.5);
                     BaseAgent.grid.maybeRemoveOpenDirections(this, available_actions, 0.2);
                     if(available_actions.isEmpty()) {
-                        available_actions = BaseAgent.grid.getAvailableDirections2(this);
+                        available_actions = BaseAgent.grid.getAvailableDirections2(getPosition());
                     }
                     // move away from agents
                     // tend to move to walls
@@ -93,7 +93,7 @@ public class Random_Agent extends BaseAgent {
                     if(lastDirection != Action.NO_DIRECTION) {
                         BaseAgent.grid.removeExceptThisDirection(lastDirection, available_actions);
                         if(available_actions.isEmpty()) {
-                            available_actions = BaseAgent.grid.getAvailableDirections(this);
+                            available_actions = BaseAgent.grid.getAvailableDirections(getPosition());
                             BaseAgent.grid.removeExceptSideDirections(lastDirection, available_actions);
                             timeout++;
                         }

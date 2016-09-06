@@ -1,9 +1,9 @@
 package agent;
 
 import agents.*;
+import lcs.Action;
 import Misc.Log;
 import Misc.Misc;
-import lcs.MainClassifierSet;
 import lcs.ClassifierSet;
 import java.util.ArrayList;
 
@@ -27,29 +27,31 @@ public class LCS_Engine {
     public LCS_Engine(int experiment_nr) throws Exception {
         Misc.initSeed(Configuration.getRandomSeed() + experiment_nr * Configuration.getNumberOfProblems());
         BaseAgent.grid = new Grid();
-
         BaseAgent.resetGlobalID();
+
+        final int max_classifiers = Configuration.getMaxPopSize()+Action.MAX_ACTIONS+1;
+
         if(Configuration.getGoalAgentMovementType() == Configuration.LCS_MOVEMENT) {
-            BaseAgent.goalAgent = new LCS_Goal_Agent();
+            BaseAgent.goalAgent = new LCS_Goal_Agent(max_classifiers);
         } else {
             BaseAgent.goalAgent = new Random_Agent(Configuration.getGoalAgentMovementType(), true);
         }
 
-        agentList = new ArrayList<BaseAgent>();
+        agentList = new ArrayList<BaseAgent>(Configuration.getMaxAgents());
 
         for (int i = 0; i < Configuration.getMaxAgents(); i++) {
             switch (Configuration.getAgentType()) {
                 case Configuration.RANDOMIZED_MOVEMENT_AGENT_TYPE:agentList.add(new Random_Agent(Configuration.RANDOM_MOVEMENT, false));break;
                 case Configuration.SIMPLE_AI_AGENT_TYPE:agentList.add(new AI_Agent());break;
                 case Configuration.INTELLIGENT_AI_AGENT_TYPE:agentList.add(new Good_AI_Agent());break;
-                case Configuration.NEW_LCS_AGENT_TYPE:agentList.add(new New_LCS_Agent());break;
-                case Configuration.OLD_LCS_AGENT_TYPE:agentList.add(new LCS_Agent());break;
-                case Configuration.MULTISTEP_LCS_AGENT_TYPE:agentList.add(new Multistep_LCS_Agent());break;
+                case Configuration.NEW_LCS_AGENT_TYPE:agentList.add(new New_LCS_Agent(max_classifiers));break;
+                case Configuration.OLD_LCS_AGENT_TYPE:agentList.add(new LCS_Agent(max_classifiers));break;
+                case Configuration.MULTISTEP_LCS_AGENT_TYPE:agentList.add(new Multistep_LCS_Agent(max_classifiers));break;
                 case Configuration.SINGLE_LCS_AGENT_TYPE:agentList.add(new Single_LCS_Agent());break;
             }
         }
         if(Configuration.getAgentType() == Configuration.SINGLE_LCS_AGENT_TYPE) {
-            Single_LCS_Agent.classifierSet = new MainClassifierSet();
+            Single_LCS_Agent.initSingleLCSAgent(max_classifiers);
         }
     }
 
@@ -150,9 +152,11 @@ public class LCS_Engine {
     private void calculateAgents(final long gaTimestep) throws Exception {
         BaseAgent.mark = false;
 
-        ArrayList<BaseAgent> random_list = new ArrayList<BaseAgent>();
+        int goal_speed = Configuration.getGoalAgentMovementSpeed();
+        ArrayList<BaseAgent> random_list = new ArrayList<BaseAgent>(agentList.size() + goal_speed);
+
         random_list.addAll(agentList);
-        for(int i = 0; i < Configuration.getGoalAgentMovementSpeed(); i++) {
+        for(int i = 0; i < goal_speed; i++) {
             random_list.add(BaseAgent.goalAgent);
         }
 

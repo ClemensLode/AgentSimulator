@@ -13,6 +13,10 @@ import lcs.AppliedClassifierSet;
 import java.util.LinkedList;
 
 public class New_LCS_Agent extends Base_LCS_Agent {
+
+    public New_LCS_Agent(int n) {
+        super(n);
+    }
     /**
      * Complete history of actionsets that were executed
      * Contains the history up to max stack size

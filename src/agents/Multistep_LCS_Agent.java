@@ -14,6 +14,10 @@ import lcs.AppliedClassifierSet;
 
 public class Multistep_LCS_Agent extends Base_LCS_Agent {
 
+    public Multistep_LCS_Agent(int n) {
+        super(n);
+    }
+
     private ActionClassifierSet prevActionSet = null;
 
     /**
@@ -78,11 +82,10 @@ public class Multistep_LCS_Agent extends Base_LCS_Agent {
     }
 
     /**
-     * 
-     * @param action_set
-     * @param action_set_size Numerosity of the action set size from which the action was 
      * @param reward Positive reward (goal agent in sight or not)
+     * @param best_value best value of the previous action set
      * @param factor Weight of the update
+     * @param is_event If this function was called because of an event, i.e. a positive reward
      * @throws java.lang.Exception If there was an error updating the reward
      */
     public void collectReward(boolean reward, double best_value, double factor, boolean is_event) throws Exception {
@@ -107,8 +110,8 @@ public class Multistep_LCS_Agent extends Base_LCS_Agent {
      * is called in each step, determines the current reward and checks if the
      * reward has changed. If it has changed update the classifiers in the 
      * action set appropriately
-     * @param gaTimestep
-     * @throws java.lang.Exception
+     * @param gaTimestep current time step
+     * @throws java.lang.Exception If there was an error collecting the reward, executing the evolutionary algorithm or contacting other agents
      */
     @Override
     public void calculateReward(final long gaTimestep) throws Exception {

@@ -56,7 +56,7 @@ public class Classifier {
      * list of all classifier sets that contain this classifier, important to 
      * keep track of the numerosity sum
      */
-    private ArrayList<ClassifierSet> parents = new ArrayList<ClassifierSet>();
+    private ArrayList<ClassifierSet> parents = new ArrayList<ClassifierSet>(1 + Configuration.getMaxStackSize());
 
 // nicht set_size! Ansonsten sind die ActionSetSizes der ersten Classifier 1, 2, 3, 4, 5 statt 5, 5, 5, 5, 5
     // Action set size wird seperat zugewiesen, sobald die Zahl der hinzugefügten Classifier bekannt sind
@@ -177,7 +177,7 @@ public class Classifier {
      * @see AppliedClassifierSet#AppliedClassifierSet
      */
     public ArrayList<Integer> getMatchingActions(Sensors s) {
-        ArrayList<Integer> correct_list = new ArrayList<Integer>();
+        ArrayList<Integer> correct_list = new ArrayList<Integer>(1 + Action.MAX_DIRECTIONS);
 
         if (action.getDirection() == Action.NO_DIRECTION) {
             correct_list.add(new Integer(Action.NO_DIRECTION));

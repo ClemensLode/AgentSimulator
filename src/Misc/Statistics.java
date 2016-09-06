@@ -5,7 +5,6 @@ import agent.Configuration;
 import lcs.ClassifierSet;
 
 /**
- *
  * This class logs the statistics
  * 
  * @author Clemens Lode, 1151459, University Karlsruhe (TH)
@@ -17,7 +16,9 @@ public class Statistics {
      */
     private static int experiment_count = 0;
 
-    
+    /**
+     * This class is static only, no instantiation please
+     */
     private Statistics() {
     }
 
@@ -40,8 +41,8 @@ public class Statistics {
      * - covered area / optimal coverable area
      *
      */
-    private static ArrayList<Stat> stats = new ArrayList<Stat>();
-    private static ArrayList<Stat> average_stats = new ArrayList<Stat>();
+    private static ArrayList<Stat> stats;
+    private static ArrayList<Stat> average_stats;
 
     /**
      * Add one set of data
@@ -88,10 +89,11 @@ public class Statistics {
     }
 
     /**
-     * reset for a new experiment
+     * Re-initialize after configuration change
      */
-    public static void reset() {
-        stats.clear();
+    public static void initialize() {
+        stats = new ArrayList<Stat>(1+Configuration.getTotalTimeSteps());
+        average_stats = new ArrayList<Stat>(1+Configuration.getTotalTimeSteps());
     }
 
     /**

@@ -33,6 +33,7 @@ public class Main {
             } catch(Exception e) {
                 Log.errorLog("Error initializing configuration file: ", e);
             }
+            Statistics.initialize();
             System.out.println("Running test with configuration " + args[i] + "...");
             Misc.initPlotFile();
         // number of experiments with the same configuration
@@ -40,7 +41,6 @@ public class Main {
                 Log.initialize(false);
             
                 Configuration.printConfiguration();
-                Statistics.reset();
                 Log.log("# Experiment Nr. " + experiment_nr);
                 System.out.println("Experiment Nr. " + experiment_nr);
                 

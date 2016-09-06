@@ -71,8 +71,8 @@ public class BaseGrid {
             return false;
         }
 
-        int x = Geometry.correctTorusX(a.getX() + Action.dx[action]);
-        int y = Geometry.correctTorusY(a.getY() + Action.dy[action]);
+        int x = Geometry.correctX[128 + a.getX() + Action.dx[action]];
+        int y = Geometry.correctY[128 + a.getY() + Action.dy[action]];
         if(grid[x][y].isOccupied()) {
             return false;
         }
@@ -111,18 +111,28 @@ public class BaseGrid {
         return new Point(x, y);
     }
 
-    protected boolean isObstacleNear(Point p) {
+    protected int isObstacleNear(Point p) {
+        int count = 0;
         for(int x = -1; x <= 1; x++) {
             for(int y = -1; y <= 1; y++) {
-                int new_x = Geometry.correctTorusX(p.x + x);
-                int new_y = Geometry.correctTorusY(p.y + y);
+                if(x == 0 && y == 0) {
+                    continue;
+                }
+                int new_x = Geometry.correctX[128 + p.x + x];
+                int new_y = Geometry.correctY[128 + p.y + y];
                 if(grid[new_x][new_y].isOccupied())
                 {
-                    return true;
+                    count++;
                 }
             }
         }
-        return false;
+        return count;
+    }
+
+    protected Point getNeighborField(final Point p, final int d) {
+        int x = Geometry.correctX[128 + p.x + Action.dx[d]];
+        int y = Geometry.correctY[128 + p.y + Action.dy[d]];
+        return new Point(x, y);
     }
 
     /**
@@ -131,14 +141,10 @@ public class BaseGrid {
      * @param direction desired movement direction
      * @return true if movement is invalid, false if it is valid and the agent
      * can move in that direction
-     * @throws java.lang.Exception if the direction was out of range
      */
-    protected boolean isDirectionInvalid(final Point position, final int direction) throws Exception {
-        if (direction < 0 || direction >= Action.MAX_DIRECTIONS) {
-            throw new Exception("Grid.isDirectionInvalid(): Direction " + direction + " of Agent at " + position.x + "/" + position.y + " out of range.");
-        }
-        int x = Geometry.correctTorusX(position.x + Action.dx[direction]);
-        int y = Geometry.correctTorusY(position.y + Action.dy[direction]);
+    protected boolean isDirectionInvalid(final Point position, final int direction) {
+        int x = Geometry.correctX[128 + position.x + Action.dx[direction]];
+        int y = Geometry.correctY[128 + position.y + Action.dy[direction]];
         return grid[x][y].isOccupied();
     }
 
@@ -161,14 +167,13 @@ public class BaseGrid {
     }
 
     /**
-     * @param a The agent in question
+     * @param p The position of the agent in question
      * @return An array of directions in which the agent can move
-     * @throws java.lang.Exception
      */
-    public ArrayList<Integer> getAvailableDirections(final BaseAgent a) throws Exception {
-        ArrayList<Integer> list = new ArrayList<Integer>();
+    public ArrayList<Integer> getAvailableDirections(final Point p) {
+        ArrayList<Integer> list = new ArrayList<Integer>(Action.MAX_DIRECTIONS);
         for(int i = 0; i < Action.MAX_DIRECTIONS; i++) {
-            if(!isDirectionInvalid(a.getPosition(), i)) {
+            if(!isDirectionInvalid(p, i)) {
                 list.add(new Integer(i));
             }
         }
@@ -176,15 +181,14 @@ public class BaseGrid {
     }
 
     /**
-     * @param a The agent in question
+     * @param p The position of the agent in question
      * @return An array of directions in which the agent can move
-     * @throws java.lang.Exception
      */
     // TODO
-    public ArrayList<Integer> getAvailableDirections2(final BaseAgent a) throws Exception {
-        ArrayList<Integer> list = new ArrayList<Integer>();
+    public ArrayList<Integer> getAvailableDirections2(final Point p) {
+        ArrayList<Integer> list = new ArrayList<Integer>(Action.MAX_DIRECTIONS);
         for(int i = 0; i < Action.MAX_DIRECTIONS; i++) {
-//            if(!isDirectionInvalid(a.getPosition(), i)) {
+//            if(!isDirectionInvalid(position(), i)) {
                 list.add(new Integer(i));
 //            }
         }
@@ -255,8 +259,8 @@ public class BaseGrid {
      */
     protected Point getFreeFieldNear(Point p) {
         for(int i = 0; i < 9; i++) {
-            int x = Geometry.correctTorusX(Misc.nextInt(3) - 1 + p.x);
-            int y = Geometry.correctTorusY(Misc.nextInt(3) - 1 + p.y);
+            int x = Geometry.correctX[128 + Misc.nextInt(3) - 1 + p.x];
+            int y = Geometry.correctY[128 + Misc.nextInt(3) - 1 + p.y];
             if(!grid[x][y].isOccupied()) {
                 return new Point(x, y);
             }

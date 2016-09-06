@@ -26,8 +26,12 @@ public class ClassifierSet {
     /**
      * May not be instanciated
      */
-    protected ClassifierSet() {
-    }   
+    private ClassifierSet() {
+    }
+
+    protected ClassifierSet(int n) {
+        classifiers = new ArrayList<Classifier>(n);
+    }
     
     /**
      * Frees up any reference to this classifier set in any classifier

@@ -13,6 +13,10 @@ import lcs.Action;
 
 public class LCS_Goal_Agent extends LCS_Agent {
 
+    public LCS_Goal_Agent(int n) {
+        super(n);
+    }
+
     /**
      * is called in each step, determines the current reward and checks if the
      * reward has changed. If it has changed update the classifiers in the 
@@ -85,7 +89,7 @@ public class LCS_Goal_Agent extends LCS_Agent {
             historicActionSet.removeFirst();
         }
 
-        if(BaseAgent.grid.getAvailableDirections(this).isEmpty()) {
+        if(BaseAgent.grid.getAvailableDirections(getPosition()).isEmpty()) {
             calculatedAction = Action.DO_JUMP;
         }
     }

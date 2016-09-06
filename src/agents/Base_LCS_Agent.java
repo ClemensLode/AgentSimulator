@@ -12,7 +12,6 @@ import agent.Configuration;
  * @author Clemens Lode, 1151459, University Karlsruhe (TH)
  */
 abstract public class Base_LCS_Agent extends BaseAgent {
-
     /**
      * Reward of the last time step (in order to recognize events)
      */
@@ -28,7 +27,14 @@ abstract public class Base_LCS_Agent extends BaseAgent {
     /**
      * current rule set
      */
-    protected MainClassifierSet classifierSet = new MainClassifierSet();
+    protected MainClassifierSet classifierSet;
+    
+    
+    private Base_LCS_Agent() {}
+    
+    public Base_LCS_Agent(int n) {            
+            classifierSet = new MainClassifierSet(n);
+    }
 
     /**
      * number of entries in the action set since the last event

@@ -96,6 +96,7 @@ public class Configuration {
     /**
      * Type of scenario we want to test
      * @see #RANDOM_SCENARIO
+     * @see #MAZE_SCENARIO
      * @see #NON_TORUS_SCENARIO
      * @see #PILLAR_SCENARIO
      * @see #CROSS_SCENARIO
@@ -105,21 +106,17 @@ public class Configuration {
     private static int scenarioType = 0;
 
     public final static int RANDOM_SCENARIO = 0;
-    public final static int NON_TORUS_SCENARIO = 1;
-    public final static int PILLAR_SCENARIO = 2;
-    public final static int CROSS_SCENARIO = 3;
-    public final static int ROOM_SCENARIO = 4;
-    public final static int DIFFICULT_SCENARIO = 5;
+    public final static int MAZE_SCENARIO = 1;
+    public final static int NON_TORUS_SCENARIO = 2;
+    public final static int PILLAR_SCENARIO = 3;
+    public final static int CROSS_SCENARIO = 4;
+    public final static int ROOM_SCENARIO = 5;
+    public final static int DIFFICULT_SCENARIO = 6;
 
     /**
      * use evolutionary algorithm on the action sets
      */
     private static boolean doEvolutionaryAlgorithm = true;
-
-    /**
-     * Determines whether obstacles block the sight
-     */
-    private static boolean obstaclesBlockSight = false;
 
     /**
      * Percentage of the grid that should be filled with obstacles in the "Random Scenario"
@@ -377,8 +374,6 @@ public class Configuration {
         i = i.add(BigInteger.valueOf(maxY));
         i = i.multiply(BigInteger.valueOf(4));
         i = i.add(BigInteger.valueOf(scenarioType));
-        i = i.multiply(BigInteger.valueOf(2));
-        i = i.add(BigInteger.valueOf(obstaclesBlockSight?1:0));
         if(scenarioType == 0) {
             i = i.multiply(BigInteger.valueOf(11));
             i = i.add(BigInteger.valueOf((int)(obstaclePercentage*10.0)));
@@ -426,8 +421,6 @@ public class Configuration {
                 halfMaxY = maxY / 2;
                 scenarioType = Integer.valueOf(p.readLine());
 
-
-                obstaclesBlockSight = Boolean.valueOf(p.readLine());
                 obstaclePercentage = Double.valueOf(p.readLine());
 
                 obstacleConnectionFactor = Double.valueOf(p.readLine());
@@ -521,9 +514,6 @@ public class Configuration {
         Log.log("# Scenario type");
         Log.log(scenarioType);
 
-
-        Log.log("# obstacles block sight");
-        Log.log(obstaclesBlockSight);
         Log.log("# obstacle percentage");
         Log.log(obstaclePercentage);
         Log.log("# obstacle connection factor");
@@ -796,7 +786,7 @@ public class Configuration {
     }
 
     /**
-     * @return number of problems times number of steps
+     * @return number of problems times number of steps (number of problems multiplicated with number of steps)
      */
     public static int getTotalTimeSteps() {
         return getNumberOfProblems() * getNumberOfSteps();
@@ -838,11 +828,6 @@ public class Configuration {
     public static int getExternalRewardMode() {
         return externalRewardMode;
     }
-
-    public static boolean isObstaclesBlockSight() {
-        return obstaclesBlockSight;
-    }
-
 
     /**
      * @return the exchangeClassifiers

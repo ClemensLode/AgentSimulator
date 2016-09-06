@@ -12,6 +12,11 @@ import java.util.ArrayList;
  */
 public class MainClassifierSet extends ClassifierSet {
 
+
+    public MainClassifierSet(int n) {
+        super(n);
+    }
+
     /**
      * Add classifiers that match the current state to this set so that the
      * overall classifier set covers all possible actions

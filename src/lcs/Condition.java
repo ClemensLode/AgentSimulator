@@ -146,7 +146,7 @@ public class Condition {
      * @return rotation list consisting of all rotations that this condition matches the sensor state 
      */
     public ArrayList<Integer> getMatchingDirections(final Sensors s) {
-        ArrayList<Integer> direction_list = new ArrayList<Integer>();
+        ArrayList<Integer> direction_list = new ArrayList<Integer>(Action.MAX_DIRECTIONS);
         int goal_direction = s.getSensorGoalAgentDirection();
         int rotation = 0;
 

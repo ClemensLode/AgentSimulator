@@ -1,7 +1,6 @@
 package lcs;
 
 import agent.*;
-import agents.*;
 import Misc.*;
 import java.util.ArrayList;
 
@@ -37,6 +36,7 @@ public class ActionClassifierSet extends ClassifierSet {
      * @see Classifier#addParent
      */
     public ActionClassifierSet(final Sensors current_state, final AppliedClassifierSet current_match_set, final int action) {
+        super(10);
         for (AppliedClassifier c : current_match_set.getClassifiers()) {
             if (c.getAbsoluteDirection() == action) {
                 Classifier new_classifier = c.getOriginalClassifier();
