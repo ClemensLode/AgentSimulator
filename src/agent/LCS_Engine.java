@@ -1,157 +1,208 @@
 package agent;
 
+import agents.*;
+import Misc.Log;
+import Misc.Misc;
+import lcs.MainClassifierSet;
+import lcs.ClassifierSet;
 import java.util.ArrayList;
-import java.awt.Point;
 
 /**
+ *
+ * This class provides routines to initialize the engine, run the experiments
+ * and log the results and statistics
  *
  * @author Clemens Lode, 1151459, University Karlsruhe (TH)
  */
 public class LCS_Engine {
 
-    private ArrayList<Agent> agentList;
+    private ArrayList<BaseAgent> agentList;
 
-    public LCS_Engine() throws Exception {
-        Agent.grid = new Grid();
-        Agent.resetID();
-        Agent.goalAgent = new Agent(new Point(Configuration.getMaxX() / 2, Configuration.getMaxY() / 2));
+    /**
+     * Initializes a new LCS engine
+     * resets the id, the goal agent and creates a new random agent list
+     * @param experiment_nr Number of experiment, import for initializing the random seed
+     * @throws java.lang.Exception if there was an error registering the agents
+     */
+    public LCS_Engine(int experiment_nr) throws Exception {
+        Misc.initSeed(Configuration.getRandomSeed() + experiment_nr * Configuration.getNumberOfProblems());
+        BaseAgent.grid = new Grid();
 
-        agentList = new ArrayList<Agent>();
+        BaseAgent.resetGlobalID();
+        if(Configuration.getGoalAgentMovementType() == Configuration.LCS_MOVEMENT) {
+            BaseAgent.goalAgent = new LCS_Goal_Agent();
+        } else {
+            BaseAgent.goalAgent = new Random_Agent(Configuration.getGoalAgentMovementType(), true);
+        }
+
+        agentList = new ArrayList<BaseAgent>();
 
         for (int i = 0; i < Configuration.getMaxAgents(); i++) {
-            Point p;
-            do {
-                p = new Point(Misc.nextInt(Configuration.getMaxX()), Misc.nextInt(Configuration.getMaxY()));
-            } while (!Agent.grid.isFreeField(p));
-            agentList.add(new Agent(p));
+            switch (Configuration.getAgentType()) {
+                case Configuration.RANDOMIZED_MOVEMENT_AGENT_TYPE:agentList.add(new Random_Agent(Configuration.RANDOM_MOVEMENT, false));break;
+                case Configuration.SIMPLE_AI_AGENT_TYPE:agentList.add(new AI_Agent());break;
+                case Configuration.INTELLIGENT_AI_AGENT_TYPE:agentList.add(new Good_AI_Agent());break;
+                case Configuration.NEW_LCS_AGENT_TYPE:agentList.add(new New_LCS_Agent());break;
+                case Configuration.OLD_LCS_AGENT_TYPE:agentList.add(new LCS_Agent());break;
+                case Configuration.MULTISTEP_LCS_AGENT_TYPE:agentList.add(new Multistep_LCS_Agent());break;
+                case Configuration.SINGLE_LCS_AGENT_TYPE:agentList.add(new Single_LCS_Agent());break;
+            }
         }
-    }
-    // TODO reset oder so
-/*
-    private void loadAIClassifiers(String file_name) {
-        for (Agent a : agentList) {
-            a.classifierSet.loadClassifiersFromFile(file_name);
-        }
-    }*/
-
-    private void moveGoalAgent() throws Exception {
-        Agent.goalAgent.moveRandomly();
-        Agent.goalAgent.moveRandomly();
-    }
-
-    private void evoluteAgents(long gaTimestep) throws Exception {
-        for(Agent a : agentList) {
-            a.evolutionaryAlgorithm(gaTimestep);
+        if(Configuration.getAgentType() == Configuration.SINGLE_LCS_AGENT_TYPE) {
+            Single_LCS_Agent.classifierSet = new MainClassifierSet();
         }
     }
 
-    // "Fenster" über die letzten X classifier fahren lassen?
-    private void calculateIndividualRewards() {
-        for(Agent a : agentList) {
-            a.calculateReward();
+    /**
+     * Executes a number of problems
+     * @param experiment_nr Number of experiment, important for initializing the random seed
+     * @throws java.lang.Exception if there was an error creating the gif file or calculating the problem
+     */
+    public void doOneMultiStepExperiment(int experiment_nr) throws Exception {
+        int currentTimestep = 0;
+
+        if(Configuration.isGifOutput()) {
+            BaseAgent.grid.startGIF(experiment_nr);
+        }
+        // number of problems for the same population
+        for (int i = 0; i < Configuration.getNumberOfProblems(); i++) {
+
+            Log.log("# Problem Nr. " + (i + 1));
+
+            /**
+             * creates a new grid and deploys agents and goal at random positions
+             */
+            BaseAgent.grid.resetState();
+
+            /**
+             * Unterschied zu XCS: Läuft weiter...~
+             */
+            currentTimestep = doOneMultiStepProblem(currentTimestep);
+            Misc.initSeed(Configuration.getRandomSeed() + experiment_nr * Configuration.getNumberOfProblems() + 1 + i);
+        }
+        if(Configuration.isGifOutput()) {
+            BaseAgent.grid.finishGIF();
         }
     }
-    
-    private void calculateAgents(boolean do_explore, long gaTimestep) {
-        for(Agent a : agentList) {
-            try {
-                a.calculateNextMove(do_explore, gaTimestep);
-            } catch (Exception e) {
-                Log.errorLog("Problem calculating next move: ", e);
+
+    /**
+     * Executes a number of steps on the grid
+     * @param do_explore whether to use the evolutionary algorithm
+     * @param stepCounter current time step
+     * @return the time step after the execution
+     */
+    private int doOneMultiStepProblem(int stepCounter) throws Exception {
+        // number of steps a problem should last
+        int steps_next_problem = Configuration.getNumberOfSteps() + stepCounter;
+        System.out.println(stepCounter);
+        for (int currentTimestep = stepCounter; currentTimestep < steps_next_problem; currentTimestep++) {
+            printHeader(currentTimestep);
+
+            if(Configuration.isGifOutput()) {
+                BaseAgent.grid.addFrameToGIF();
             }
 
-            a.printHeader();
-            a.printMatching();
-            
+            calculateAgents(currentTimestep);
+            BaseAgent.grid.updateSight();
+
+            // calculate the reward of all agents
+            rewardAgents(currentTimestep);
+
+            // update the quality of the run
+            BaseAgent.grid.updateStatistics(currentTimestep, findBestAgent());
+            if(Log.isDoLog()) {
+                BaseAgent.grid.printAgents();
+            }
+        }
+
+        return steps_next_problem;
+    }
+
+    private ClassifierSet findBestAgent() {
+        ClassifierSet best = null;
+        switch(Configuration.getAgentType()) {
+            case Configuration.RANDOMIZED_MOVEMENT_AGENT_TYPE:
+            case Configuration.SIMPLE_AI_AGENT_TYPE:
+            case Configuration.INTELLIGENT_AI_AGENT_TYPE:
+                if(Configuration.getGoalAgentMovementType() == Configuration.LCS_MOVEMENT) {
+                    return ((Base_LCS_Agent)(BaseAgent.goalAgent)).getClassifierSet();
+                }
+                return null;
+            case Configuration.SINGLE_LCS_AGENT_TYPE:
+                return Single_LCS_Agent.classifierSet;
+        }
+        double best_fit = 0.0;
+        for(BaseAgent a : agentList) {
+            double t = ((Base_LCS_Agent)a).getFitnessNumerosity();
+            if(best == null || t > best_fit) {
+                best_fit = t;
+                best = ((Base_LCS_Agent)a).getClassifierSet();
+            }
+        }
+        return best;
+    }
+
+    /**
+     * Calculate the matchings and the action set of each agent and execute the
+     * movement
+     * @param gaTimestep current time step
+     */
+    private void calculateAgents(final long gaTimestep) throws Exception {
+        BaseAgent.mark = false;
+
+        ArrayList<BaseAgent> random_list = new ArrayList<BaseAgent>();
+        random_list.addAll(agentList);
+        for(int i = 0; i < Configuration.getGoalAgentMovementSpeed(); i++) {
+            random_list.add(BaseAgent.goalAgent);
+        }
+
+        for(BaseAgent a : random_list) {
+            a.aquireNewSensorData();
+            a.calculateNextMove(gaTimestep);
+        }
+
+        int[] array = Misc.getRandomArray(random_list.size());
+
+        for(int i = 0; i < array.length; i++) {
+            BaseAgent a = random_list.get(array[i]);
             try {
-                a.doNextMove();            
+                a.doNextMove();
+
+                if(a.isGoalAgent()) {
+                    a.aquireNewSensorData();
+                    a.calculateNextMove(0);
+                }
+
             } catch (Exception e) {
                 Log.errorLog("Problem executing next move: ", e);
             }
-            
-            a.printAction();
-            
-            try {
-                calculateIndividualRewards();
-            } catch (Exception e) {
-                Log.errorLog("Problem calculating reward:", e);
-            }
         }
-    }    
-    
-    /*
-     * Parameter list:
-     * Number of agents
-     * grid size
-     * 
-     * */
-    /************************** Multi-step Experiments *******************************/
+    }
+
     /**
-     * Executes one multi step experiment and monitors the performance.
-     *
-     * @see #doOneMultiStepProblemExplore
-     * @see #doOneMultiStepProblemExploit
-     * @see #writePerformance
+     * Rewards all agents
+     * @throws java.lang.Exception if there was an error moving the agent
      */
-    public void doOneMultiStepExperiment() {
-        boolean do_explore = false;
-        int currentTimestep = 0;
-
-        // number of problems for the same population
-        for (int i = 0; i < Configuration.getNumberOfProblems(); i++) {
-            // switch parameter for exploiting and exploring for each problem
-            // TODO Literatur!?
-            
-        //    Log.log("# Problem Nr. " + (i+1) + "\n");
-       //     System.out.println("Problem Nr."+(i+1));
-            
-            do_explore = !do_explore;
-            
-            currentTimestep = doOneMultiStepProblem(do_explore, currentTimestep);
+    private void rewardAgents(final long gaTimestep) throws Exception {
+        for(BaseAgent a : agentList) {
+            a.calculateReward(gaTimestep);
         }
-        
-        Agent.grid.checkGoalAgentInSight();
-        // also print final step TODO
+        BaseAgent.goalAgent.calculateReward(gaTimestep);
     }
 
-
-
-    private int doOneMultiStepProblem(boolean do_explore, int stepCounter) {
-
-        // number of steps a problem should last
-        for (int currentTimestep = stepCounter; currentTimestep < Configuration.getNumberOfSteps() + stepCounter; currentTimestep++) {
-            printHeader(currentTimestep);
-            // update the quality of the run
-            Agent.grid.checkGoalAgentInSight();
-
-            calculateAgents(do_explore, currentTimestep);
-            
-            // move the goal agent after we moved the agents and calculated the reward
-            // easier for the agents? TODO
-            try {
-                moveGoalAgent();
-            } catch (Exception e) {
-                Log.errorLog("Problem moving goal agent randomly: ", e);
-            }
-
-            if (do_explore) {
-                try {
-                    evoluteAgents(currentTimestep);
-                } catch (Exception e) {
-                    Log.errorLog("Problem evoluting agents: ", e);
-                }
-            }
+    /**
+     * Prints the header of the log file
+     * @param currentTimestep Current time step
+     */
+    private void printHeader(long currentTimestep) throws Exception {
+        if(!Log.isDoLog()) {
+            return;
         }
 
-        return stepCounter + Configuration.getNumberOfSteps();
-    }
-    
-    
-    private void printHeader(long currentTimestep) {
+        Log.log("# -------------------------");
+        Log.log("iteration " + currentTimestep);
         Log.log("# -------------------------\n");
-        Log.log("iteration " + currentTimestep + "\n");
-        Log.log("# -------------------------\n\n");
+        Log.log("# grid");
+        Log.log(LCS_Agent.grid.getGridString());
     }
-    
- 
 }
