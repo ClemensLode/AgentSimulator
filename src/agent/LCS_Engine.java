@@ -38,14 +38,8 @@ public class LCS_Engine {
     }
 
     private void evoluteAgents() throws Exception {
-        if (Configuration.isDoEvolutionaryAlgorithm()) {
-            for (int i = 0; i < agentList.size(); i++) {
-                agentList.get(i).evolutionaryAlgorithm();
-            }
-        } else {
-            for (int i = 0; i < agentList.size(); i++) {
-                agentList.get(i).geneticAlgorithm();
-            }
+        for (int i = 0; i < agentList.size(); i++) {
+            agentList.get(i).evolutionaryAlgorithm();
         }
     }
 

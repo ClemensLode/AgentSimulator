@@ -17,20 +17,7 @@ public class ClassifierSet {
 
 
     private ArrayList<Classifier> classifiers;
-    
-    /**
-     * The Sum of the numerosity in one set is always kept up to date!
-     */
-    private int numerositySum;
-    
-
-    /**
-     * Each set keeps a reference to the parent set out of which it was generated. In the population itself
-     * this pointer is set to zero.
-     */
-    private ClassifierSet parentSet;    
-    
-    
+        
     
     public void removeClassifier(Classifier c) { classifiers.remove(c); }    
     public void removeClassifier(int index) {classifiers.remove(index); }
@@ -40,6 +27,10 @@ public class ClassifierSet {
     
     public void clear() {classifiers.clear();}
 
+    
+    public ClassifierSet() {
+        classifiers = new ArrayList<Classifier>();
+    }
     
     /**
      * Constructs a match set out of the population. After the creation, it is checked if the match set covers all possible actions
@@ -54,10 +45,10 @@ public class ClassifierSet {
      * @param time  The actual number of instances the XCS learned from so far.
      * @param numberOfActions The number of actions possible in the environment.     
      */
-    public ClassifierSet(Condition state, ClassifierSet pop, int time, int numberOfActions)
+    /*
+    public ClassifierSet(Condition state, int time, int numberOfActions)
     {
-        parentSet=pop;
-        numerositySum=0;
+//      numerositySum=0;
         classifiers = new ArrayList<Classifier>();
         classifiers.clear();
         
@@ -79,7 +70,7 @@ public class ClassifierSet {
             again=false;
             for(int i=0; i<actionCovered.length; i++){
                 if(!actionCovered[i]){
-                    Classifier newCl=new Classifier(state, new Action(i), getNumerositySum()+1, time);
+                    Classifier newCl=new Classifier(state, new Action(i), time);
                     
                     addClassifier(newCl);
                     pop.addClassifier(newCl);
@@ -103,9 +94,9 @@ public class ClassifierSet {
 		}
             }
         }while(again);
-    }    
+    }*/    
     
-    public Classifier chooseClassifier(ClassifierSet matchSet, final Grid grid, final int id, final Point p, final double setSize, final long gaTimestep) throws Exception {
+    public Classifier chooseClassifier(ClassifierSet matchSet, final Grid grid, final int id, final Point p, final long gaTimestep) throws Exception {
         for(int i = 0; i < classifiers.size(); i++) {
             if(classifiers.get(i).isMatched(grid, id, p)) {
                 matchSet.addClassifier(classifiers.get(i));
@@ -114,7 +105,7 @@ public class ClassifierSet {
         
         if(matchSet.isEmpty()) {
             // choose random classifier from all classifiers  TODO, evtl auch neuen Classifier kreieren oder alten verallgemeinern...
-            Classifier c = Classifier.createCoveringClassifier(grid, Configuration.getCoveringWildcardProbability(), id, p, setSize, gaTimestep);
+            Classifier c = Classifier.createCoveringClassifier(grid, Configuration.getCoveringWildcardProbability(), id, p, gaTimestep);
             matchSet.addClassifier(c);
             addClassifier(c);
         }
@@ -170,7 +161,7 @@ public class ClassifierSet {
                         }
                         i++;
                     }
-                    addClassifier(new Classifier(new Condition(condition_data), new Action(action_data), 1, 0));
+                    addClassifier(new Classifier(new Condition(condition_data), new Action(action_data), 0));
                     // numerosity??
                     
                     n++;
@@ -201,10 +192,10 @@ public class ClassifierSet {
     /**
      * Returns the average of the time stamps in the set.
      */
-    private double getTimeStampAverage()
+    /*private double getTimeStampAverage()
     {
         return getTimeStampSum()/numerositySum;
-    }
+    }*/
     
     /**
      * Returns the sum of the prediction values of all classifiers in the set.
@@ -266,17 +257,17 @@ public class ClassifierSet {
      * @param matchSet The current match set
      * @param action The chosen action for the action set.
      */
-    public ClassifierSet(ClassifierSet matchSet, int action)
+/*    public ClassifierSet(ClassifierSet matchSet, int action)
     {
         parentSet=matchSet;
-        numerositySum=0;
+//        numerositySum=0;
         classifiers.clear();
         for(Classifier c : matchSet.classifiers) {
             if(c.getAction().getDirection() == action) {
                 addClassifier(c);
             }
         }
-    }    
+    }    */
     
 
     /**
@@ -318,14 +309,14 @@ public class ClassifierSet {
     }
 
     
-    public double getDelPropSum(double mean_fitness) {
+/*    public double getDelPropSum(double mean_fitness) {
         double sum = 0.;
         
         for(Classifier c : classifiers) {
             sum += c.getDelProp(mean_fitness);
         }
         return sum;
-    }
+    }*/
     
     public int checkDegreeOfRelationship(final ClassifierSet other) {
         int degree = 0;
@@ -394,7 +385,7 @@ public class ClassifierSet {
      * considering the deletion vote. Returns the macro-classifier which got decreased by one micro-classifier.
      * 
      * @see XClassifier#getDelProp    
-     */
+     *//*
     private Classifier deleteFromPopulation()
     {
         double meanFitness= getFitnessSum()/(double)getNumerositySum();
@@ -416,7 +407,7 @@ public class ClassifierSet {
         }
         
         return null;
-    }    
+    }    */
     /*
     public void evolutionaryAlgorithm(double elite, double mu) throws Exception {
         int n = (int)(this.size() * elite);
@@ -564,21 +555,11 @@ public class ClassifierSet {
      *
      * @param classifier The to be added classifier.
      */
-    private void addClassifier(Classifier c)
+    public void addClassifier(Classifier c)
     {
         classifiers.add(c);
-        addValues(c);
     }
 
-
-    /**
-     * Increases the numerositySum value with the numerosity of the classifier.
-     */
-    private void addValues(Classifier cl)
-    {
-        numerositySum+=cl.getNumerosity();      
-    }
-    
     
     /**
      * Updates all parameters in the current set (should be the action set).
@@ -600,6 +581,7 @@ public class ClassifierSet {
      * (should be set to zero in single step environments).
      * @param reward The actual resulting reward after the execution of an action.
      */
+    /*
     public void updateSet(double maxPrediction, double reward)
     {
     
@@ -609,14 +591,14 @@ public class ClassifierSet {
             c.increaseExperience();
             c.updatePreError(P);
             c.updatePrediction(P);
-            c.updateActionSetSize(numerositySum);
+//          c.updateActionSetSize(numerositySum); ??
         }
         updateFitnessSet();
 
         if(Configuration.isActionSetSubsumption()) {
             doActionSetSubsumption();
         }
-    }
+    }*/
     
     private double getAccuracySum() {
         double sum = 0.;
@@ -658,12 +640,14 @@ public class ClassifierSet {
      * @param state  The current situation/problem instance.
      * @param numberOfActions The number of actions possible in the environment.
      */ 
+    /*
     public void runGA(long time, Condition state, int numberOfActions)
     {
         // Don't do a GA if the theta_GA threshold is not reached, yet
         if(classifiers.isEmpty() || time - getTimeStampAverage() < Configuration.getThetaGA()) {
             return;
         }
+     * !! TODO
 
         setTimeStamps(time);
 
@@ -688,7 +672,7 @@ public class ClassifierSet {
         cl2.setFitness(cl1.getFitness());
    
         insertDiscoveredClassifiers(cl1, cl2, cl1P, cl2P);
-    }
+    }*/
     
     /**
      * Inserts both discovered classifiers keeping the maximal size of the population and possibly doing GA subsumption.
@@ -703,6 +687,7 @@ public class ClassifierSet {
      * @param cl1P The first parent of the two new classifiers.
      * @param cl2P The second classifier of the two new classifiers.
      */
+    /*
     private void insertDiscoveredClassifiers(Classifier cl1, Classifier cl2, Classifier cl1P, Classifier cl2P)
     {
         ClassifierSet pop=this;
@@ -721,7 +706,7 @@ public class ClassifierSet {
         while(pop.numerositySum > Configuration.getMaxPopSize()) {
             pop.deleteFromPopulation();
         }
-    }    
+    }    */
 
     /**
      * Selects one classifier using roulette wheel selection according to the fitnesses of the classifiers.
@@ -747,7 +732,7 @@ public class ClassifierSet {
      *
      * @see #subsumeXClassifier(XClassifier)
      */
-    private void subsumeClassifier(Classifier cl, Classifier cl1P, Classifier cl2P)
+    /*private void subsumeClassifier(Classifier cl, Classifier cl1P, Classifier cl2P)
     {
         if(cl1P!=null && cl1P.subsumes(cl)){
             increaseNumerositySum(1);
@@ -770,7 +755,7 @@ public class ClassifierSet {
      * @param cl The classifier that may be subsumed.
      * @see #addXClassifierToPopulation
      */
-    private void subsumeClassifier(Classifier cl)
+    /*private void subsumeClassifier(Classifier cl)
     {
         //Open up a new Vector in order to chose the subsumer candidates randomly
         ArrayList<Classifier> choices = new ArrayList<Classifier>();
@@ -797,7 +782,7 @@ public class ClassifierSet {
      * @see XClassifier#isSubsumer
      * @see XClassifier#isMoreGeneral
      */
-    private void doActionSetSubsumption()
+    /*private void doActionSetSubsumption()
     {
         ClassifierSet pop=this;
         while(pop.parentSet!=null) {
@@ -838,7 +823,7 @@ public class ClassifierSet {
      * @see #getIdenticalClassifier
      * @param cl The to be added classifier.
      */
-    private void addClassifierToPopulation(Classifier cl)
+    /*private void addClassifierToPopulation(Classifier cl)
     {
         // set pop to the actual population
         ClassifierSet pop=this;
@@ -861,13 +846,13 @@ public class ClassifierSet {
      * This function should be called when the numerosity of a classifier in some set is increased in 
      * order to keep the numerosity sums of all sets and essentially the population up to date.
      */
-    private void increaseNumerositySum(int nr)
+    /*private void increaseNumerositySum(int nr)
     {
         numerositySum+=nr;
         if(parentSet!=null) {
             parentSet.increaseNumerositySum(nr);
         }
-    }    
+    }    */
     
     @Override
     public String toString() {
@@ -881,8 +866,8 @@ public class ClassifierSet {
         return output;
     }
 
-    public int getNumerositySum() {
+    /*public int getNumerositySum() {
         return numerositySum;
-    }
+    }*/
 
 }

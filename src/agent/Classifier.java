@@ -42,9 +42,6 @@ public class Classifier {
     // predicted payoff
     private double prediction;  
     
-    // number of equal classifiers that were added after this classifier + 1
-    private int numerosity;
-    
     // number of times this classifier was updated
     private int experience;
     
@@ -56,10 +53,6 @@ public class Classifier {
     private Condition condition;
     
 
-    /**
-     * The action set size estimate of the classifier.
-     */
-    private double actionSetSize;    
     /*
     public Classifier(long gaTimestamp) {
         resetAll();
@@ -74,14 +67,14 @@ public class Classifier {
         setGaTimestamp(gaTimestamp);
     }*/
     
-    public Classifier(Condition condition, double setSize, long gaTimestamp) throws Exception {
-        classifierSetVariables(setSize, gaTimestamp);
+    public Classifier(Condition condition, long gaTimestamp) throws Exception {
+        classifierSetVariables(gaTimestamp);
                 
         this.condition = condition.clone();
     }
     
-    public Classifier(Condition condition, Action action, double setSize, long gaTimestamp) {
-        classifierSetVariables(setSize, gaTimestamp);
+    public Classifier(Condition condition, Action action, long gaTimestamp) {
+        classifierSetVariables(gaTimestamp);
 
         this.condition = condition.clone();
         this.action = action.clone();
@@ -134,10 +127,8 @@ public class Classifier {
 	this.prediction=clOld.prediction;
 	this.predictionError=clOld.predictionError;
 	// Here we should divide the fitness by the numerosity to get a accurate value for the new one!
-	this.fitness=clOld.fitness/clOld.numerosity;
-	this.numerosity=1;
+	this.fitness=clOld.fitness;
 	this.experience=0;
-	this.actionSetSize=clOld.actionSetSize;
 	this.gaTimestamp=clOld.gaTimestamp;
     }    
     
@@ -148,10 +139,10 @@ public class Classifier {
      * @see XCSConstants#predictionIni
      * @see XCSConstants#predictionErrorIni
      * @see XCSConstants#fitnessIni
-     * @param setSize The size of the set the classifier is created in.
+     * @param setSize The size of the set the classifier is created in. ???????? TODO
      * @param time The actual number of instances the XCS learned from so far.
      */
-    private void classifierSetVariables(double setSize, long time)
+    private void classifierSetVariables(long time)
     {		
         action = new Action();
         condition = new Condition();
@@ -160,9 +151,7 @@ public class Classifier {
 	this.setPredictionError(Configuration.getPredictionErrorInitialization());
 	this.setFitness(Configuration.getFitnessInitialization());
     
-	this.numerosity=1;
 	this.experience=0;
-	this.actionSetSize=setSize;
 	this.gaTimestamp=time;
     }    
     
@@ -175,33 +164,16 @@ public class Classifier {
 	experience++;
     }
     
-
-    /**
-     * Updates the action set size.
-     *
-     * @see XCSConstants#beta
-     * @param numeriositySum The number of micro-classifiers in the population
-     */
-    public double updateActionSetSize(double numerositySum)
-    {
-	if(experience < 1./Configuration.getBeta()){
-	    actionSetSize= (actionSetSize * (double)(experience-1)+ numerositySum) / (double)experience;
-	}else{
-	    actionSetSize+= Configuration.getBeta() * (numerositySum - actionSetSize);
-	}
-	return actionSetSize*numerosity;
-    }    
-    
     @Override
     public Classifier clone() {
         return new Classifier(this);
     }      
     
-    public static Classifier createCoveringClassifier(final Grid grid, final double wildcard_probability, final int id, final Point position, final double setSize, final long gaTimestamp) throws Exception {
+    public static Classifier createCoveringClassifier(final Grid grid, final double wildcard_probability, final int id, final Point position, final long gaTimestamp) throws Exception {
         double[] direction_agent_distance = grid.getDirectionAgentDistances(position, id);
         int direction_goal_agent = grid.getAgentDirectionRange(position, Agent.goalAgent.getPosition());
         
-        return (new Classifier(Condition.createCoveringCondition(direction_agent_distance, direction_goal_agent, wildcard_probability), setSize, gaTimestamp));
+        return (new Classifier(Condition.createCoveringCondition(direction_agent_distance, direction_goal_agent, wildcard_probability), gaTimestamp));
     }      
     
     public int[] createGeneticString() {
@@ -327,13 +299,13 @@ public class Classifier {
      * @see XCSConstants#theta_del
      * @param meanFitness The mean fitness in the population.
      */
-    public double getDelProp(double mean_fitness)
+/*    public double getDelProp(double mean_fitness)
     {
 	if(fitness/numerosity >= Configuration.getDelta()*mean_fitness || experience < Configuration.getDeltaDel()) {
 	    return actionSetSize*numerosity;
         }
 	return actionSetSize*numerosity*mean_fitness / ( fitness/numerosity);
-    }    
+    }    */
     
     public final Action getAction() {
         return action;
@@ -399,7 +371,7 @@ public class Classifier {
      */
     public double updateFitness(double accSum, double accuracy)
     {
-	setFitness(fitness + Configuration.getBeta() * ((accuracy * getNumerosity()) / accSum - fitness));	
+	setFitness(fitness + Configuration.getBeta() * (accuracy / accSum - fitness));	
 	return fitness;//fitness already considers numerosity
     }    
     
@@ -486,10 +458,10 @@ public class Classifier {
      *
      * @param num The added numerosity (can be negative!).
      */
-    public void addNumerosity(int num)
+/*    public void addNumerosity(int num)
     {
 	numerosity+=num;
-    }
+    }*/
 
     public void setFitness(double fitness) {
         this.fitness = fitness;

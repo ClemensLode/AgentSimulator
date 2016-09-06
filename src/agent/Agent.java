@@ -20,7 +20,6 @@ public class Agent {
     private LinkedList<Classifier> actionSet;
 // previous rewards
     private boolean lastReward = false;
-    private int lastRewardSteps = 0;
     
     private double totalPoints = 0;
 
@@ -39,7 +38,7 @@ public class Agent {
     
     // TODO: Log timestamp of last GA run
     // Evolute agent with a certain probability depending on lastGATimeStamp whenever an event happens
-    private int lastGATimeStamp = 0;
+    // private int lastGATimeStamp = 0;
 
     
 // current state    
@@ -62,7 +61,6 @@ public class Agent {
         global_id++;
         
         actionSet = new LinkedList<Classifier>();
-        rewardSet = new LinkedList<Double>();        
 
         grid.addAgent(this);
     }
@@ -105,21 +103,23 @@ public class Agent {
         return Classifier.getInputString(grid, id, p);
     }
     
-/* for LCS */
-    public void geneticAlgorithm() {
-        classifierSet.panmicticGeneticAlgorithm(Configuration.getCrossoverProbability(), Configuration.getCrossoverMutationProbability());
-    }
-    public void evolutionaryAlgorithm() throws Exception {
-        classifierSet.evolutionaryAlgorithm(Configuration.getElitistSelection(), Configuration.getEvolutionaryMutationProbability());
+    public void evolutionaryAlgorithm(long gaTimeStamp) throws Exception {
+
+        if (Configuration.isDoEvolutionaryAlgorithm()) {        
+            classifierSet.evolutionaryAlgorithm(Configuration.getElitistSelection(), Configuration.getEvolutionaryMutationProbability());
+        } else {
+            classifierSet.panmicticGeneticAlgorithm(Configuration.getCrossoverProbability(), Configuration.getCrossoverMutationProbability());    
+        }
     }
 
 
     
     
     public void calculateNextMove(long gaTimestep) throws Exception {
+        // lastMatchSet: temporary save for log output
         lastMatchSet.clear();
-        
         Classifier classifier = classifierSet.chooseClassifier(lastMatchSet, grid, id, p, gaTimestep);
+        
         lastActionSet.clear();
         lastActionSet.addClassifier(classifier);
         
@@ -130,18 +130,7 @@ public class Agent {
         // TODO Zuordnung zu Classifierset oder so... muss ja vom Stack wieder auf das tatsächliche Objekt zurückgeführt werden
         Action action = classifier.getAction();
         int direction = action.getDirection();
-        
-        actionSet.confirmClassifiersInSet();
-        actionSet.updateSet
-        
-	    if(prevActionSet!=null){
-		prevActionSet.confirmClassifiersInSet();
-		prevActionSet.updateSet(predictionArray.getBestValue(), prevReward);
-                prevActionSet.runGA(stepCounter+steps, prevState, env.getNrActions());
-            }        
-        
-        
-        
+
         grid.moveAgent(this, direction);
     }
     
