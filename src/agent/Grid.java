@@ -14,7 +14,7 @@ import lcs.ClassifierSet;
  * All movements and collisions of the agents will be registered here
  * This class also provides detection routines (sight range)
  * 
- * @author Clemens Lode, 1151459, University Karlsruhe (TH)
+ * @author Clemens Lode, clemens at lode.de, University Karlsruhe (TH)
  */
 public class Grid extends BaseGrid {
 
@@ -154,7 +154,7 @@ public class Grid extends BaseGrid {
 
         }
     }
-// TODO wenn kein torus, Hindernis erkennen?
+
 
     private void createObstacle(Point p) {
         grid[p.x][p.y].setContent(Field.OBSTACLE);
@@ -210,6 +210,9 @@ public class Grid extends BaseGrid {
         updateSight();
     }
 
+    /**
+     * Checks all points whether they are visible by an agent
+     */
     public void updateSight() {
         int max_x = Configuration.getMaxX();
         int max_y = Configuration.getMaxY();
@@ -306,6 +309,12 @@ public class Grid extends BaseGrid {
         }
     }
 
+    /**
+     * @param a The agent in question
+     * @param available_directions List with available directions
+     * @param probability_reward Remove direction if another agent is in reward range with this probability
+     * @param probability_sight Remove direction if another agent is in sight range with this probability
+     */
     public void maybeRemoveAgentDirections(final BaseAgent a, ArrayList<Integer> available_directions, double probability_reward, double probability_sight) {
         boolean[] direction_agent_in_sight_list = getDirectionAgentInSightList(a.getPosition(), a.getID());
         for (int i = 0; i < Action.MAX_DIRECTIONS; i++) {
@@ -319,23 +328,6 @@ public class Grid extends BaseGrid {
     }
 
 
-    public void maybeRemoveObstacleDirections(final BaseAgent a, ArrayList<Integer> available_directions, double probability) {
-        boolean[] direction_obstacle_in_sight_list = getDirectionObstacleInSightList(a.getPosition(), a.getID());
-        for (int i = 0; i < Action.MAX_DIRECTIONS; i++) {
-            if (Misc.nextDouble() < probability && direction_obstacle_in_sight_list[2*i]) {
-                available_directions.remove(new Integer(i));
-            }
-        }
-    }
-
-    public void maybeRemoveOpenDirections(final BaseAgent a, ArrayList<Integer> available_directions, double probability) {
-        boolean[] direction_obstacle_in_sight_list = getDirectionObstacleInSightList(a.getPosition(), a.getID());
-        for (int i = 0; i < Action.MAX_DIRECTIONS; i++) {
-            if (Misc.nextDouble() < probability && !direction_obstacle_in_sight_list[2*i]) {
-                available_directions.remove(new Integer(i));
-            }
-        }
-    }
 
     public Point getFreeGoalAgentField() {
         switch (Configuration.getScenarioType()) {

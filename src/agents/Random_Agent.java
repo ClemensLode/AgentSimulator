@@ -9,10 +9,9 @@ import agent.BaseGrid;
 /**
  *
  * 
- * @author Clemens Lode, 1151459, University Karlsruhe (TH)
+ * @author Clemens Lode, clemens at lode.de, University Karlsruhe (TH)
  */
 public class Random_Agent extends BaseAgent {
-// TODO vielleicht DO_JUMP erst nach einem Bonustimeout von 4 oder so
 
     /**
      * only for goal agent

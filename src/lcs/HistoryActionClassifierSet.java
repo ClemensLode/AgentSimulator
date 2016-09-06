@@ -7,7 +7,7 @@ import agent.Sensors;
  * This class provides extra memory to the action classifier set in order to 
  * allow the late distribution of the reward
  *
- * @author Clemens Lode, 1151459, University Karlsruhe (TH)
+ * @author Clemens Lode, clemens at lode.de, University Karlsruhe (TH)
  */
 public class HistoryActionClassifierSet {
 
@@ -31,45 +31,30 @@ public class HistoryActionClassifierSet {
         this.reward.add(new RewardHelper(reward, factor));
     }
 
-    public void rewardPrematurely(double max_prediction) throws Exception {
-        actionClassifierSet.updateReward(1.0, max_prediction, 1.0);
-    }
-
-    public double getBestValue() throws Exception {
-        return actionClassifierSet.getMatchSet().getBestValue();
-    }
-
-    public void processReward(MainClassifierSet main, double max_prediction) throws Exception {
-        if (reward.isEmpty()) {
-            return;
-        }
-
+    /**
+     * Processes the saved rewards and factors and updates the action sets
+     *
+     * @param main The corresponding classifier set of the agent
+     * @throws java.lang.Exception If there was an error creating the match set
+     */
+    public void processReward(MainClassifierSet main) throws Exception {
         int calculatedAction = actionClassifierSet.getAction();
         Sensors lastState = actionClassifierSet.getLastState();
         AppliedClassifierSet lastMatchSet = new AppliedClassifierSet(lastState, main);
         actionClassifierSet = new ActionClassifierSet(lastState, lastMatchSet, calculatedAction);
 
-
-        // empty results => Apply 0 reward
-        // so that no 0-reward needs to be distributed when no agent is in sight in the LCS Agent code
-        //    actionClassifierSet.updateReward(0.0, max_prediction, 1.0);
-        //} else {
+        double max_reward = 0.0;
         double max = 0.0;
-        double max_factor = 0.0;
-        for (RewardHelper r : reward) {
-            // we already gave reward for this case
-            if (r.reward == 1.0 && r.factor == 1.0) {
-                return;
-            }
 
-            if (r.reward * r.factor >= max_factor) {
-                max = r.reward;
-                max_factor = r.reward * r.factor;
+        for (RewardHelper r : reward) {
+            if (r.reward * r.factor > max) {
+                max = r.reward * r.factor;
+                max_reward = r.reward;
             }
         }
-        actionClassifierSet.updateReward(max, max_prediction, 1.0);
-    // }
+        actionClassifierSet.updateReward(max_reward, 0.0, 1.0);
     }
+
 
     public void evolutionaryAlgorithm(MainClassifierSet main_classifier_set, long gaTimestep) throws Exception {
         actionClassifierSet.evolutionaryAlgorithm(main_classifier_set, gaTimestep);

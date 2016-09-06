@@ -2,14 +2,16 @@ package agents;
 
 import Misc.Misc;
 import lcs.Action;
+import agent.Configuration;
+
 
 /**
  *
  * Complex agent implementation, moves around randomly if no goal agent is in sight, moves away from other agents
  * 
- * @author Clemens Lode, 1151459, University Karlsruhe (TH)
+ * @author Clemens Lode, clemens at lode.de, University Karlsruhe (TH)
  */
-public class Good_AI_Agent extends BaseAgent {
+public class IntelligenteHeuristik_Agent extends BaseAgent {
     
     /**
      * Determines the matching classifiers and chooses one action from this set
@@ -48,6 +50,13 @@ public class Good_AI_Agent extends BaseAgent {
                     calculatedAction = Misc.nextInt(Action.MAX_DIRECTIONS);
                 }
             }
-        } 
+        }
+       if(Misc.nextDouble() > Configuration.getTournamentProbability()) {
+            int temp = Misc.nextInt(Action.MAX_DIRECTIONS - 1);
+            if(temp == calculatedAction) {
+                temp++;
+            }
+            calculatedAction = temp;
+        }
     }   
 }

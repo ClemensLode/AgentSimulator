@@ -7,7 +7,7 @@ import lcs.ClassifierSet;
 /**
  * This class logs the statistics
  * 
- * @author Clemens Lode, 1151459, University Karlsruhe (TH)
+ * @author Clemens Lode, clemens at lode.de, University Karlsruhe (TH)
  */
 public class Statistics {
 
@@ -117,6 +117,8 @@ public class Statistics {
         try {
 
         int counter = 0;
+
+        // uncomment for additionl statistic output
         /*
         Log.newCustomLog(Misc.getBaseFileName("points_spread"));
         for(Stat s : average_stats) {
@@ -263,6 +265,9 @@ public class Statistics {
             }
             average_average_stat.divide(max+1);
             double new_entry = average_average_stat.getGoalAgentObserved();
+
+            // uncomment in order to display the best average found so far
+
 //            if(last < new_entry) {
                 last = new_entry;
 //            }

@@ -14,10 +14,13 @@ import gif.*;
 
 
 /**
- * @author Clemens Lode, 1151459, University Karlsruhe (TH)
+ * Basic grid functionality
+ *
+ * @author Clemens Lode, clemens at lode.de, University Karlsruhe (TH)
  */
 public class BaseGrid {
     public static long invalidActions = 0;
+    public static long goalInvalidActions = 0;
     public static int goalJumps = 0;
     protected Field [][] grid;
 
@@ -35,6 +38,9 @@ public class BaseGrid {
         }
     }
 
+    /**
+     * resets the grid
+     */
     protected void clear() {
         int max_x = Configuration.getMaxX();
         int max_y = Configuration.getMaxY();
@@ -67,6 +73,9 @@ public class BaseGrid {
         if (isDirectionInvalid(a.getPosition(), action)) {
             if((!a.isGoalAgent()) && isDirectionNonGoalInvalid(a.getPosition(), action)) {
                 invalidActions++;
+            }
+            if((a.isGoalAgent()) && isDirectionNonGoalInvalid(a.getPosition(), action)) {
+                goalInvalidActions++;
             }
             return false;
         }
@@ -111,6 +120,10 @@ public class BaseGrid {
         return new Point(x, y);
     }
 
+    /**
+     * @param p The point in question
+     * @return Numer of obstacles near p
+     */
     protected int isObstacleNear(Point p) {
         int count = 0;
         for(int x = -1; x <= 1; x++) {
@@ -148,6 +161,11 @@ public class BaseGrid {
         return grid[x][y].isOccupied();
     }
 
+    /**
+     * @param position The position in question
+     * @param direction The direction in question
+     * @return True if the field in question is not occupied by a goal agent
+     */
     protected boolean isDirectionNonGoalInvalid(final Point position, final int direction) {
         int x = Geometry.correctX[128 + position.x + Action.dx[direction]];
         int y = Geometry.correctY[128 + position.y + Action.dy[direction]];
@@ -188,7 +206,6 @@ public class BaseGrid {
     /**
      * @return An array of directions in which an agent can move
      */
-    // TODO
     public ArrayList<Integer> getAllDirections() {
         ArrayList<Integer> list = new ArrayList<Integer>(Action.MAX_DIRECTIONS);
         for(int i = 0; i < Action.MAX_DIRECTIONS; i++) {
@@ -276,6 +293,9 @@ public class BaseGrid {
 
 
 
+    /**
+     * @return Darstellung des momentanen Gridzustands
+     */
     private BufferedImage getImage() {
         int max_x = Configuration.getMaxX();
         int max_y = Configuration.getMaxY();

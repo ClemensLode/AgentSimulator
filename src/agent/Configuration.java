@@ -15,7 +15,7 @@ import java.math.BigInteger;
  * This class contains all variables that define the parameters of a single
  * experiment. All variables can only be changed once!
  * 
- * @author Clemens Lode, 1151459, University Karlsruhe (TH)
+ * @author Clemens Lode, clemens at lode.de, University Karlsruhe (TH)
  */
 public class Configuration {
 

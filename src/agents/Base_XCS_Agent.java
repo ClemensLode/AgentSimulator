@@ -9,7 +9,7 @@ import agent.Configuration;
 
 /**
  *
- * @author Clemens Lode, 1151459, University Karlsruhe (TH)
+ * @author Clemens Lode, clemens at lode.de, University Karlsruhe (TH)
  */
 abstract public class Base_XCS_Agent extends BaseAgent {
 

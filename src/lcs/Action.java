@@ -6,7 +6,7 @@ import agent.Configuration;
 /**
  * Base class of an action
  * 
- * @author Clemens Lode, 1151459, University Karlsruhe (TH)
+ * @author Clemens Lode, clemens at lode.de, University Karlsruhe (TH)
  */
 public class Action {
 

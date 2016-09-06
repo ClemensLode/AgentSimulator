@@ -9,7 +9,7 @@ import java.io.IOException;
  * initialize() needs to be called at the beginning of each agent log file
  * finalise() needs to be called at the end
  * 
- * @author Clemens Lode, 1151459, University Karlsruhe (TH)
+ * @author Clemens Lode, clemens at lode.de, University Karlsruhe (TH)
  */
 public class Log {
 

@@ -4,7 +4,7 @@ package agents;
  * This class provides basic functionality for any moving agents and the goal agent
  * This class cannot be instanciated
  * 
- * @author Clemens Lode, 1151459, University Karlsruhe (TH)
+ * @author Clemens Lode, clemens at lode.de, University Karlsruhe (TH)
  */
 import agent.Sensors;
 import agent.Field;
@@ -20,40 +20,31 @@ public abstract class BaseAgent {
      * The action that was determined by calculateNextMove
      */
     protected int calculatedAction = 0;
-
     protected Sensors lastState = null;
-
-
     /**
      * statistical value
      */
     protected double totalPoints = 0;
-    
     /**
      * instance of the grid
      */
     public static Grid grid;
-    
     /**
      * instance of the single goal agent
      */
     public static BaseAgent goalAgent;
-    
     /**
      * current position on the grid
      */
     private Point p;
-    
     /**
      * unique id of the agent
      */
     private int id;
-    
     /**
      * reset global id whenever a new grid with new agents is created
      */
     private static int global_id = Field.GOAL_AGENT_ID;
-    
 
     /**
      * Create new agent and register the agent in the grid
@@ -100,7 +91,8 @@ public abstract class BaseAgent {
      * @see New_LCS_Agent#collectExternalReward
      * @see Multistep_LCS_Agent#collectExternalReward
      */
-    public void collectExternalReward(BaseAgent other_agent, int start_index, int action_set_size, boolean reward, boolean is_event) throws Exception {}
+    public void collectExternalReward(BaseAgent other_agent, int start_index, int action_set_size, boolean reward, boolean is_event) throws Exception {
+    }
 
     /**
      * Move the agent and put all classifiers with the same action in the action
@@ -108,31 +100,47 @@ public abstract class BaseAgent {
      * @throws java.lang.Exception if there was an error moving the agent on the grid
      */
     public void doNextMove() throws Exception {
-        if(grid.moveAgent(this, calculatedAction)) {
+        if (grid.moveAgent(this, calculatedAction)) {
             printMove();
         }
     }
 
-    /**
-     * counts the number of rounds the goal agent was in sight
-     * @return true if the goal agent currently is in sight
-     */
-    public boolean checkRewardPoints() {
-        if(lastState == null) {
-            return false;
-        }
-        boolean[] sensor_agent = lastState.getSensorAgent();
+    public boolean isGoalAgentNear() {
         boolean[] sensor_goal = lastState.getSensorGoal();
-        boolean reward = false;
-        for(int i = 0; i < Action.MAX_DIRECTIONS; i++) {
-            if((sensor_goal[2*i])) {// && (!sensor_agent[2*i+1])) {
-                //TODO
-                reward = true;
-                break;
+        for (int i = 0; i < Action.MAX_DIRECTIONS; i++) {
+            if ((sensor_goal[2 * i])) {
+                return true;
             }
         }
+        return false;
+    }
+    public boolean isAgentNear() {
+        boolean[] sensor_agent = lastState.getSensorAgent();
+        for (int i = 0; i < Action.MAX_DIRECTIONS; i++) {
+            if (sensor_agent[2 * i]) {
+                return true;
+            }
+        }
+        return false;
+    }
 
-        // goal agent is in sight?
+
+    /**
+     * counts the number of rounds the goal agent was in sight and calculates
+     * the base reward
+     * @return the base reward
+     */
+    public boolean checkRewardPoints() {
+        if (lastState == null) {
+            return false;
+        }
+        boolean reward = isGoalAgentNear();
+
+        if (!reward) {
+            reward = !isAgentNear();
+        }
+
+        // goal agent is in reward range?
         if (grid.isGoalAgentInRewardRange(this)) {
             totalPoints = totalPoints + 1.0;
         }
@@ -145,7 +153,7 @@ public abstract class BaseAgent {
      */
     public void resetBeforeNewProblem() throws Exception {
     }
-    
+
     /**
      * @return true if this agent has the goal agent id
      */
@@ -220,11 +228,11 @@ public abstract class BaseAgent {
      * Prints the header of the LCS_Agent (the ID)
      */
     public void printHeader() {
-        if(!Log.isDoLog()) {
+        if (!Log.isDoLog()) {
             return;
         }
 
-        if(this.isGoalAgent()) {
+        if (this.isGoalAgent()) {
             Log.log("# GOAL AGENT");
         } else {
             Log.log("# AGENT");
@@ -236,13 +244,13 @@ public abstract class BaseAgent {
         String sb = "ID " + (nf.format((long) getID()));
         Log.log(sb);
         Log.log("# input");
-        if(lastState != null) {
+        if (lastState != null) {
             Log.log(lastState.getInputString());
         }
     }
 
     public void printMove() {
-        if(!Log.isDoLog()) {
+        if (!Log.isDoLog()) {
             return;
         }
         Log.log(" - actual move");

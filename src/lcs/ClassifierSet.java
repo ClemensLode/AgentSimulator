@@ -9,7 +9,7 @@ import java.util.Comparator;
  * functions are in MainClassifierSet, ActionClassifierSet and AppliedClassifierSet
  * This class cannot be instanciated
  * 
- * @author Clemens Lode, 1151459, University Karlsruhe (TH)
+ * @author Clemens Lode, clemens at lode.de, University Karlsruhe (TH)
  */
 public class ClassifierSet {
 
@@ -139,7 +139,23 @@ public class ClassifierSet {
      */
     public void changeNumerositySum(int n) {
         numerositySum += n;
-    }    
+    }
+
+        public double getEgoisticFactor() throws Exception {
+        double factor = 0.0;
+        double pred_sum = 0.0;
+        for(Classifier c : getClassifiers()) {
+            factor += c.getEgoFactor();
+            pred_sum += c.getFitness() * c.getPrediction();
+        }
+        if(pred_sum > 0.0) {
+            factor /= pred_sum;
+        } else {
+            factor = 0.0;
+        }
+
+        return factor;
+    }
     
     private double getAveragePrediction() throws Exception {
         double prediction = 0.0;
@@ -159,6 +175,16 @@ public class ClassifierSet {
         return avg_fitness;
     }
 
+    public double getAverageActionSize() throws Exception {
+        double avg_action_size = 0.0;
+        for (Classifier c : getClassifiers()) {
+            avg_action_size += c.getActionSetSize();
+        }
+        avg_action_size /= (double)getNumerositySum();
+        return avg_action_size;
+    }
+
+
     private double getAverageTimestamp() {
         double timestamp = 0.0;
         for (Classifier c : getClassifiers()) {
@@ -173,7 +199,7 @@ public class ClassifierSet {
         String output = new String();
         output += "   > Averages:\n";
         try{
-        output += "   > Pre: " + getAveragePrediction() + " Fit: " + getAverageFitness() + " Tss: " + getAverageTimestamp() + " Num: " + getNumerositySum() + " Size: " + size() + "\n";
+        output += "   > Pre: " + getAveragePrediction() + " Fit: " + getAverageFitness() + " Act: " + getAverageActionSize() + " Tss: " + getAverageTimestamp() + " Num: " + getNumerositySum() + " Size: " + size() + "\n";
 
         Collections.sort(classifiers, new Comparator() {
 

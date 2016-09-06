@@ -8,7 +8,7 @@ import java.util.ArrayList;
  * The correctly rotated classifiers with the absolute direction
  * Only used to determine the action
  * 
- * @author Clemens Lode, 1151459, University Karlsruhe (TH)
+ * @author Clemens Lode, clemens at lode.de, University Karlsruhe (TH)
  */
 public class AppliedClassifierSet {
 
@@ -16,12 +16,10 @@ public class AppliedClassifierSet {
      * The actual sets of applied classifiers (i.e. pairs of the actual direction and the original classifier)
      */
     private ArrayList<Classifier> classifiers = new ArrayList<Classifier>();
-    
     /**
      * The cache for the prediction fitness product sum for each direction
      */
     private double[] predictionFitnessProductSum = new double[Action.MAX_DIRECTIONS];
-    
     /**
      * The cache for the sum of the fitnesses of classifiers for each direction
      */
@@ -36,7 +34,7 @@ public class AppliedClassifierSet {
      */
     public AppliedClassifierSet(final Sensors state, ClassifierSet parent_pop) throws Exception {
         for (Classifier c : parent_pop.getClassifiers()) {
-            if(c.isMatchingState(state)) {
+            if (c.isMatchingState(state)) {
                 classifiers.add(c);
             }
         }
@@ -58,7 +56,7 @@ public class AppliedClassifierSet {
      */
     public double getBestValue() throws Exception {
         initValues();
-        
+
         int i;
         double max;
         for (i = 1, max = predictionFitnessProductSum[0]; i < predictionFitnessProductSum.length; i++) {
@@ -82,7 +80,6 @@ public class AppliedClassifierSet {
         return min;
 
     }
-    
 
     /**
      * Choses an action from the matching set
@@ -112,8 +109,8 @@ public class AppliedClassifierSet {
      */
     public final ArrayList<Classifier> getClassifiers() {
         return classifiers;
-    }    
-    
+    }
+
     /**
      * re-calculates the fitness and predictionFitnessProduct cache
      */
@@ -125,19 +122,19 @@ public class AppliedClassifierSet {
         for (Classifier c : classifiers) {
             predictionFitnessProductSum[c.getDirection()] += c.getPrediction() * c.getFitness();
             fitnessSum[c.getDirection()] += c.getFitness();
-            if(Double.isNaN(predictionFitnessProductSum[c.getDirection()])) {
+            if (Double.isNaN(predictionFitnessProductSum[c.getDirection()])) {
                 throw new Exception("predfit out of range " + c.toString());
             }
-            if(Double.isNaN(fitnessSum[c.getDirection()])) {
+            if (Double.isNaN(fitnessSum[c.getDirection()])) {
                 throw new Exception("fit out of range " + c.toString());
             }
         }
 
         for (int i = 0; i < Action.MAX_DIRECTIONS; i++) {
-            if(Double.isNaN(predictionFitnessProductSum[i])) {
+            if (Double.isNaN(predictionFitnessProductSum[i])) {
                 throw new Exception("predfit out of range " + i);
             }
-            if(Double.isNaN(fitnessSum[i])) {
+            if (Double.isNaN(fitnessSum[i])) {
                 throw new Exception("fit out of range " + i);
             }
         }
@@ -145,7 +142,7 @@ public class AppliedClassifierSet {
         for (int i = 0; i < Action.MAX_DIRECTIONS; i++) {
             if (fitnessSum[i] != 0.0) {
                 predictionFitnessProductSum[i] /= fitnessSum[i];
-                if(Double.isNaN(predictionFitnessProductSum[i])) {
+                if (Double.isNaN(predictionFitnessProductSum[i])) {
                     throw new Exception("out of range " + fitnessSum[i]);
                 }
             } else {
@@ -153,7 +150,6 @@ public class AppliedClassifierSet {
             }
         }
     }
-    
 
     /**
      * Selects an action randomly. 
@@ -174,10 +170,10 @@ public class AppliedClassifierSet {
      */
     private int bestActionWinner() {
         int ret = 0;
-        // TODO randomize Reihenfolge!
-        for (int i = 1; i < predictionFitnessProductSum.length; i++) {
-            if (predictionFitnessProductSum[ret] < predictionFitnessProductSum[i]) {
-                ret = i;
+        int[] array = Misc.getRandomArray(Action.MAX_DIRECTIONS);
+        for (int i = 0; i < array.length; i++) {
+            if (ret == -1 || predictionFitnessProductSum[ret] < predictionFitnessProductSum[array[i]]) {
+                ret = array[i];
             }
         }
         return ret;
@@ -210,9 +206,9 @@ public class AppliedClassifierSet {
      * probability p, the next with p*(1-p), the third with p*(1-p)^2 etc.
      * See 
      * M. V. Butz, K. Sastry, and D. E. Goldberg, “Tournament selection:
-Stable fitness pressure in XCS,” in Lecture Notes in Computer Science,
+    Stable fitness pressure in XCS,” in Lecture Notes in Computer Science,
      * Eds. Chicago, IL, Jul. 12–16, 2003, vol. 2724,
-Proc. Genetic and Evol. Comput., pp. 1857–1869.
+    Proc. Genetic and Evol. Comput., pp. 1857–1869.
      *
      *
      * @return
@@ -220,29 +216,29 @@ Proc. Genetic and Evol. Comput., pp. 1857–1869.
     private int tournamentActionWinner() {
         int[] array = Misc.getRandomArray(Action.MAX_DIRECTIONS);
 
-        while(array.length > 1) {
+        while (array.length > 1) {
             int ret = -1;
             int j = 0;
-            //last change, check nontorus scenario
-            for(int i = 0; i < array.length; i++) {
+
+            for (int i = 0; i < array.length; i++) {
                 if (ret == -1 || predictionFitnessProductSum[ret] < predictionFitnessProductSum[array[i]]) {
                     ret = array[i];
                     j = i;
                 }
             }
-            if(Misc.nextDouble() <= Configuration.getTournamentProbability()) {
+            if (Misc.nextDouble() <= Configuration.getTournamentProbability()) {
                 return ret;
             }
 
-            int[] new_array = new int[array.length-1];
-            for(int i = 0; i < j; i++) {
+            int[] new_array = new int[array.length - 1];
+            for (int i = 0; i < j; i++) {
                 new_array[i] = array[i];
             }
-            for(int i = j + 1; i < array.length; i++) {
-                new_array[i-1] = array[i];
+            for (int i = j + 1; i < array.length; i++) {
+                new_array[i - 1] = array[i];
             }
             array = new int[new_array.length];
-            for(int i = 0; i < array.length; i++) {
+            for (int i = 0; i < array.length; i++) {
                 array[i] = new_array[i];
             }
         }

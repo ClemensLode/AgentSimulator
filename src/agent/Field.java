@@ -4,8 +4,9 @@ import java.util.ArrayList;
 import java.text.NumberFormat;
 
 /**
+ * Single field on the grid.
  *
- * @author Clemens Lode, 1151459, University Karlsruhe (TH)
+ * @author Clemens Lode, clemens at lode.de, University Karlsruhe (TH)
  */
 public class Field {
 

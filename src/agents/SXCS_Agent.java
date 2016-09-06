@@ -4,7 +4,7 @@ package agents;
  * This class provides the functionality to access the classifier set, to move
  * the agents and to calculate the reward
  * 
- * @author Clemens Lode, 1151459, University Karlsruhe (TH)
+ * @author Clemens Lode, clemens at lode.de, University Karlsruhe (TH)
  */
 import agent.Configuration;
 import lcs.ActionClassifierSet;
@@ -83,22 +83,12 @@ public class SXCS_Agent extends Base_XCS_Agent {
      * @param start_index Index of the action set in the historic action set where the reward update should begin
      * @param action_set_size Numerosity of the action set size from which the action was
      * @param reward Positive reward (goal agent in sight or not)
-     * @param factor Weight of the update (see Configuration#getBeta)
      * @param is_event Does this reward come from an event or from a non-event (no change in reward for a long time)?
      * @throws java.lang.Exception If there was an error updating the reward
      */
-    protected void collectReward(int start_index, int action_set_size, boolean reward, double factor, boolean is_event) throws Exception {
-        double max_prediction = 0.0;
-        if (!is_event && Configuration.isUseMaxPrediction()) {
-            max_prediction = historicActionSet.get(start_index + 1).getMatchSet().getBestValue();
-        }
-        boolean first = false;
-        int action_winner = 0;
-        if (!is_event) {
-            action_winner = historicActionSet.get(start_index + 1).getAction();
-        } else {
-            first = true;
-        }
+    protected void collectReward(int start_index, int action_set_size, boolean reward, boolean is_event) throws Exception {
+
+        // kaum Einfluss?
         double corrected_reward = reward ? 1.0 : 0.0;
 
         for (int i = 0; i < action_set_size; i++) {
@@ -107,26 +97,15 @@ public class SXCS_Agent extends Base_XCS_Agent {
             }
 
             ActionClassifierSet action_classifier_set = historicActionSet.get(start_index - i);
-            action_classifier_set.updateReward(corrected_reward, max_prediction, factor);
-
-            if (!first) {
-                lastPredictionError += Math.abs(action_classifier_set.getMatchSet().getValue(action_winner) * Configuration.getGamma() + corrected_reward - max_prediction);
-            }
-            first = false;
-            action_winner = historicActionSet.get(start_index - i).getAction();
-
-            // is_event is just an optimization
-            if (is_event) {
-                if (Configuration.isUseMaxPrediction()) {
-                    max_prediction = action_classifier_set.getMatchSet().getBestValue();
-                }
-            }
+            action_classifier_set.updateReward(corrected_reward, 0.0, 1.0);
         }
 
     }
 
+
     /**
      * resets the historic action set and initialized lastReward
+     * @throws java.lang.Exception If there was an error with resetting the problem
      */
     @Override
     public void resetBeforeNewProblem() throws Exception {
@@ -158,17 +137,14 @@ public class SXCS_Agent extends Base_XCS_Agent {
             }
 
             int start_index = historicActionSet.size() - 1;
-            collectReward(start_index, actionSetSize, reward, 1.0, true);
+            collectReward(start_index, actionSetSize, reward, true);
             // remove all classifier sets
             actionSetSize = 0;
         } // ausschliesslich
         else if (actionSetSize >= Configuration.getMaxStackSize()) {
             int start_index = Configuration.getMaxStackSize() / 2;
             int length = actionSetSize - start_index;
-            // don't penalize if the agent didn't see the goal agent for a long time
-            if (reward) {
-                collectReward(start_index, length, reward, 1.0, false);
-            }
+            collectReward(start_index, length, reward, false);
             actionSetSize = start_index;
         }
         lastReward = reward;

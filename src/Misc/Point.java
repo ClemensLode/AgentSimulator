@@ -1,8 +1,9 @@
 package Misc;
 
 /**
+ * Base geometry class
  *
- * @author Clemens Lode, 1151459, University Karlsruhe (TH)
+ * @author Clemens Lode, clemens at lode.de, University Karlsruhe (TH)
  */
 public class Point {
     public int x;

@@ -10,7 +10,7 @@ import java.io.FileWriter;
  *
  * This static class contains all in/output and random functions
  * 
- * @author Clemens Lode, 1151459, University Karlsruhe (TH)
+ * @author Clemens Lode, clemens at lode.de, University Karlsruhe (TH)
  */
 public class Misc {
 

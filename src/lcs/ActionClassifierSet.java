@@ -10,7 +10,7 @@ import java.util.ArrayList;
  * This class provides the action classifier set, it is needed to save the history of sets of
  * classifiers that were activated so far
  * 
- * @author Clemens Lode, 1151459, University Karlsruhe (TH)
+ * @author Clemens Lode, clemens at lode.de, University Karlsruhe (TH)
  */
 public class ActionClassifierSet extends ClassifierSet {
 
@@ -71,7 +71,6 @@ public class ActionClassifierSet extends ClassifierSet {
         }
 
         setTimeStamps(gaTimestep); // ?? Warum werden GA Timestamps aller auf die aktuelle Zeit gesetzt?
-        // TODO sollte nicht z.B. Experience auch eine Rolle spielen?? mmmh
 
         // Select two parent Classifiers with roulette wheel selection
 
@@ -122,41 +121,39 @@ public class ActionClassifierSet extends ClassifierSet {
      * Updates the values of a classifier according to the reward received
      * @param reward The amount of reward
      * @param max_prediction Max predicted value for the next match set
-     * @param factor Weight of the change, change the appropriate values by a smaller amount if it was an external reward
+     * @param factor Weight of the reward (mostly received through communication)
      * @throws java.lang.Exception If there was an error with the reward or updating prediction, action set size and fitness
      */
     public void updateReward(double reward, double max_prediction, double factor) throws Exception {
         if (getClassifiers().isEmpty()) {
             return;
         }
-        if(factor == 0.0) {
-            return;
-        }
 
         double[] accuracies = new double[size()];
 
+        double P = (reward + Configuration.getGamma() * max_prediction);
+
+        for (Classifier c : getClassifiers()) {
+            c.increaseExperience(1.0);
+            // faster convergence if switched, only for simpler problems so don't
+            c.updatePrediction(P, factor);
+            c.updatePredictionError(P, factor);
+            c.updateActionSetSize(getNumerositySum());
+
+        }
 
         int i = 0;
         double accuracy_sum = 0.;
         for (Classifier c : getClassifiers()) {
             accuracies[i] = c.getAccuracy();
-            if(Double.isNaN(accuracies[i])) {
-                throw new Exception("" + Configuration.getAlpha() + " * pow(" + c.getPredictionError() + " / " + Configuration.getEpsilon0() + " , " + (-Configuration.getNu()));
-            }
             accuracy_sum += accuracies[i] * c.getNumerosity();
-        }
-        double P = (reward + Configuration.getGamma() * max_prediction);
-        if(Double.isNaN(P)) {
-            throw new Exception("" + reward + " + " + max_prediction);
+            i++;
         }
 
-        for (Classifier c : getClassifiers()) {
-            c.increaseExperience(factor);
-            // faster convergence if switched, only for simpler problems so don't
-            c.updatePrediction(P, factor);
-            c.updatePredictionError(P, factor);
-            c.updateActionSetSize(getNumerositySum(), factor);
+        i = 0;
+        for(Classifier c : getClassifiers()) {
             c.updateFitness(accuracy_sum, accuracies[i], factor);
+            i++;
         }
 
         if (Configuration.isDoActionSetSubsumption()) {

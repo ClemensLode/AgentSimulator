@@ -4,7 +4,7 @@ package agents;
  * This class provides the functionality to access the classifier set, to move
  * the agents and to calculate the reward
  * 
- * @author Clemens Lode, 1151459, University Karlsruhe (TH)
+ * @author Clemens Lode, clemens at lode.de, University Karlsruhe (TH)
  */
 import agent.Configuration;
 import lcs.ActionClassifierSet;

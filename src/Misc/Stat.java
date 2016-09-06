@@ -7,7 +7,7 @@ import agent.Configuration;
  *
  * Class for a single statistics entry
  * 
- * @author Clemens Lode, 1151459, University Karlsruhe (TH)
+ * @author Clemens Lode, clemens at lode.de, University Karlsruhe (TH)
  */
 public class Stat {
 

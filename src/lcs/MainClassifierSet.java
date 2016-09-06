@@ -9,7 +9,7 @@ import agents.Base_XCS_Agent;
 /**
  * Main classifier set of each agent, provides covering, crossing over, subsumation, adding/removing and relationship functionality
  * 
- * @author Clemens Lode, 1151459, University Karlsruhe (TH)
+ * @author Clemens Lode, clemens at lode.de, University Karlsruhe (TH)
  */
 public class MainClassifierSet extends ClassifierSet {
 
@@ -60,7 +60,6 @@ public class MainClassifierSet extends ClassifierSet {
                 if (!action_covered[i]) {
                     Classifier newCl = new Classifier(state, new Action(i), gaTime, getNumerositySum()+1, prediction_initialization);
                     addClassifier(newCl);
-                    // newCl.setMatchingActions(action_covered, state); TODO maybe optimize....
                     // wenn ein neuer Classifier spaeter gepruefte actions schon abdeckt, muessen insgesamt weniger Classifier hinzugefuegt werden
                     Base_XCS_Agent.cover_actions++;
                 }
@@ -215,13 +214,9 @@ public class MainClassifierSet extends ClassifierSet {
     }
 
     public double getAveragePrediction() throws Exception {
-        //return Configuration.getPredictionInitialization();
         double pred = 0.0;
         int count = 0;
         for(Classifier c : getClassifiers()) {
-            //if(c.getExperience() < Configuration.getThetaSubsumer()) {
-            //    continue;
-            //}
             pred += c.getPrediction();
             count++;
         }
@@ -260,60 +255,6 @@ public class MainClassifierSet extends ClassifierSet {
         throw new Exception("Error finding proper roulette wheel selection");
     }
 
-    /**
-     * Relation of this classifier set (the active agent classifier set,
-     * e.g. the set that received a reward) to another classifier set
-     * @param other The other set we want to compare with
-     * @return degree of relationship (0.0 - 1.0)
-     */
-    public double checkDegreeOfRelationship(final MainClassifierSet other) throws Exception {
-        double degree = 0.0;
-        int size = 0;
-        ArrayList<Classifier> matched = new ArrayList<Classifier>();
-
-        for (Classifier c : getClassifiers()) {
-            if(!c.isPossibleSubsumer()) {
-                continue;
-            }
-
-            Classifier cl = other.getBestIdenticalClassifier(matched, c);
-            if (cl != null) {
-                matched.add(cl);
-
-
-
-                double div = c.getPrediction();
-                if(cl.getPrediction() > div) {
-                    div = cl.getPrediction();
-                }
-                if(div != 0.0) {
-                    double difference =
-                            1.0 - Math.abs(c.getFitness() * c.getPrediction() - cl.getFitness() * cl.getPrediction()) / div;
-                    if(difference > 1.0) {
-                        difference = 1.0;
-                    } else
-                    if(difference < 0.0) {
-                        difference = 0.0;
-                    }
-                    degree += difference;
-                }
-            }
-// TODO            size hoch?
-            size++;
-        }
-
-        if(size == 0) {
-            return 0.0;
-        }
-
-        degree /= (double)size;
-
-        if (degree >= 0.01 && degree <= 1.0) {
-            return degree;
-        } else {
-            return 0.0;
-        }
-    }
 
     /**
      * Relation of this classifier set (the active agent classifier set,
@@ -321,72 +262,11 @@ public class MainClassifierSet extends ClassifierSet {
      * @param other The other set we want to compare with
      * @return degree of relationship (0.0 - 1.0)
      */
-    public double checkDegreeOfRelationshipNew(final MainClassifierSet other) throws Exception {
-        double degree = 0.0;
-        int size = 0;
-        ArrayList<Classifier> matched = new ArrayList<Classifier>();
-
-        for (Classifier c : getClassifiers()) {
-            if (c.getExperience() < Configuration.getThetaSubsumer()) {
-                continue;
-            }
-//            if(!c.isPossibleSubsumer()) {
-//                continue;
-//            }
-
-            Classifier cl = other.getBestIdenticalClassifierNew(matched, c);
-            if (cl != null) {
-                matched.add(cl);
-
-                double div = c.getPrediction();
-                if(cl.getPrediction() > div) {
-                    div = cl.getPrediction();
-                }
-                if(div != 0.0) {
-                    double difference =
-                            1.0 - Math.abs(c.getPrediction() - cl.getPrediction()) / div;
-                    //difference *= c.getFitness() * cl.getFitness();
-                    if(difference > 1.0) {
-                        difference = 1.0;
-                    } else
-                    if(difference < 0.0) {
-                        difference = 0.0;
-                    }
-                    degree += difference;
-                }
-            }
-            size++;
-        }
-
-        if(size == 0) {
-            return 0.0;
-        }
-
-        degree /= (double)size;
-
-        if (degree >= 0.01 && degree <= 1.0) {
-            return degree;
-        } else {
-            return 0.0;
-        }
-    }
-
-
-    // alle SITUATIONEN durchlaufen und Verhalten vergleichen!
-    // Configuration Option für possible subsumer einführen
-    //
-
-    /**
-     * Relation of this classifier set (the active agent classifier set,
-     * e.g. the set that received a reward) to another classifier set
-     * @param other The other set we want to compare with
-     * @return degree of relationship (0.0 - 1.0)
-     */
-    public double checkEgoisticDegreeOfRelationship(final MainClassifierSet other) throws Exception {
+    public double checkEgoisticDegreeOfRelationship(final MainClassifierSet other) {
         if(ego_factor == 0.0 || other.ego_factor == 0.0) {
             return 0.0;
         }
-        return(1.0 - Math.abs(ego_factor - other.ego_factor)*Math.abs(ego_factor - other.ego_factor));//getEgoisticFactor() - other.getEgoisticFactor()));
+        return(1.0 - Math.abs(ego_factor - other.ego_factor)*Math.abs(ego_factor - other.ego_factor));
     }
 
     private double ego_factor = 0.0;
@@ -397,133 +277,7 @@ public class MainClassifierSet extends ClassifierSet {
         }
     }
 
-    public double getEgoisticFactor() throws Exception {
-        double factor = 0.0;
-        double pred_sum = 0.0;
-        for(Classifier c : getClassifiers()) {
-//            if(!c.isPossibleSubsumer()) {
-//                continue;
-//            }
-            // ignore behavior if goal agent is near
-//            if(c.getCondition().isGoalCondition()) {
-//                continue;
- //           }
-            factor += c.getEgoFactor();
-            pred_sum += c.getFitness() * c.getPrediction();
-        }
-        if(pred_sum > 0.0) {
-            factor /= pred_sum;
-        } else {
-            factor = 0.0;
-        }
 
-        return factor;
-    }
 
-    /**
-     * Looks for an identical classifier in the population.
-     * @param newCl The new classifier.
-     * @return Returns the identical classifier if found, null otherwise.
-     */
-    private Classifier getBestIdenticalClassifier(ArrayList<Classifier> already_matched, Classifier newCl) throws Exception {
 
-// TODO        da auch noch possible subsumer rein?
-
-        ArrayList<Classifier> identical_classifiers = new ArrayList<Classifier>();
-        for (Classifier c : getClassifiers()) {
-            if (c.equals(newCl)) {
-                identical_classifiers.add(c);
-            }
-        }
-        identical_classifiers.removeAll(already_matched);
-        if (identical_classifiers.isEmpty()) {
-            return null;
-        } else {
-            double dist = -1.0;
-            Classifier best = null;
-            for (Classifier c : identical_classifiers) {
-                double temp_dist = Math.abs(newCl.getFitness() - c.getFitness());
-// TODO                fitness * prediction?
-                if (temp_dist < dist || dist == -1.0) {
-                    dist = temp_dist;
-                    best = c;
-                }
-            }
-            return best;
-        }
-    }
-
-    /**
-     * Looks for an identical classifier in the population.
-     * @param newCl The new classifier.
-     * @return Returns the identical classifier if found, null otherwise.
-     */
-    private Classifier getBestIdenticalClassifierNew(ArrayList<Classifier> already_matched, Classifier newCl) throws Exception {
-        ArrayList<Classifier> identical_classifiers = new ArrayList<Classifier>();
-        for (Classifier c : getClassifiers()) {
-            if (c.equals(newCl)) {
-                identical_classifiers.add(c);
-            }
-        }
-        identical_classifiers.removeAll(already_matched);
-        if (identical_classifiers.isEmpty()) {
-            return null;
-        } else {
-            double best_fitness = -1.0;
-            Classifier best = null;
-            for (Classifier c : identical_classifiers) {
-                if(c.getFitness() > best_fitness) {
-                    best_fitness = c.getFitness();
-                    best = c;
-                }
-            }
-            return best;
-        }
-    }
-
-    /**
-     * Looks for an identical classifier in the population.
-     * @param newCl The new classifier.
-     * @return Returns the identical classifier if found, null otherwise.
-     */
-    private Classifier getBestIdenticalClassifier(Classifier newCl) throws Exception {
-        ArrayList<Classifier> identical_classifiers = new ArrayList<Classifier>();
-        for (Classifier c : getClassifiers()) {
-            if (c.equals(newCl)) {
-                identical_classifiers.add(c);
-            }
-        }
-        if (identical_classifiers.isEmpty()) {
-            return null;
-        } else {
-            double best_fitness = -1.0;
-            Classifier best = null;
-            for (Classifier c : identical_classifiers) {
-                if(c.getFitness() > best_fitness) {
-                    best_fitness = c.getFitness();
-                    best = c;
-                }
-            }
-            return best;
-        }
-    }
-
-    public void exchangeRules(MainClassifierSet other) throws Exception {
-        Classifier c1 = chooseRandomClassifier(Misc.nextDouble(), getFitnessSum());
-        if(c1 != null) {
-            Classifier ic2 = other.getBestIdenticalClassifier(c1);
-            if(ic2 == null || ic2.getFitness() < c1.getFitness()) {
-                other.addClassifier(new Classifier(c1));
-            }
-        }
-
-        Classifier c2 = other.chooseRandomClassifier(Misc.nextDouble(), other.getFitnessSum());
-        if(c2 != null) {
-            Classifier ic1 = getBestIdenticalClassifier(c2);
-            if(ic1 == null || ic1.getFitness() < c2.getFitness()) {
-                addClassifier(new Classifier(c2));
-            }
-        }
-
-    }
 }

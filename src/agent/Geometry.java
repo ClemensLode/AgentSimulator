@@ -5,8 +5,9 @@ import java.util.ArrayList;
 import lcs.Action;
 
 /**
- * 
- * @author Clemens Lode, 1151459, University Karlsruhe (TH)
+ * Basic geometry class (lines, distances etc.(
+ *
+ * @author Clemens Lode, clemens at lode.de, University Karlsruhe (TH)
  */
 public class Geometry {
 
@@ -30,6 +31,9 @@ public class Geometry {
     public static int[] correctX;
     public static int[] correctY;
 
+    /**
+     * Precalculate the sightPoints
+     */
     public static void fillSightPoints() {
         int max = (int) Configuration.getSightRange();
         sightPoints = new ArrayList<Point>(max*max);
@@ -65,6 +69,9 @@ public class Geometry {
         }
     }
 
+    /**
+     * Precalculate the distances on the torus
+     */
     public static void fillSavedDistances() {
         int max_x = Configuration.getMaxX();
         int max_y = Configuration.getMaxY();
@@ -104,6 +111,9 @@ public class Geometry {
         }
     }
 
+    /**
+     * Precalculate the lines
+     */
     public static void fillSavedLinePosition() {
         int max_x = Configuration.getMaxX();
         int max_y = Configuration.getMaxY();
@@ -175,13 +185,6 @@ public class Geometry {
 
 
     protected static ArrayList<Point> getTorusLine(Point a, Point b) {
-        /*if(a.x == b.x) {
-            return getVerticalTorusLine(a.x, a.y, b.y);
-        }
-        if(a.y == b.y) {
-            return getHorizontalTorusLine(a.y, a.x, b.x);
-        }*/
-
         if(a.x == b.x && a.y == b.y) {
             return null;
         }
@@ -444,22 +447,6 @@ public class Geometry {
                 return Action.NORTH;
             }
         }
-
-
-    // east west, horizontal difference greater than vertical difference
-    /*    if (Math.abs(dx) > Math.abs(dy)) {
-            if(dx > 0) {
-                    return Action.EAST;
-            } else {
-                    return Action.WEST;
-            }
-        } else {
-            if(dy > 0) {
-                return Action.SOUTH;
-            } else {
-                return Action.NORTH;
-            }
-        }      */
     }
 
     /**

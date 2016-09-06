@@ -11,7 +11,7 @@ import java.util.ArrayList;
 /**
  * Main class for the XCS Classifier
  * 
- * @author Clemens Lode, 1151459, University Karlsruhe (TH)
+ * @author Clemens Lode, clemens at lode.de, University Karlsruhe (TH)
  */
 public class Classifier {
 
@@ -24,7 +24,6 @@ public class Classifier {
      */
     private double prediction;
 
-    // TODO problem mit possiblesubsumer Aufrufe, experience 0 sonst...
     /**
      * Number of time this classifier was updated
      */
@@ -148,11 +147,7 @@ public class Classifier {
         int[] newChildAStr = new int[childAStr.length];
         int[] newChildBStr = new int[childBStr.length];
 
-        for (int i = 0; i < crossoverIndex1; i++) {
-            newChildAStr[i] = childAStr[i];
-            newChildBStr[i] = childBStr[i];
-        }
-
+  
         switch (Misc.nextInt(3)) {
             case 0:
                 for (int i = crossoverIndex1; i < crossoverIndex2; i++) {
@@ -281,7 +276,7 @@ public class Classifier {
      * Updates the fitness of the classifier according to the relative accuracy.
      * @param accSum The sum of all the accuracies in the action set
      * @param accuracy The accuracy of the classifier.
-     * @param factor Weight of the change, change fitness by a smaller amount if it was an external reward
+     * @param factor Weight of the update
      * @throws java.lang.Exception if the fitness is out of range
      * @see Configuration#beta
      */
@@ -289,7 +284,7 @@ public class Classifier {
         try {
             setFitness(getFitness() + factor * Configuration.getBeta() * ((accuracy * (double) getNumerosity()) / accSum - getFitness()));
         } catch(Exception e) {
-            Log.errorLog("" + accSum + " / " + accuracy + " / " + factor + " / " + getFitness());
+            Log.errorLog("" + accSum + " / " + accuracy + " / " + getFitness());
             throw e;
         }
     }
@@ -297,15 +292,15 @@ public class Classifier {
     /**
      * Updates the prediction error of the classifier according to P.
      * @param P The actual Q-payoff value (actual reward + max of predicted reward in the following situation).
-     * @param factor Weight of the change, change prediction error by a smaller amount if it was an external reward
+     * @param factor Weight of the update
      * @see Configuration#beta
      */
     public void updatePredictionError(double P, double factor) throws Exception {
         if (getExperience() < 1. / Configuration.getBeta()) {
             setPredictionError((getPredictionError() * (getExperience() - 1.0) + Math.abs(P - prediction)) / getExperience());
         } else {
-            if(Double.isNaN(getPredictionError() + factor * Configuration.getBeta() * (Math.abs(P - prediction) - getPredictionError()))) {
-                throw new Exception("prediction error out of range " + getPredictionError() + " + " + factor + " * " + P + " - " + prediction);
+            if(Double.isNaN(getPredictionError() + Configuration.getBeta() * (Math.abs(P - prediction) - getPredictionError()))) {
+                throw new Exception("prediction error out of range " + getPredictionError() + " * " + P + " - " + prediction);
             }
             setPredictionError(getPredictionError() + factor * Configuration.getBeta() * (Math.abs(P - prediction) - getPredictionError()));
         }
@@ -314,26 +309,25 @@ public class Classifier {
     /**
      * Updates the prediction of the classifier according to P.
      * @param P The actual Q-payoff value (actual reward + max of predicted reward in the following situation).
-     * @param factor Weight of the change, change prediction by a smaller amount if it was an external reward
+     * @param factor Weight of the update
      * @see Configuration#beta
      */
     public void updatePrediction(double P, double factor) throws Exception {
 
-    //    if (getExperience() < 1. / Configuration.getBeta()) {
-//            setPrediction((prediction * (getExperience() - 1.0) + P) / getExperience());
-//        } else {
+        if (getExperience() < 1. / Configuration.getBeta()) {
+            setPrediction((prediction * (getExperience() - 1.0) + P) / getExperience());
+        } else {
             setPrediction(prediction + factor * Configuration.getBeta() * (P - prediction));
-//        }
+        }
     }
 
     /**
      * Updates the action set size to find the average of the action set sizes this classifier is part of
      * @param numerosity_sum Numerosity of the action classifier set in question
-     * @param factor Weight of the change, change action set size by a smaller amount if it was an external reward
      * @throws java.lang.Exception If the action set size is out of bounds
      * @see Configuration#beta
      */
-    public void updateActionSetSize(int numerosity_sum, double factor) throws Exception {
+    public void updateActionSetSize(int numerosity_sum) throws Exception {
         if (Configuration.getBeta() * getExperience() < 1.0) {
             try {
                 setActionSetSize((getActionSetSize() * (getExperience() - 1.0) + (double) numerosity_sum) / getExperience());
@@ -343,9 +337,9 @@ public class Classifier {
 
         } else {
             try {
-                setActionSetSize(getActionSetSize() + factor * Configuration.getBeta() * (((double) numerosity_sum) - getActionSetSize()));
+                setActionSetSize(getActionSetSize() + Configuration.getBeta() * (((double) numerosity_sum) - getActionSetSize()));
             } catch (Exception e) {
-                throw new Exception(e + " : " + getActionSetSize() + " + " + factor + " * " + Configuration.getBeta() + " * (" + numerosity_sum + " - " + getActionSetSize() + ")");
+                throw new Exception(e + " : " + getActionSetSize() + " + " + Configuration.getBeta() + " * (" + numerosity_sum + " - " + getActionSetSize() + ")");
             }
 
         }
@@ -401,7 +395,7 @@ public class Classifier {
         numerosity += num;
         if(numerosity == 0) {
             fitness = 0.01;
-        } else
+        }else
         if(old_num > 0) {
               setFitness(getFitness() * ((double)numerosity) / ((double)old_num));
         }
@@ -504,7 +498,7 @@ public class Classifier {
     }
 
     /**
-     * @return number of times the classifier was in the action set TODO
+     * @return number of times the classifier was in the action set
      */
     public double getExperience() {
         return experience;

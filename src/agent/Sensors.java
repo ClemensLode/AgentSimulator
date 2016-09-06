@@ -6,7 +6,7 @@ import lcs.Action;
  * This class provides a container for formatted sensor information
  * New instances are created by the grid class
  * 
- * @author Clemens Lode, 1151459, University Karlsruhe (TH)
+ * @author Clemens Lode, clemens at lode.de, University Karlsruhe (TH)
  */
 public class Sensors {
 

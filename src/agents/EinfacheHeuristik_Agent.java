@@ -4,13 +4,14 @@ package agents;
  *
  * Simple agent implementation, moves around randomly if no goal agent is in sight
  * 
- * @author Clemens Lode, 1151459, University Karlsruhe (TH)
+ * @author Clemens Lode, clemens at lode.de, University Karlsruhe (TH)
  */
 
 import Misc.Misc;
 import lcs.Action;
+import agent.Configuration;
 
-public class AI_Agent extends BaseAgent {
+public class EinfacheHeuristik_Agent extends BaseAgent {
 
     
     /**
@@ -26,6 +27,14 @@ public class AI_Agent extends BaseAgent {
                 calculatedAction = i;
                 break;
             }
+        }
+
+        if(Misc.nextDouble() > Configuration.getTournamentProbability()) {
+            int temp = Misc.nextInt(Action.MAX_DIRECTIONS - 1);
+            if(temp == calculatedAction) {
+                temp++;
+            }
+            calculatedAction = temp;
         }
 
         if(calculatedAction == -1) {

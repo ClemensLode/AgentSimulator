@@ -9,7 +9,7 @@ import Misc.Misc;
  * Provides functionality to store a state and a matching, to compare and mutate
  * a condition and to create a covering matching to a state
  * 
- * @author Clemens Lode, 1151459, University Karlsruhe (TH)
+ * @author Clemens Lode, clemens at lode.de, University Karlsruhe (TH)
  */
 public class Condition {
 
@@ -81,16 +81,14 @@ public class Condition {
     }
 
     public double getEgoFactor(final int action) {
+        if(data[Condition.AGENT_DISTANCE_INDEX + 2*action + 1] != 0) {
+            return 1.0;
+        } else
+        if(data[Condition.AGENT_DISTANCE_INDEX + 2*action] != 0) {
+            return 0.5;
+        }
 
-            switch (data[Condition.AGENT_DISTANCE_INDEX + 2*action]) {
-                case DONTCARE:
-                    return 0.5;
-                case 1:
-                    return 1.0;
-                default:
-                    return 0.0;
-            }
-
+        return 0.0;
     }
 
     /**
@@ -112,7 +110,6 @@ public class Condition {
         for (int i = 0; i < sensors.length; i++) {
             if (Misc.nextDouble() < Configuration.getMutationProbability()) {
                 changed = true;
-                // TODO Check
                 if (data[i] == DONTCARE) {
                     data[i] = sensors[i] ? 1 : 0;
                 } else {
@@ -125,6 +122,8 @@ public class Condition {
     }
 
     /**
+     * Checks whether the condition matches the sensor state
+     *
      * @param s Sensor state
      * @return rotation list consisting of all rotations that this condition matches the sensor state 
      */
@@ -134,11 +133,6 @@ public class Condition {
             boolean matched = true;
             for (int i = 0; i < sensors.length; i+=2) {
 
-                /**
-                 * 0/0
-                 * 1/0
-                 * 1/1
-                 */
 
                 if(!sensors[i] && !sensors[i+1]) {
                     if(data[i] == 1 || data[i+1] == 1) {
@@ -181,20 +175,6 @@ public class Condition {
      */
     public boolean equals(final Condition c) {
         for(int i = 0; i < data.length; i+=2) {
-/*          if(data[i] == 0 && data[i+1] == DONTCARE && c.data[i] == DONTCARE && c.data[i+1] == DONTCARE) {
-                continue;
-            }
-            if(c.data[i] == 0 && c.data[i+1] == DONTCARE && data[i] == DONTCARE && data[i+1] == DONTCARE) {
-                continue;
-            }
-            if(data[i] == 0 && data[i+1] == 1 && c.data[i] == 1 && c.data[i+1] == 1) {
-                continue;
-            }
-            if(c.data[i] == 0 && c.data[i+1] == 1 && data[i] == 1 && data[i+1] == 1) {
-                continue;
-            }
-*/
-
             if(data[i] != c.data[i] || data[i+1] != c.data[i+1]) {
                 return false;
             }

@@ -12,7 +12,7 @@ import java.util.ArrayList;
  * This class provides routines to initialize the engine, run the experiments
  * and log the results and statistics
  *
- * @author Clemens Lode, 1151459, University Karlsruhe (TH)
+ * @author Clemens Lode, clemens at lode.de, University Karlsruhe (TH)
  */
 public class LCS_Engine {
 
@@ -42,8 +42,8 @@ public class LCS_Engine {
         for (int i = 0; i < Configuration.getMaxAgents(); i++) {
             switch (Configuration.getAgentType()) {
                 case Configuration.RANDOMIZED_MOVEMENT_AGENT_TYPE:agentList.add(new Random_Agent(Configuration.RANDOM_MOVEMENT, false));break;
-                case Configuration.SIMPLE_AI_AGENT_TYPE:agentList.add(new AI_Agent());break;
-                case Configuration.INTELLIGENT_AI_AGENT_TYPE:agentList.add(new Good_AI_Agent());break;
+                case Configuration.SIMPLE_AI_AGENT_TYPE:agentList.add(new EinfacheHeuristik_Agent());break;
+                case Configuration.INTELLIGENT_AI_AGENT_TYPE:agentList.add(new IntelligenteHeuristik_Agent());break;
                 case Configuration.DSXCS_AGENT_TYPE:agentList.add(new DSXCS_Agent(max_classifiers));break;
                 case Configuration.SXCS_AGENT_TYPE:agentList.add(new SXCS_Agent(max_classifiers));break;
                 case Configuration.XCS_AGENT_TYPE:agentList.add(new XCS_Agent(max_classifiers));break;

@@ -10,7 +10,7 @@ import Misc.Misc;
  * Runs the simulation according to the parameters of the configuration file
  * Saves an output in the output_<TIME> directory
  * 
- * @author Clemens Lode, 1151459, University Karlsruhe (TH)
+ * @author Clemens Lode, clemens at lode.de, University Karlsruhe (TH)
  */
 public class Main {
 
@@ -39,6 +39,7 @@ public class Main {
         // number of experiments with the same configuration
             long time = System.currentTimeMillis();
             BaseGrid.invalidActions = 0;
+            BaseGrid.goalInvalidActions = 0;
             BaseGrid.goalJumps = 0;
             double[] average_cover_actions = new double[Configuration.getNumberOfProblems()];
             for(int t = 0; t < Configuration.getNumberOfProblems(); t++) {
@@ -75,6 +76,7 @@ public class Main {
             }
 
             System.out.println((System.currentTimeMillis() - time) + "ms");
+            System.out.println("Invalid goal actions: " + 100.0 * (double)BaseGrid.goalInvalidActions / (double)(Configuration.getTotalTimeSteps() * Configuration.getNumberOfExperiments()) + "%");
             Statistics.printAverageStatistics();     
             Misc.appendPlotFile();
             Misc.resetExperimentCounter();
