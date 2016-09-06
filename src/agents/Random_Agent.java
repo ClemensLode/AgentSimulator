@@ -1,10 +1,10 @@
-package agents;
+package com.clawsoftware.agentsimulator.agents;
 
-import agent.Configuration;
-import Misc.Misc;
-import lcs.Action;
+import com.clawsoftware.agentsimulator.agent.Configuration;
+import com.clawsoftware.agentsimulator.Misc.Misc;
+import com.clawsoftware.agentsimulator.lcs.Action;
 import java.util.ArrayList;
-import agent.BaseGrid;
+import com.clawsoftware.agentsimulator.agent.BaseGrid;
 
 /**
  *

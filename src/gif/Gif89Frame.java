@@ -1,7 +1,7 @@
 //******************************************************************************
 // Gif89Frame.java
 //******************************************************************************
-package gif;
+package com.clawsoftware.agentsimulator.gif;
 
 import java.awt.Point;
 import java.io.OutputStream;
@@ -74,7 +74,7 @@ public abstract class Gif89Frame {
    */    
   public static final int DM_REVERT    = 3;
 
-  //// Bitmap variables set in package subclass constructors ////
+  //// Bitmap variables set in package com.clawsoftware.agentsimulator.subclass constructors ////
   int    theWidth = -1;
   int    theHeight = -1;
   byte[] ciPixels;

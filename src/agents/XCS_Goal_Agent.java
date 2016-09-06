@@ -1,4 +1,4 @@
-package agents;
+package com.clawsoftware.agentsimulator.agents;
 
 /**
  * This class provides the functionality to access the classifier set, to move
@@ -6,11 +6,11 @@ package agents;
  * 
  * @author Clemens Lode, clemens at lode.de, University Karlsruhe (TH)
  */
-import lcs.ActionClassifierSet;
-import lcs.AppliedClassifierSet;
-import lcs.Action;
+import com.clawsoftware.agentsimulator.lcs.ActionClassifierSet;
+import com.clawsoftware.agentsimulator.lcs.AppliedClassifierSet;
+import com.clawsoftware.agentsimulator.lcs.Action;
 
-public class XCS_Goal_Agent extends XCS_Agent {
+public class XCS_Goal_Agent extends Event_XCS_Agent {
 
     public XCS_Goal_Agent(int n) throws Exception {
         super(n);
@@ -20,8 +20,8 @@ public class XCS_Goal_Agent extends XCS_Agent {
      */
     @Override
     public boolean checkRewardPoints() {
-        if(lastState == null) {
-            return false;
+        if (lastState == null) {
+            acquireNewSensorData();
         }
         boolean[] sensor_agent = lastState.getSensorAgent();
         boolean reward = true;
@@ -56,9 +56,8 @@ public class XCS_Goal_Agent extends XCS_Agent {
          * Situation
          */
         lastMatchSet = new AppliedClassifierSet(lastState, classifierSet);
-        // Wir holen uns einen zufälligen / den besten Classifier
-        lastExplore = checkIfExplore(lastState.isGoalInRewardRange(), lastExplore, gaTimestep);
 
+        // Wir holen uns einen zufälligen / den besten Classifier
         calculatedAction = lastMatchSet.chooseAbsoluteDirection(lastExplore);
 
         lastPrediction = lastMatchSet.getValue(calculatedAction);

@@ -1,6 +1,6 @@
-package agent;
+package com.clawsoftware.agentsimulator.agent;
 
-import lcs.Action;
+import com.clawsoftware.agentsimulator.lcs.Action;
 
 /**
  * This class provides a container for formatted sensor information

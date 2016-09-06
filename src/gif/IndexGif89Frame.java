@@ -1,7 +1,7 @@
 //******************************************************************************
 // IndexGif89Frame.java
 //******************************************************************************
-package gif;
+package com.clawsoftware.agentsimulator.gif;
 
 //==============================================================================
 /** Instances of this Gif89Frame subclass are constructed from bitmaps in the 

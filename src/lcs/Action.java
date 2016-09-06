@@ -1,7 +1,7 @@
-package lcs;
+package com.clawsoftware.agentsimulator.lcs;
 
-import Misc.Misc;
-import agent.Configuration;
+import com.clawsoftware.agentsimulator.Misc.Misc;
+import com.clawsoftware.agentsimulator.agent.Configuration;
 
 /**
  * Base class of an action

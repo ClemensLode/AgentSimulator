@@ -1,7 +1,7 @@
 //******************************************************************************
 // Gif89Encoder.java
 //******************************************************************************
-package gif;
+package com.clawsoftware.agentsimulator.gif;
 
 import java.awt.*;
 import java.io.*;
@@ -15,7 +15,7 @@ import java.util.Vector;
  *  <a href="../readme.txt">readme</a> containing his notice), but much of it,
  *  including nearly all of the present class, is original code.  My main
  *  motivation for writing a new encoder was to support animated GIFs, but the
- *  package also adds support for embedded textual comments.
+ *  package com.clawsoftware.agentsimulator.also adds support for embedded textual comments.
  *  <p>
  *  There are still some limitations.  For instance, animations are limited to
  *  a single global color table.  But that is usually what you want anyway, so
@@ -44,7 +44,7 @@ import java.util.Vector;
  *  <p>
  *  <strong>Animated GIF Example</strong>
  *  <pre>
- *  import net.jmge.gif.Gif89Encoder;
+ *  import com.clawsoftware.agentsimulator.net.jmge.gif.Gif89Encoder;
  *  // ...
  *  void writeAnimatedGIF(Image[] still_images,
  *                        String annotation,
@@ -64,7 +64,7 @@ import java.util.Vector;
  *
  *  <strong>Static GIF Example</strong>
  *  <pre>
- *  import net.jmge.gif.Gif89Encoder;
+ *  import com.clawsoftware.agentsimulator.net.jmge.gif.Gif89Encoder;
  *  // ...
  *  void writeNormalGIF(Image img,
  *                      String annotation,

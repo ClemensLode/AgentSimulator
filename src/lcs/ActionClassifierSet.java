@@ -1,8 +1,8 @@
-package lcs;
+package com.clawsoftware.agentsimulator.lcs;
 
-import agent.Sensors;
-import agent.Configuration;
-import Misc.Misc;
+import com.clawsoftware.agentsimulator.agent.Sensors;
+import com.clawsoftware.agentsimulator.agent.Configuration;
+import com.clawsoftware.agentsimulator.Misc.Misc;
 import java.util.ArrayList;
 
 /**

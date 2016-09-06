@@ -1,4 +1,4 @@
-package agent;
+package com.clawsoftware.agentsimulator.agent;
 
 import java.util.ArrayList;
 import java.text.NumberFormat;
@@ -70,15 +70,24 @@ public class Field {
         reward_for.clear();
     }
 
+    /**
+     * @return Number of agents in surveillance range
+     */
     public int rewardedByCount() {
         return reward_for.size();
     }
 
 
+    /**
+     * @return true if there is at least one agent in sight range
+     */
     public boolean isSeen() {
         return !seen_by.isEmpty();
     }
-    
+
+    /**
+     * @return true if there is at least one agent (that is not the goal agent) in sight range
+     */
     public boolean isSeenByAgents() {
         return seen_by.size() > 1 || (seen_by.size() == 1 && seen_by.get(0) != Field.GOAL_AGENT_ID);
     }

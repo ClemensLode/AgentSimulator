@@ -1,4 +1,4 @@
-package lcs;
+package com.clawsoftware.agentsimulator.lcs;
 
 /**
  *

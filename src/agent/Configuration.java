@@ -1,7 +1,7 @@
-package agent;
+package com.clawsoftware.agentsimulator.agent;
 
-import Misc.Log;
-import Misc.Misc;
+import com.clawsoftware.agentsimulator.Misc.Log;
+import com.clawsoftware.agentsimulator.Misc.Misc;
 import java.io.File;
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -18,12 +18,6 @@ import java.math.BigInteger;
  * @author Clemens Lode, clemens at lode.de, University Karlsruhe (TH)
  */
 public class Configuration {
-
-
-    /**
-     * use multistep prediction reward
-     */
-    private static boolean useMaxPrediction;
 
     /**
      * quadratic descent of reward for LCS
@@ -238,42 +232,45 @@ public class Configuration {
      */
 
 
-    /**
-     * Exploration probability 1
-     */
-    public static final int ALWAYS_EXPLORE_MODE = 0;
+    public static final int RANDOM_ROULETTE_SELECTION_MODE = 0;
+    public static final int RANDOM_TOURNAMENT_SELECTION_MODE = 1;
+    public static final int RANDOM_BEST_SELECTION_MODE = 2;
+    public static final int ROULETTE_TOURNAMENT_SELECTION_MODE = 3;
+    public static final int ROULETTE_BEST_SELECTION_MODE = 4;
+    public static final int TOURNAMENT_BEST_SELECTION_MODE = 5;
 
-    public static final int ALWAYS_EXPLORE_RANDOM_MODE = 1;
+    public static final int SWITCH_GOAL_OBS_MODE = 0;
+    public static final int SWITCH_GOAL_SIGHT_MODE = 1;
+    public static final int SWITCH_REWARD_MODE = 2;
+    public static final int SWITCH_NO_MODE = 3;
 
-    /**
-     * Exploration probability 0
-     */
-    public static final int ALWAYS_EXPLOIT_MODE = 2;
-    public static final int ALWAYS_EXPLOIT_BEST_MODE = 3;
+    public static final int GOAL_OBS_MODE = 0;
+    public static final int GOAL_SIGHT_MODE = 1;
+    public static final int GOAL_OBS_AGENTS_OBS_MODE = 2;
+    public static final int GOAL_OBS_AGENTS_SIGHT_MODE = 3;
+    public static final int GOAL_SIGHT_AGENTS_OBS_MODE = 4;
+    public static final int GOAL_SIGHT_AGENTS_SIGHT_MODE = 5;
 
-    /**
-     * Exploration probability 
-     */
-    public static final int SWITCH_EXPLORATION_START_EXPLORE_MODE = 4;
-
-    public static final int SWITCH_EXPLORATION_START_EXPLOIT_MODE = 5;
-
-
-    public static final int RANDOM_EXPLORATION_MODE = 6;
 
     /**
      * When to explore and when to exploit the classifiers
      */
     private static int explorationMode = 0;
 
+    private static int switchMode = 0;
+
+    private static int goalMode = 0;
+
     /**
      * Type of goal agent movement
      */
     private static int goalAgentMovementType = 0;
+
     /**
      * Total random goal agent movement (jumps to a free cell)
      */
     public static final int TOTAL_RANDOM_MOVEMENT = 0;
+
     /**
      * Random goal agent movement (neighboring cell)
      */
@@ -294,6 +291,9 @@ public class Configuration {
      */
     public static final int ALWAYS_SAME_DIRECTION = 4;
 
+    /**
+     * Goal agent with XCS learning classifier system
+     */
     public static final int XCS_MOVEMENT = 5;
 
     /**
@@ -301,12 +301,35 @@ public class Configuration {
      */
     private static double goalAgentMovementSpeed = 1.5;
 
+    /**
+     * Random walk agents
+     */
     public static final int RANDOMIZED_MOVEMENT_AGENT_TYPE = 0;
-    public static final int SIMPLE_AI_AGENT_TYPE = 1;
-    public static final int INTELLIGENT_AI_AGENT_TYPE = 2;
+
+    /**
+     * Agent with random walk that moves into the direction of the goal object if it is in sight
+     */
+    public static final int STATIC_AI_AGENT_TYPE = 1;
+
+    /**
+     * agent with DSXCS algorithm
+     */
     public static final int DSXCS_AGENT_TYPE = 3;
+
+    /**
+     * agent with SXCS algorithm
+     */
     public static final int SXCS_AGENT_TYPE = 4;
-    public static final int XCS_AGENT_TYPE = 5;
+
+    /**
+     * agent with a standard XCS implementation
+     */
+    public static final int STANDARD_XCS_AGENT_TYPE = 5;
+
+    /**
+     * agent with a standard XCS implementation with events
+     */
+    public static final int EVENT_XCS_AGENT_TYPE = 6;
 
     /**
      * Type of agent to test
@@ -328,6 +351,7 @@ public class Configuration {
      * @see #REWARD_SIMPLE
      */
     private static int externalRewardMode = 0;
+
     public static final int NO_EXTERNAL_REWARD = 0;
     public static final int REWARD_ALL_EQUALLY = 1;
     public static final int REWARD_SIMPLE = 2;
@@ -378,6 +402,8 @@ public class Configuration {
         i = i.add(BigInteger.valueOf(goalAgentMovementType));
         i = i.multiply(BigInteger.valueOf(8));
         i = i.add(BigInteger.valueOf((int)(goalAgentMovementSpeed*10.0)));
+        i = i.multiply(BigInteger.valueOf(8096));
+        i = i.add(BigInteger.valueOf(numberOfSteps)); 
         return i;
     }
 
@@ -400,7 +426,6 @@ public class Configuration {
 
                 maxPopSize = Integer.valueOf(p.readLine());
 
-                useMaxPrediction = Boolean.valueOf(p.readLine());
                 useQuadraticReward = Boolean.valueOf(p.readLine());
 
                 maxX = Integer.valueOf(p.readLine());
@@ -431,7 +456,7 @@ public class Configuration {
                 beta = Double.valueOf(p.readLine());
 
                 predictionInitialization = Double.valueOf(p.readLine());
-                predictionInitializationAdaption = Boolean.valueOf(p.readLine());
+//                predictionInitializationAdaption = Boolean.valueOf(p.readLine());
 
                 predictionErrorInitialization = Double.valueOf(p.readLine());
                 fitnessInitialization = Double.valueOf(p.readLine());
@@ -452,6 +477,8 @@ public class Configuration {
 
                 doGASubsumption = Boolean.valueOf(p.readLine());
                 explorationMode = Integer.valueOf(p.readLine());
+                switchMode = Integer.valueOf(p.readLine());
+                goalMode = Integer.valueOf(p.readLine());
 
                 goalAgentMovementType = Integer.valueOf(p.readLine());
 
@@ -464,127 +491,6 @@ public class Configuration {
         } else {
             throw new Exception("Config file " + file_name + " not found.");
         }
-    }
-
-    /**
-     * Write current configuration to the log file
-     */
-    public static void printConfiguration() {
-        Log.log("# ----------------------------------------------");
-        Log.log("#                CONFIGURATION");
-        Log.log("# ----------------------------------------------");
-
-        Log.log("# random seed");
-        Log.log(randomSeed);
-
-        Log.log("# Number of experiment");
-        Log.log(numberOfExperiments);
-
-        Log.log("# Number of problems");
-        Log.log(numberOfProblems);
-        Log.log("# Number of steps");
-        Log.log(numberOfSteps);
-        Log.log("# max pop size");
-        Log.log(maxPopSize);
-        Log.log("# gif output");
-        Log.log(gifOutput);
-
-        Log.log("# use max prediction reward");
-        Log.log(useMaxPrediction);
-        Log.log("# use quadratic reward");
-        Log.log(useQuadraticReward);
-
-        Log.log("# Grid Max X");
-        Log.log(maxX);
-        Log.log("# Grid Max Y");
-        Log.log(maxY);
-        Log.log("# Scenario type");
-        Log.log(scenarioType);
-
-        Log.log("# obstacle percentage");
-        Log.log(obstaclePercentage);
-        Log.log("# obstacle connection factor");
-        Log.log(obstacleConnectionFactor);
-
-        Log.log("# Reward distance");
-        Log.log(rewardDistance);
-        Log.log("# Sight range");
-        Log.log(sightRange);
-
-        Log.log("# max Agents");
-        Log.log(maxAgents);
-        Log.log("# max stack size");
-        Log.log(maxStackSize);
-        Log.log("# covering wildcard probability");
-        Log.log(coveringWildcardProbability);
-        Log.log("# tournament probability");
-        Log.log(tournamentProbability);
-        Log.log("# random start");
-        Log.log(randomStart);
-        Log.log("# do evolutionary algorithm");
-        Log.log(doEvolutionaryAlgorithm);
-        Log.log("# theta subsumer");
-        Log.log(thetaSubsumer);
-        Log.log("# epsilon0");
-        Log.log(epsilon0);
-        Log.log("# beta");
-        Log.log(beta);
-        Log.log("# prediction initialization");
-        Log.log(predictionInitialization);
-        Log.log("# prediction initialization adaption");
-        Log.log(isPredictionInitializationAdaption());
-        Log.log("# prediction error initialization");
-        Log.log(predictionErrorInitialization);
-        Log.log("# fitness initialization");
-        Log.log(fitnessInitialization);
-
-        Log.log("# delta");
-        Log.log(delta);
-        Log.log("# theta del");
-        Log.log(thetaDel);
-        Log.log("# do action set subsumption");
-        Log.log(doActionSetSubsumption);
-        Log.log("# alpha");
-        Log.log(alpha);
-        Log.log("# gamma");
-        Log.log(gamma);
-        Log.log("# nu");
-        Log.log(nu);
-        Log.log("# theta GA");
-        Log.log(thetaGA);
-        Log.log("# prediction error reduction");
-        Log.log(predictionErrorReduction);
-        Log.log("# fitness reduction");
-        Log.log(fitnessReduction);
-        Log.log("# mutattion probability");
-        Log.log(mutationProbability);
-        Log.log("# do action subsumption");
-        Log.log(doGASubsumption);
-
-        Log.log("# exploration mode");
-        Log.log(explorationMode);
-
-        /**
-         * 0: Total random movement (jumps to a free cell)
-         * 1: Random movement (neighboring cell)
-         * 2: Random movement, direction changes by max 1     * 
-         * 3: Movement always in the same direction as last movement
-         */
-        Log.log("# goal agent movement type");
-        Log.log(goalAgentMovementType);
-        Log.log("# goal agent movement speed");
-        Log.log(goalAgentMovementSpeed);
-
-        Log.log("# type of agent (randomized movement, AI Agent, LCS Agent etc.)");
-        Log.log(agentType);
-
-        Log.log("# Type of external reward");
-        Log.log(externalRewardMode);
-
-        Log.log("# ----------------------------------------------");
-        Log.log("#          CONFIGURATION END");
-        Log.log("# ----------------------------------------------");
-
     }
 
    /**
@@ -713,58 +619,101 @@ public class Configuration {
         return epsilon0;
     }
 
+    /**
+     * @return X dimension of the grid
+     */
     public static int getMaxX() {
         return maxX;
     }
 
+    /**
+     * @return half X dimension of the grid
+     */
     public static int getHalfMaxX() {
         return halfMaxX;
     }
 
+    /**
+     * @return Y dimension of the grid
+     */
     public static int getMaxY() {
         return maxY;
     }
 
+    /**
+     * @return half Y dimension of the grid
+     */
     public static int getHalfMaxY() {
         return halfMaxY;
     }
 
+    /**
+     * @return maximal surveillance range
+     */
     public static double getRewardDistance() {
         return rewardDistance;
     }
 
+    /**
+     * @return maximal sight range
+     */
     public static double getSightRange() {
         return sightRange;
     }
 
+    /**
+     * @return number of agents in the grid
+     */
     public static int getMaxAgents() {
         return maxAgents;
     }
 
+    /**
+     * @return size of the stack of SXCS agents
+     */
     public static int getMaxStackSize() {
         return maxStackSize;
     }
 
+    /**
+     * @return probability for wild cards in the classifier
+     */
     public static double getCoveringWildcardProbability() {
         return coveringWildcardProbability;
     }
 
+    /**
+     * @return probability value for the tournament selection method
+     */
     public static double getTournamentProbability() {
         return tournamentProbability;
     }
 
+    /**
+     * @return true if an evolutionary algorithm should be used
+     */
     public static boolean isDoEvolutionaryAlgorithm() {
         return doEvolutionaryAlgorithm;
     }
 
+    /**
+     * @return the factor of the reduction of the prediction error value
+     */
     public static double getPredictionErrorReduction() {
         return predictionErrorReduction;
     }
 
+    /**
+     * @return the factor of the reduction of the fitness value
+     */
     public static double getFitnessReduction() {
         return fitnessReduction;
     }
 
+    /**
+     * @return the type of movement of the goal object
+     * @see
+     */
     public static int getGoalAgentMovementType() {
         return goalAgentMovementType;
     }
@@ -783,12 +732,11 @@ public class Configuration {
     /**
       * @return The agent type
         @see #RANDOMIZED_MOVEMENT_AGENT_TYPE
-        @see #SIMPLE_AI_AGENT_TYPE
-        @see #INTELLIGENT_AI_AGENT_TYPE
+        @see #STATIC_AI_AGENT_TYPE
         @see #DSXCS_AGENT_TYPE
         @see #SXCS_AGENT_TYPE
-        @see #XCS_AGENT_TYPE
-        @see #SINGLE_LCS_AGENT_TYPE
+        @see #STANDARD_XCS_AGENT_TYPE
+        @see #EVENT_XCS_AGENT_TYPE
      */
     public static int getAgentType() {
         return agentType;
@@ -800,6 +748,14 @@ public class Configuration {
 
     public static int getExplorationMode() {
         return explorationMode;
+    }
+
+    public static int getSwitchMode() {
+        return switchMode;
+    }
+
+    public static int getGoalMode() {
+        return goalMode;
     }
 
     public static double getObstaclePercentage() {
@@ -815,13 +771,6 @@ public class Configuration {
 
     public static int getExternalRewardMode() {
         return externalRewardMode;
-    }
-
-    /**
-     * @return the useMaxPrediction
-     */
-    public static boolean isUseMaxPrediction() {
-        return useMaxPrediction;
     }
 
     /**

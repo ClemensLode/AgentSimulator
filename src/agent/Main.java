@@ -1,8 +1,8 @@
-package agent;
+package com.clawsoftware.agentsimulator.agent;
 
-import Misc.Log;
-import Misc.Statistics;
-import Misc.Misc;
+import com.clawsoftware.agentsimulator.Misc.Log;
+import com.clawsoftware.agentsimulator.Misc.Statistics;
+import com.clawsoftware.agentsimulator.Misc.Misc;
 
 /**
  * Main class
@@ -26,6 +26,7 @@ public class Main {
         Field.init();
 
         for(int i = 0; i < args.length; i++) {
+            System.out.println("Initializing " + args[i]);
             Misc.initNewOutputDirectory(date[i]);
             try {
                 Configuration.initialize(args[i]);
@@ -34,7 +35,7 @@ public class Main {
                 Log.errorLog("Error initializing configuration file: ", e);
             }
             Statistics.initialize();
-            System.out.println("Running test with configuration " + args[i] + "...");
+            System.out.println("Running test...");
             Misc.initPlotFile();
         // number of experiments with the same configuration
             long time = System.currentTimeMillis();
@@ -48,8 +49,6 @@ public class Main {
 
             for (int experiment_nr = 1; experiment_nr <= Configuration.getNumberOfExperiments(); experiment_nr++) {
                 Log.initialize(false);
-            
-                Configuration.printConfiguration();
                 Log.log("# Experiment Nr. " + experiment_nr);
                 System.out.println("Experiment Nr. " + experiment_nr);
 
@@ -66,7 +65,6 @@ public class Main {
                 }
 
                 Log.finalise();
-                //Statistics.printStatistics(false);
                 Misc.nextExperiment();
                 Statistics.nextExperiment();
             }

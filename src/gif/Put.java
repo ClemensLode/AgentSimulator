@@ -1,7 +1,7 @@
 //******************************************************************************
 // Put.java
 //******************************************************************************
-package gif;
+package com.clawsoftware.agentsimulator.gif;
 
 import java.io.OutputStream;
 import java.io.IOException;
@@ -9,7 +9,7 @@ import java.io.IOException;
 //==============================================================================
 /** Just a couple of trivial output routines used by other classes in the
  *  package.  Normally this kind of stuff would be in a separate IO package, but
- *  I wanted the present package to be self-contained for ease of distribution
+ *  I wanted the present package com.clawsoftware.agentsimulator.to be self-contained for ease of distribution
  *  and use by others.
  */
 final class Put {

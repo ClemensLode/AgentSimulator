@@ -1,7 +1,7 @@
 //******************************************************************************
 // DirectGif89Frame.java
 //******************************************************************************
-package gif;
+package com.clawsoftware.agentsimulator.gif;
 
 import java.awt.Image;
 import java.awt.image.PixelGrabber;

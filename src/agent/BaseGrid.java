@@ -1,16 +1,16 @@
-package agent;
+package com.clawsoftware.agentsimulator.agent;
 
-import Misc.Point;
-import lcs.Action;
-import Misc.Misc;
+import com.clawsoftware.agentsimulator.Misc.Point;
+import com.clawsoftware.agentsimulator.lcs.Action;
+import com.clawsoftware.agentsimulator.Misc.Misc;
 import java.util.ArrayList;
 import java.awt.image.BufferedImage;
 import java.awt.image.WritableRaster;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
-import agents.BaseAgent;
+import com.clawsoftware.agentsimulator.agents.BaseAgent;
 
-import gif.*;
+import com.clawsoftware.agentsimulator.gif.*;
 
 
 /**
@@ -142,9 +142,14 @@ public class BaseGrid {
         return count;
     }
 
-    protected Point getNeighborField(final Point p, final int d) {
-        int x = Geometry.correctX[128 + p.x + Action.dx[d]];
-        int y = Geometry.correctY[128 + p.y + Action.dy[d]];
+    /**
+     * @param p The base point
+     * @param action The action to take
+     * @return The resulting coordinate when using the action at the given point
+     */
+    protected Point getNeighborField(final Point p, final int action) {
+        int x = Geometry.correctX[128 + p.x + Action.dx[action]];
+        int y = Geometry.correctY[128 + p.y + Action.dy[action]];
         return new Point(x, y);
     }
 
@@ -164,30 +169,13 @@ public class BaseGrid {
     /**
      * @param position The position in question
      * @param direction The direction in question
-     * @return True if the field in question is not occupied by a goal agent
+     * @return True if the field in question is not occupied by a goal object
      */
     protected boolean isDirectionNonGoalInvalid(final Point position, final int direction) {
         int x = Geometry.correctX[128 + position.x + Action.dx[direction]];
         int y = Geometry.correctY[128 + position.y + Action.dy[direction]];
         return (!grid[x][y].isOccupiedByGoal());
     }
-
-    /**
-     *
-     * INVALID: introduced knowledge to the LCS Agent which it normally doesn't have (distance)
-     * Improves the effectivity by up to 1%
-     *
-     * @param position The position in question
-     * @return A boolean array where the invalid actions are marked (true)
-     * @throws java.lang.Exception
-     */
-    /*protected boolean[] getInvalidActions(final Point position) throws Exception {
-        boolean[] invalid_actions = new boolean[Action.MAX_DIRECTIONS];
-        for(int i = 0; i < Action.MAX_DIRECTIONS; i++) {
-            invalid_actions[i] = isDirectionInvalid(position, i);
-        }
-        return invalid_actions;
-    }*/
 
     /**
      * @param p The position of the agent in question
@@ -214,7 +202,11 @@ public class BaseGrid {
         return list;
     }
 
-
+    /**
+     * Remove all directions from the array (except one direction )
+     * @param direction The direction not to remove
+     * @param available_directions The array to modify
+     */
     public void removeExceptThisDirection(int direction, ArrayList<Integer> available_directions) {
         if(available_directions.contains(new Integer(direction))) {
             available_directions.clear();
@@ -224,6 +216,10 @@ public class BaseGrid {
         }
     }
 
+    /**
+     * @param direction The direction in question
+     * @return the directions left and right of the parameter
+     */
     public ArrayList<Integer> getSideDirections(int direction) {
         ArrayList<Integer> list = new ArrayList<Integer>(Action.MAX_DIRECTIONS);
         switch(direction) {
@@ -279,7 +275,13 @@ public class BaseGrid {
         if(!grid[p.x][p.y].isOccupied()) {
             return new Point(p.x, p.y);
         }
-        for(int j = 3; j < Configuration.getHalfMaxX();j++) {
+        for(int i = 0; i < Configuration.getMaxY(); i++) {
+            int y = Geometry.correctY[128 + p.y + i];
+            if(!grid[p.x][y].isOccupied()) {
+                return new Point(p.x, y);
+            }
+        }
+        for(int j = 2; j < Configuration.getHalfMaxX();j++) {
             for(int i = 0; i < 9; i++) {
                 int x = Geometry.correctX[128 + Misc.nextInt(1+2*j) - j + p.x];
                 int y = Geometry.correctY[128 + Misc.nextInt(1+2*j) - j + p.y];
@@ -294,7 +296,7 @@ public class BaseGrid {
 
 
     /**
-     * @return Darstellung des momentanen Gridzustands
+     * @return Presentation of the current state of the grid
      */
     private BufferedImage getImage() {
         int max_x = Configuration.getMaxX();
@@ -306,23 +308,22 @@ public class BaseGrid {
         int[] cellColor_B = new int[cell_states];
         // black, red, green, white, gray
         switch (cell_states-1) {
-            // Sichtweite
-            // TODO
+            // sight range
             case 5:
                 cellColor_R[5] = 64;
                 cellColor_G[5] = 64;
                 cellColor_B[5] = 128;
-            // Rewardreichweite
+            // reward range
             case 4:
                 cellColor_R[4] = 96;
                 cellColor_G[4] = 96;
                 cellColor_B[4] = 192;
-            // Agent
+            // agent
             case 3:
                 cellColor_R[3] = 255;
                 cellColor_G[3] = 255;
                 cellColor_B[3] = 255;
-            // Zielobjekt
+            // goal object
             case 2:
                 cellColor_R[2] = 96;
                 cellColor_G[2] = 255;
@@ -380,11 +381,20 @@ public class BaseGrid {
         return image;
     }
 
+    /**
+     * Initiates a new animated gif file
+     * @param experiment_nr Number of experiment
+     * @throws Exception if there was an error opening the file
+     */
     protected void startGIF(int experiment_nr) throws Exception {
         gifOS = new FileOutputStream(Misc.getShortFileName("grid", experiment_nr) + ".gif");
         gifenc = new Gif89Encoder();
     }
 
+    /**
+     * Closes the previously opened animated gif file
+     * @throws Exception if there was an error closing the gif file
+     */
     protected void finishGIF() throws Exception {
         gifenc.setLoopCount(0);
         gifenc.setUniformDelay(1);
@@ -393,6 +403,10 @@ public class BaseGrid {
         gifOS.close();
     }
 
+    /**
+     * Add a single frame to the gif file
+     * @throws Exception if there was an error adding a frame to the gif file
+     */
     protected void addFrameToGIF() throws Exception {
         gifenc.addFrame(getImage());
     }

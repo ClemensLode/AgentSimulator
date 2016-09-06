@@ -1,11 +1,10 @@
-package agents;
+package com.clawsoftware.agentsimulator.agents;
 
-import lcs.MainClassifierSet;
-import Misc.Log;
-import lcs.ActionClassifierSet;
-import lcs.AppliedClassifierSet;
-import Misc.Misc;
-import agent.Configuration;
+import com.clawsoftware.agentsimulator.lcs.MainClassifierSet;
+import com.clawsoftware.agentsimulator.Misc.Log;
+import com.clawsoftware.agentsimulator.lcs.ActionClassifierSet;
+import com.clawsoftware.agentsimulator.lcs.AppliedClassifierSet;
+import com.clawsoftware.agentsimulator.agent.Configuration;
 
 /**
  *
@@ -20,10 +19,9 @@ abstract public class Base_XCS_Agent extends BaseAgent {
      */
     protected boolean lastReward = false;
 
-    /**
-     * maximal reward given in each round
-     */
-    //public final static double MAX_REWARD = 1000.0;
+    protected boolean lastGoalObs = false;
+    protected boolean lastGoalSight = false;
+
 
     protected boolean lastExplore = false;
 
@@ -86,29 +84,63 @@ abstract public class Base_XCS_Agent extends BaseAgent {
     }
 
 
-    public static boolean checkIfExplore(boolean reward, boolean last_explore, long gaTimestep) {
-        double exploration_probability = 0.0;
-        switch (Configuration.getExplorationMode()) {
-            case Configuration.ALWAYS_EXPLOIT_BEST_MODE:
-            case Configuration.ALWAYS_EXPLOIT_MODE:
-                return false;
-            case Configuration.ALWAYS_EXPLORE_RANDOM_MODE:
-            case Configuration.ALWAYS_EXPLORE_MODE:
-                return true;
-                /**
-                 * will be switched by the agent if the reward was positive
-                 */
-            case Configuration.SWITCH_EXPLORATION_START_EXPLOIT_MODE:
-            case Configuration.SWITCH_EXPLORATION_START_EXPLORE_MODE:
-                return last_explore;
-            case Configuration.RANDOM_EXPLORATION_MODE:
-                exploration_probability = 0.5;
+    /**
+     * counts the number of rounds the goal agent was in sight and calculates
+     * the base reward
+     * @return the base reward
+     */
+    public boolean checkRewardPoints() {
+        super.checkRewardPoints();
+
+        boolean reward = false;
+
+        switch(Configuration.getGoalMode()) {
+            case Configuration.GOAL_OBS_MODE:
+                reward = isGoalAgentVeryNear();break;
+            case Configuration.GOAL_SIGHT_MODE:
+                reward = isGoalAgentNear();break;
+            case Configuration.GOAL_OBS_AGENTS_OBS_MODE:
+                reward = isGoalAgentVeryNear();
+                if(!reward) {
+                    reward = !isAgentVeryNear();
+                }
+                break;
+            case Configuration.GOAL_OBS_AGENTS_SIGHT_MODE:
+                reward = isGoalAgentVeryNear();
+                if(!reward) {
+                    reward = !isAgentNear();
+                }
+                break;
+            case Configuration.GOAL_SIGHT_AGENTS_OBS_MODE:
+                reward = isGoalAgentNear();
+                if(!reward) {
+                    reward = !isAgentVeryNear();
+                }
+                break;
+            case Configuration.GOAL_SIGHT_AGENTS_SIGHT_MODE:
+                reward = isGoalAgentNear();
+                if(!reward) {
+                    reward = !isAgentNear();
+                }
                 break;
         }
-        if (Misc.nextDouble() <= exploration_probability) {
-            return true;
-        } else {
-            return false;
+
+        return reward;
+    }
+
+    public boolean testSwitchExplore(boolean reward) {
+        if (lastState == null) {
+            acquireNewSensorData();
+        }
+        switch(Configuration.getSwitchMode()) {
+            case Configuration.SWITCH_GOAL_OBS_MODE:
+                return isGoalAgentVeryNear();
+            case Configuration.SWITCH_GOAL_SIGHT_MODE:
+                return isGoalAgentNear();
+            case Configuration.SWITCH_REWARD_MODE:
+                return reward;
+            case Configuration.SWITCH_NO_MODE:
+            default:return false;
         }
     }
 
@@ -117,10 +149,8 @@ abstract public class Base_XCS_Agent extends BaseAgent {
      */
     @Override
     public void resetBeforeNewProblem() throws Exception {
-        lastReward = grid.isGoalAgentInRewardRange(this); // TODO?
-        lastExplore = 
-                Configuration.getExplorationMode() == Configuration.SWITCH_EXPLORATION_START_EXPLORE_MODE?
-                    !lastReward : lastReward;
+        lastReward = checkRewardPoints();
+        lastExplore = testSwitchExplore(lastReward);
         lastMatchSet = null;
         lastActionSet = null;
         lastPredictionError = 0.0;
@@ -148,7 +178,7 @@ abstract public class Base_XCS_Agent extends BaseAgent {
         }
     }
 
-    public double getFitnessNumerosity() throws Exception {
+    public double getFitnessNumerosity() {
         return classifierSet.getAverageFitness();
     }
     
@@ -181,7 +211,6 @@ abstract public class Base_XCS_Agent extends BaseAgent {
         }
     }
 
-//TODO random-explore miteinbeziehen! Und alle mal durchtesten evtl.
     /**
      * Prints the action set
      */

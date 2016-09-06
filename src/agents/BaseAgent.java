@@ -1,4 +1,4 @@
-package agents;
+package com.clawsoftware.agentsimulator.agents;
 
 /**
  * This class provides basic functionality for any moving agents and the goal agent
@@ -6,13 +6,13 @@ package agents;
  * 
  * @author Clemens Lode, clemens at lode.de, University Karlsruhe (TH)
  */
-import agent.Sensors;
-import agent.Field;
-import agent.Grid;
-import Misc.Log;
-import Misc.Point;
+import com.clawsoftware.agentsimulator.agent.Sensors;
+import com.clawsoftware.agentsimulator.agent.Field;
+import com.clawsoftware.agentsimulator.agent.Grid;
+import com.clawsoftware.agentsimulator.Misc.Log;
+import com.clawsoftware.agentsimulator.Misc.Point;
 import java.text.NumberFormat;
-import lcs.Action;
+import com.clawsoftware.agentsimulator.lcs.Action;
 
 public abstract class BaseAgent {
 
@@ -54,7 +54,7 @@ public abstract class BaseAgent {
         grid.addAgent(this);
     }
 
-    public void aquireNewSensorData() {
+    public void acquireNewSensorData() {
         lastState = grid.getAbsoluteSensorInformation(p, id);
     }
 
@@ -77,6 +77,25 @@ public abstract class BaseAgent {
      */
     public void calculateReward(final long gaTimestep) throws Exception {
         checkRewardPoints();
+    }
+
+
+    /**
+     * counts the number of rounds the goal agent was in sight and calculates
+     * the base reward
+     * @return the base reward
+     */
+    public boolean checkRewardPoints() {
+        if (lastState == null) {
+            acquireNewSensorData();
+        }
+
+        // goal agent is in reward range?
+        if (grid.isGoalAgentInRewardRange(this)) {
+            totalPoints = totalPoints + 1.0;
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -114,10 +133,32 @@ public abstract class BaseAgent {
         }
         return false;
     }
+    public boolean isGoalAgentVeryNear() {
+        boolean[] sensor_goal = lastState.getSensorGoal();
+        for (int i = 0; i < Action.MAX_DIRECTIONS; i++) {
+            if (sensor_goal[2 * i + 1]) {
+                return true;
+            }
+        }
+        return false;
+    }
     public boolean isAgentNear() {
         boolean[] sensor_agent = lastState.getSensorAgent();
+        int near = 0;
         for (int i = 0; i < Action.MAX_DIRECTIONS; i++) {
             if (sensor_agent[2 * i]) {
+                near++;
+                
+            }
+        }
+        return (near >= 2);
+        //return false;
+    }
+
+    public boolean isAgentVeryNear() {
+        boolean[] sensor_agent = lastState.getSensorAgent();
+        for (int i = 0; i < Action.MAX_DIRECTIONS; i++) {
+            if (sensor_agent[2 * i + 1]) {
                 return true;
             }
         }
@@ -125,28 +166,6 @@ public abstract class BaseAgent {
     }
 
 
-    /**
-     * counts the number of rounds the goal agent was in sight and calculates
-     * the base reward
-     * @return the base reward
-     */
-    public boolean checkRewardPoints() {
-        if (lastState == null) {
-            return false;
-        }
-        boolean reward = isGoalAgentNear();
-
-        if (!reward) {
-            reward = !isAgentNear();
-        }
-
-        // goal agent is in reward range?
-        if (grid.isGoalAgentInRewardRange(this)) {
-            totalPoints = totalPoints + 1.0;
-        }
-
-        return reward;
-    }
 
     /**
      * Called before each problem
@@ -244,9 +263,10 @@ public abstract class BaseAgent {
         String sb = "ID " + (nf.format((long) getID()));
         Log.log(sb);
         Log.log("# input");
-        if (lastState != null) {
-            Log.log(lastState.getInputString());
+        if (lastState == null) {
+            acquireNewSensorData();
         }
+        Log.log(lastState.getInputString());
     }
 
     public void printMove() {

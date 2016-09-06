@@ -1,10 +1,10 @@
-package agent;
+package com.clawsoftware.agentsimulator.agent;
 
-import agents.*;
-import lcs.Action;
-import Misc.Log;
-import Misc.Misc;
-import lcs.ClassifierSet;
+import com.clawsoftware.agentsimulator.agents.*;
+import com.clawsoftware.agentsimulator.lcs.Action;
+import com.clawsoftware.agentsimulator.Misc.Log;
+import com.clawsoftware.agentsimulator.Misc.Misc;
+import com.clawsoftware.agentsimulator.lcs.ClassifierSet;
 import java.util.ArrayList;
 
 /**
@@ -21,7 +21,7 @@ public class LCS_Engine {
     /**
      * Initializes a new LCS engine
      * resets the id, the goal agent and creates a new random agent list
-     * @param experiment_nr Number of experiment, import for initializing the random seed
+     * @param experiment_nr Number of experiment, import com.clawsoftware.agentsimulator.for initializing the random seed
      * @throws java.lang.Exception if there was an error registering the agents
      */
     public LCS_Engine(int experiment_nr) throws Exception {
@@ -42,11 +42,11 @@ public class LCS_Engine {
         for (int i = 0; i < Configuration.getMaxAgents(); i++) {
             switch (Configuration.getAgentType()) {
                 case Configuration.RANDOMIZED_MOVEMENT_AGENT_TYPE:agentList.add(new Random_Agent(Configuration.RANDOM_MOVEMENT, false));break;
-                case Configuration.SIMPLE_AI_AGENT_TYPE:agentList.add(new EinfacheHeuristik_Agent());break;
-                case Configuration.INTELLIGENT_AI_AGENT_TYPE:agentList.add(new IntelligenteHeuristik_Agent());break;
+                case Configuration.STATIC_AI_AGENT_TYPE:agentList.add(new EinfacheHeuristik_Agent());break;
                 case Configuration.DSXCS_AGENT_TYPE:agentList.add(new DSXCS_Agent(max_classifiers));break;
                 case Configuration.SXCS_AGENT_TYPE:agentList.add(new SXCS_Agent(max_classifiers));break;
-                case Configuration.XCS_AGENT_TYPE:agentList.add(new XCS_Agent(max_classifiers));break;
+                case Configuration.STANDARD_XCS_AGENT_TYPE:agentList.add(new Standard_XCS_Agent(max_classifiers));break;
+                case Configuration.EVENT_XCS_AGENT_TYPE:agentList.add(new Event_XCS_Agent(max_classifiers));break;
             }
         }
     }
@@ -66,7 +66,6 @@ public class LCS_Engine {
 
         for (int i = 0; i < Configuration.getNumberOfProblems(); i++) {
 
-            //Log.log("# Problem Nr. " + (i + 1));
 
             /**
              * creates a new grid and deploys agents and goal at random positions
@@ -129,19 +128,21 @@ public class LCS_Engine {
      */
     private void calculateAgents(long gaTimestep) throws Exception {
         for(BaseAgent a : agentList) {
-            a.aquireNewSensorData();
+            a.acquireNewSensorData();
             a.calculateNextMove(gaTimestep);
         }
-        BaseAgent.goalAgent.aquireNewSensorData();
+        BaseAgent.goalAgent.acquireNewSensorData();
         BaseAgent.goalAgent.calculateNextMove(gaTimestep);
     }
 
-    private ClassifierSet findBestAgent() throws Exception {
+    /**
+     * @return Agent with the best classifier set
+     */
+    private ClassifierSet findBestAgent() {
         ClassifierSet best = null;
         switch(Configuration.getAgentType()) {
             case Configuration.RANDOMIZED_MOVEMENT_AGENT_TYPE:
-            case Configuration.SIMPLE_AI_AGENT_TYPE:
-            case Configuration.INTELLIGENT_AI_AGENT_TYPE:
+            case Configuration.STATIC_AI_AGENT_TYPE:
                 if(Configuration.getGoalAgentMovementType() == Configuration.XCS_MOVEMENT) {
                     return ((Base_XCS_Agent)(BaseAgent.goalAgent)).getClassifierSet();
                 }
@@ -187,7 +188,7 @@ public class LCS_Engine {
                 // will there be another goal move?
                 if(a.isGoalAgent() && goal_speed > 1) {
                     goal_speed--;
-                    a.aquireNewSensorData();
+                    a.acquireNewSensorData();
                     a.calculateNextMove(gaTimestep);
                     a.calculateReward(gaTimestep);
                 }

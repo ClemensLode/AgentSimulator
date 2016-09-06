@@ -1,4 +1,4 @@
-package agents;
+package com.clawsoftware.agentsimulator.agents;
 
 /**
  * This class provides the functionality to access the classifier set, to move
@@ -6,9 +6,9 @@ package agents;
  * 
  * @author Clemens Lode, clemens at lode.de, University Karlsruhe (TH)
  */
-import agent.Configuration;
-import lcs.ActionClassifierSet;
-import lcs.AppliedClassifierSet;
+import com.clawsoftware.agentsimulator.agent.Configuration;
+import com.clawsoftware.agentsimulator.lcs.ActionClassifierSet;
+import com.clawsoftware.agentsimulator.lcs.AppliedClassifierSet;
 import java.util.LinkedList;
 
 public class SXCS_Agent extends Base_XCS_Agent {
@@ -57,9 +57,8 @@ public class SXCS_Agent extends Base_XCS_Agent {
          * Situation 
          */
         lastMatchSet = new AppliedClassifierSet(lastState, classifierSet);
-        // Wir holen uns einen zufälligen / den besten Classifier
-        lastExplore = checkIfExplore(lastState.isGoalInRewardRange(), lastExplore, gaTimestep);
 
+        // Wir holen uns einen zufälligen / den besten Classifier
         calculatedAction = lastMatchSet.chooseAbsoluteDirection(lastExplore);
 
         lastPrediction = lastMatchSet.getValue(calculatedAction);
@@ -127,14 +126,10 @@ public class SXCS_Agent extends Base_XCS_Agent {
     @Override
     public void calculateReward(final long gaTimestep) throws Exception {
         boolean reward = checkRewardPoints();
+        lastExplore = testSwitchExplore(reward);
 
         // event?
         if (reward != lastReward) {
-            if (Configuration.getExplorationMode() == Configuration.SWITCH_EXPLORATION_START_EXPLORE_MODE ||
-                    Configuration.getExplorationMode() == Configuration.SWITCH_EXPLORATION_START_EXPLOIT_MODE) {
-                // new problem!
-                lastExplore = !lastExplore;
-            }
 
             int start_index = historicActionSet.size() - 1;
             collectReward(start_index, actionSetSize, reward, true);

@@ -1,12 +1,12 @@
-package agent;
+package com.clawsoftware.agentsimulator.agent;
 
-import agents.BaseAgent;
-import Misc.Statistics;
-import Misc.Misc;
-import Misc.Point;
-import lcs.Action;
+import com.clawsoftware.agentsimulator.agents.BaseAgent;
+import com.clawsoftware.agentsimulator.Misc.Statistics;
+import com.clawsoftware.agentsimulator.Misc.Misc;
+import com.clawsoftware.agentsimulator.Misc.Point;
+import com.clawsoftware.agentsimulator.lcs.Action;
 import java.util.ArrayList;
-import lcs.ClassifierSet;
+import com.clawsoftware.agentsimulator.lcs.ClassifierSet;
 
 /**
  *
@@ -156,11 +156,22 @@ public class Grid extends BaseGrid {
     }
 
 
+    /**
+     * Creates an obstacle at the given point and registers it globally
+     * @param p The coordinate for the new obstacle
+     */
     private void createObstacle(Point p) {
         grid[p.x][p.y].setContent(Field.OBSTACLE);
         obstacleList.add(new Point(p.x, p.y));
     }
 
+    /**
+     * Creates a number of connected obstacles
+     * @param p The current position
+     * @param obstacle_count The numbeer of remaining obstacles to put in the grid
+     * @param factor The probability of creating an obstacle near another obstacle
+     * @return The new number of remaining obstacles to put in the grid
+     */
     private int createConnectedObstacle(Point p, int obstacle_count, double factor) {
         ArrayList<Integer> list = getAvailableDirections(p);
         if (list.size() > 0 && Misc.nextDouble() >= Configuration.getObstacleConnectionFactor()) {
@@ -191,6 +202,10 @@ public class Grid extends BaseGrid {
         return obstacle_count;
     }
 
+    /**
+     * Resets the grid and the agents, reassigns obstacles, agents and the goal object
+     * @throws Exception if there was an error initializing the agents
+     */
     public void resetState() throws Exception {
         clearGrid();
         for (Point p : obstacleList) {
@@ -205,9 +220,13 @@ public class Grid extends BaseGrid {
             }
             a.setPosition(p);
             grid[p.x][p.y].setContent(a.getID());
-            a.resetBeforeNewProblem();
         }
         updateSight();
+
+        // updating sensor information, initializing data etc.
+        for(BaseAgent a : agentList) {
+            a.resetBeforeNewProblem();
+        }
     }
 
     /**
@@ -272,6 +291,9 @@ public class Grid extends BaseGrid {
         }
     }
 
+    /**
+     * @return a random starting coordinate for the agents (depending on the scenario)
+     */
     public Point getFreeAgentField() {
         switch (Configuration.getScenarioType()) {
             case Configuration.NON_TORUS_SCENARIO:
@@ -328,7 +350,9 @@ public class Grid extends BaseGrid {
     }
 
 
-
+    /**
+     * @return a random starting coordinate for the goal object
+     */
     public Point getFreeGoalAgentField() {
         switch (Configuration.getScenarioType()) {
             case Configuration.NON_TORUS_SCENARIO:
@@ -372,6 +396,11 @@ public class Grid extends BaseGrid {
         return grid[BaseAgent.goalAgent.getX()][BaseAgent.goalAgent.getY()].isRewardedForAgents();
     }
 
+    /**
+     * @param position The position of the agent in question
+     * @param id The id of the agent in question
+     * @return a random agent nearby, null if there are no agents in 2*sight range
+     */
     public BaseAgent findRandomAgentNearby(Point position, int id) {
         ArrayList<BaseAgent> nearby_agents = new ArrayList<BaseAgent>(Configuration.getMaxAgents());
         for (BaseAgent a : agentList) {
@@ -401,7 +430,7 @@ public class Grid extends BaseGrid {
         for (int i = 0; i < goal_in_sight.length; i++) {
             goal_in_sight[i] = false;
         }
-// TODO
+// TODO?
         if (self_id == Field.GOAL_AGENT_ID) {
             return goal_in_sight;
         }
@@ -496,6 +525,12 @@ public class Grid extends BaseGrid {
         agentList.add(a);
     }
 
+    /**
+     * Creates a new statistics entry
+     * @param currentTimestep Current time
+     * @param c_set The classifier set of the best individual
+     * @throws Exception if there was an error adding the entry to the file
+     */
     public void updateStatistics(long currentTimestep, ClassifierSet c_set) throws Exception {
         /**
          * Check if any agent sees the goal agent
@@ -708,6 +743,9 @@ public class Grid extends BaseGrid {
     }
 
 
+    /**
+     * Randomly fill a maze
+     */
     private void fillMaze() {
         {
             int zoom = (int) (Configuration.getObstaclePercentage() * 20.0);
