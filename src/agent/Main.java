@@ -73,7 +73,6 @@ public class Main {
                 average_cover_actions[t] /= ((double)(Configuration.getMaxAgents() * Configuration.getNumberOfExperiments()));
                 System.out.println(average_cover_actions[t]);
             }
-35
 
             System.out.println((System.currentTimeMillis() - time) + "ms");
             Statistics.printAverageStatistics();     

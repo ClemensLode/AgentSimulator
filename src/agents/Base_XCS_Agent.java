@@ -87,15 +87,6 @@ abstract public class Base_XCS_Agent extends BaseAgent {
 
 
     public static boolean checkIfExplore(boolean reward, boolean last_explore, long gaTimestep) {
-            /**
-         * Exploration probability modes:
-         * - no exploration (0/100) (0)
-         * - always exploration (100/0) (1)
-         * - switch between explore and exploit (50/50) (3)
-         * - first explore, then exploit (50/50) (2)
-         * - linear reduction of exploration probability (100..0/0..100)
-         */
-
         double exploration_probability = 0.0;
         switch (Configuration.getExplorationMode()) {
             case Configuration.ALWAYS_EXPLOIT_BEST_MODE:

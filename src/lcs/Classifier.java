@@ -121,20 +121,6 @@ public class Classifier {
 
     }
 
-    public Classifier(int dir) throws Exception {
-        setGaTimestamp(0);
-
-        setPrediction(2.0);
-        setPredictionError(Configuration.getPredictionErrorInitialization());
-        setFitness(0.5);
-        // will later (in the actionClassifierSet) be resetted to the actual value
-        setActionSetSize(Configuration.getMaxPopSize() / Action.MAX_DIRECTIONS);
-
-        numerosity = 32;
-        this.condition = new Condition(dir);
-        this.action = new Action(dir);
-
-    }
 
     public Classifier clone(ClassifierSet cs) throws Exception{
         Classifier new_cl = new Classifier(this);
@@ -417,8 +403,9 @@ public class Classifier {
             fitness = 0.01;
         } else
         if(old_num > 0) {
-            setFitness(getFitness() * ((double)numerosity) / ((double)old_num));
+              setFitness(getFitness() * ((double)numerosity) / ((double)old_num));
         }
+
         for (ClassifierSet p : parents) {
             p.changeNumerositySum(num);
             if (numerosity == 0) {
