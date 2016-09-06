@@ -31,11 +31,6 @@ public class Configuration {
     private static boolean useQuadraticReward;
 
     /**
-     * Exchange classifiers with agents nearby
-     */
-    private static boolean exchangeClassifiers;
-
-    /**
      * The number of experiments that are calculated for each configuration
      */
     private static int numberOfExperiments = 10;
@@ -152,6 +147,11 @@ public class Configuration {
      * init value for the prediction of a classifier
      */
     private static double predictionInitialization = 0.1;
+
+    /**
+     * whether to use the average of all prediction values instead of a static value
+     */
+    private static boolean predictionInitializationAdaption = true;
 
     /**
      * init value for the prediction error of a classifier
@@ -275,47 +275,40 @@ public class Configuration {
      * Random goal agent movement (neighboring cell)
      */
     public static final int RANDOM_MOVEMENT = 1;
-    /**
-     * Intelligent goal agent movement (away from nearby agents), random if no agents in sight, tend to move into the open
-     */
-    public static final int INTELLIGENT_MOVEMENT_OPEN = 2;
-    /**
-     * Intelligent goal agent movement (away from nearby agents), random if no agents in sight, tend to move to walls
-     */
-    public static final int INTELLIGENT_MOVEMENT_HIDE = 3;
+
     /**
      * Random goal agent movement, direction changes by max 1
      */
-    public static final int RANDOM_DIRECTION_CHANGE = 4;
-    
+    public static final int RANDOM_DIRECTION_CHANGE = 2;
+
     /**
-     * Random agent that prefers obstacles
+     * Intelligent goal agent movement (tend to move away from nearby agents), random if no agents in sight
      */
-    public static final int RANDOM_HIDE = 5;
+    public static final int INTELLIGENT_MOVEMENT = 3;
+
     /**
      * Goal agent movement always in the same direction as last movement
      */
-    public static final int ALWAYS_SAME_DIRECTION = 6;
+    public static final int ALWAYS_SAME_DIRECTION = 4;
 
-    public static final int LCS_MOVEMENT = 7;
+    public static final int XCS_MOVEMENT = 5;
 
     /**
      * Number of times the goal agent executes its movement type
      */
-    private static int goalAgentMovementSpeed = RANDOM_DIRECTION_CHANGE;
+    private static double goalAgentMovementSpeed = 1.5;
 
     public static final int RANDOMIZED_MOVEMENT_AGENT_TYPE = 0;
     public static final int SIMPLE_AI_AGENT_TYPE = 1;
     public static final int INTELLIGENT_AI_AGENT_TYPE = 2;
-    public static final int NEW_LCS_AGENT_TYPE = 3;
-    public static final int OLD_LCS_AGENT_TYPE = 4;
-    public static final int MULTISTEP_LCS_AGENT_TYPE = 5;
-    public static final int SINGLE_LCS_AGENT_TYPE = 6;
+    public static final int DSXCS_AGENT_TYPE = 3;
+    public static final int SXCS_AGENT_TYPE = 4;
+    public static final int XCS_AGENT_TYPE = 5;
 
     /**
      * Type of agent to test
      */
-    private static int agentType = NEW_LCS_AGENT_TYPE;
+    private static int agentType = DSXCS_AGENT_TYPE;
 
     /**
      * starting random seed
@@ -381,7 +374,7 @@ public class Configuration {
         i = i.multiply(BigInteger.valueOf(8));
         i = i.add(BigInteger.valueOf(goalAgentMovementType));
         i = i.multiply(BigInteger.valueOf(8));
-        i = i.add(BigInteger.valueOf(goalAgentMovementSpeed));
+        i = i.add(BigInteger.valueOf((int)(goalAgentMovementSpeed*10.0)));
         return i;
     }
 
@@ -406,7 +399,6 @@ public class Configuration {
 
                 useMaxPrediction = Boolean.valueOf(p.readLine());
                 useQuadraticReward = Boolean.valueOf(p.readLine());
-                exchangeClassifiers = Boolean.valueOf(p.readLine());
 
                 maxX = Integer.valueOf(p.readLine());
                 halfMaxX = maxX / 2;
@@ -436,6 +428,8 @@ public class Configuration {
                 beta = Double.valueOf(p.readLine());
 
                 predictionInitialization = Double.valueOf(p.readLine());
+                predictionInitializationAdaption = Boolean.valueOf(p.readLine());
+
                 predictionErrorInitialization = Double.valueOf(p.readLine());
                 fitnessInitialization = Double.valueOf(p.readLine());
 
@@ -458,7 +452,7 @@ public class Configuration {
 
                 goalAgentMovementType = Integer.valueOf(p.readLine());
 
-                goalAgentMovementSpeed = Integer.valueOf(p.readLine());
+                goalAgentMovementSpeed = Double.valueOf(p.readLine());
 
                 agentType = Integer.valueOf(p.readLine());
 
@@ -491,8 +485,6 @@ public class Configuration {
         Log.log(maxPopSize);
         Log.log("# gif output");
         Log.log(gifOutput);
-        Log.log("# exchange classifiers");
-        Log.log(exchangeClassifiers);
 
         Log.log("# use max prediction reward");
         Log.log(useMaxPrediction);
@@ -536,6 +528,8 @@ public class Configuration {
         Log.log(beta);
         Log.log("# prediction initialization");
         Log.log(predictionInitialization);
+        Log.log("# prediction initialization adaption");
+        Log.log(isPredictionInitializationAdaption());
         Log.log("# prediction error initialization");
         Log.log(predictionErrorInitialization);
         Log.log("# fitness initialization");
@@ -772,7 +766,7 @@ public class Configuration {
         return goalAgentMovementType;
     }
 
-    public static int getGoalAgentMovementSpeed() {
+    public static double getGoalAgentMovementSpeed() {
         return goalAgentMovementSpeed;
     }
 
@@ -788,9 +782,9 @@ public class Configuration {
         @see #RANDOMIZED_MOVEMENT_AGENT_TYPE
         @see #SIMPLE_AI_AGENT_TYPE
         @see #INTELLIGENT_AI_AGENT_TYPE
-        @see #NEW_LCS_AGENT_TYPE
-        @see #OLD_LCS_AGENT_TYPE
-        @see #MULTISTEP_LCS_AGENT_TYPE
+        @see #DSXCS_AGENT_TYPE
+        @see #SXCS_AGENT_TYPE
+        @see #XCS_AGENT_TYPE
         @see #SINGLE_LCS_AGENT_TYPE
      */
     public static int getAgentType() {
@@ -818,13 +812,6 @@ public class Configuration {
 
     public static int getExternalRewardMode() {
         return externalRewardMode;
-    }
-
-    /**
-     * @return the exchangeClassifiers
-     */
-    public static boolean isExchangeClassifiers() {
-        return exchangeClassifiers;
     }
 
     /**
@@ -860,5 +847,12 @@ public class Configuration {
      */
     public static boolean isRandomStart() {
         return randomStart;
+    }
+
+    /**
+     * @return the predictionInitializationAdaption
+     */
+    public static boolean isPredictionInitializationAdaption() {
+        return predictionInitializationAdaption;
     }
 }

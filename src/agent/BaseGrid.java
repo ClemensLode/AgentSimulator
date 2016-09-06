@@ -18,6 +18,7 @@ import gif.*;
  */
 public class BaseGrid {
     public static long invalidActions = 0;
+    public static int goalJumps = 0;
     protected Field [][] grid;
 
     private Gif89Encoder gifenc;
@@ -285,26 +286,33 @@ public class BaseGrid {
         int[] cellColor_B = new int[cell_states];
         // black, red, green, white, gray
         switch (cell_states-1) {
+            // Sichtweite
+            // TODO
             case 5:
                 cellColor_R[5] = 64;
                 cellColor_G[5] = 64;
-                cellColor_B[5] = 96;
+                cellColor_B[5] = 128;
+            // Rewardreichweite
             case 4:
-                cellColor_R[4] = 128;
-                cellColor_G[4] = 128;
-                cellColor_B[4] = 128;
+                cellColor_R[4] = 96;
+                cellColor_G[4] = 96;
+                cellColor_B[4] = 192;
+            // Agent
             case 3:
                 cellColor_R[3] = 255;
                 cellColor_G[3] = 255;
                 cellColor_B[3] = 255;
+            // Zielobjekt
             case 2:
-                cellColor_R[2] = 128;
+                cellColor_R[2] = 96;
                 cellColor_G[2] = 255;
-                cellColor_B[2] = 128;
+                cellColor_B[2] = 96;
+            // Hinderniss
             case 1:
                 cellColor_R[1] = 255;
-                cellColor_G[1] = 64;
-                cellColor_B[1] = 64;
+                cellColor_G[1] = 96;
+                cellColor_B[1] = 96;
+            // Frei
             case 0:
                 cellColor_R[0] = 0;
                 cellColor_G[0] = 0;

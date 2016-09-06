@@ -11,7 +11,7 @@ import agent.Configuration;
  *
  * @author Clemens Lode, 1151459, University Karlsruhe (TH)
  */
-abstract public class Base_LCS_Agent extends BaseAgent {
+abstract public class Base_XCS_Agent extends BaseAgent {
     /**
      * Reward of the last time step (in order to recognize events)
      */
@@ -30,9 +30,9 @@ abstract public class Base_LCS_Agent extends BaseAgent {
     protected MainClassifierSet classifierSet;
     
     
-    private Base_LCS_Agent() {}
+    private Base_XCS_Agent() {}
     
-    public Base_LCS_Agent(int n) throws Exception {
+    public Base_XCS_Agent(int n) throws Exception {
         classifierSet = new MainClassifierSet(n);
     }
 
@@ -67,16 +67,6 @@ abstract public class Base_LCS_Agent extends BaseAgent {
     protected double lastPrediction = 0.0;
     public double lastPredictionError = 0.0;
 
-    protected void tryToExchangeRuleWithNeighbor() throws Exception {
-        if(!Configuration.isExchangeClassifiers()) {
-            return;
-        }
-        Base_LCS_Agent a = (Base_LCS_Agent)(grid.findRandomAgentNearby(getPosition(), getID()));
-        if(a == null) {
-            return;
-        }
-        classifierSet.exchangeRules(a.classifierSet);
-    }
     /**
      * Calculates the positive reward, i.e. classifiers will be rewarded higher
      * the LATER they were executed

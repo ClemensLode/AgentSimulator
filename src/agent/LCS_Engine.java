@@ -31,8 +31,8 @@ public class LCS_Engine {
 
         final int max_classifiers = Configuration.getMaxPopSize()+Action.MAX_DIRECTIONS;
 
-        if(Configuration.getGoalAgentMovementType() == Configuration.LCS_MOVEMENT) {
-            BaseAgent.goalAgent = new LCS_Goal_Agent(max_classifiers);
+        if(Configuration.getGoalAgentMovementType() == Configuration.XCS_MOVEMENT) {
+            BaseAgent.goalAgent = new SXCS_Goal_Agent(max_classifiers);
         } else {
             BaseAgent.goalAgent = new Random_Agent(Configuration.getGoalAgentMovementType(), true);
         }
@@ -44,14 +44,10 @@ public class LCS_Engine {
                 case Configuration.RANDOMIZED_MOVEMENT_AGENT_TYPE:agentList.add(new Random_Agent(Configuration.RANDOM_MOVEMENT, false));break;
                 case Configuration.SIMPLE_AI_AGENT_TYPE:agentList.add(new AI_Agent());break;
                 case Configuration.INTELLIGENT_AI_AGENT_TYPE:agentList.add(new Good_AI_Agent());break;
-                case Configuration.NEW_LCS_AGENT_TYPE:agentList.add(new New_LCS_Agent(max_classifiers));break;
-                case Configuration.OLD_LCS_AGENT_TYPE:agentList.add(new LCS_Agent(max_classifiers));break;
-                case Configuration.MULTISTEP_LCS_AGENT_TYPE:agentList.add(new Multistep_LCS_Agent(max_classifiers));break;
-                case Configuration.SINGLE_LCS_AGENT_TYPE:agentList.add(new Single_LCS_Agent());break;
+                case Configuration.DSXCS_AGENT_TYPE:agentList.add(new DSXCS_Agent(max_classifiers));break;
+                case Configuration.SXCS_AGENT_TYPE:agentList.add(new SXCS_Agent(max_classifiers));break;
+                case Configuration.XCS_AGENT_TYPE:agentList.add(new XCS_Agent(max_classifiers));break;
             }
-        }
-        if(Configuration.getAgentType() == Configuration.SINGLE_LCS_AGENT_TYPE) {
-            Single_LCS_Agent.initSingleLCSAgent(max_classifiers);
         }
     }
 
@@ -134,6 +130,8 @@ public class LCS_Engine {
             a.aquireNewSensorData();
             a.calculateNextMove(gaTimestep);
         }
+        BaseAgent.goalAgent.aquireNewSensorData();
+        BaseAgent.goalAgent.calculateNextMove(gaTimestep);
     }
 
     private ClassifierSet findBestAgent() throws Exception {
@@ -142,19 +140,17 @@ public class LCS_Engine {
             case Configuration.RANDOMIZED_MOVEMENT_AGENT_TYPE:
             case Configuration.SIMPLE_AI_AGENT_TYPE:
             case Configuration.INTELLIGENT_AI_AGENT_TYPE:
-                if(Configuration.getGoalAgentMovementType() == Configuration.LCS_MOVEMENT) {
-                    return ((Base_LCS_Agent)(BaseAgent.goalAgent)).getClassifierSet();
+                if(Configuration.getGoalAgentMovementType() == Configuration.XCS_MOVEMENT) {
+                    return ((Base_XCS_Agent)(BaseAgent.goalAgent)).getClassifierSet();
                 }
                 return null;
-            case Configuration.SINGLE_LCS_AGENT_TYPE:
-                return Single_LCS_Agent.classifierSet;
         }
         double best_fit = 0.0;
         for(BaseAgent a : agentList) {
-            double t = ((Base_LCS_Agent)a).getFitnessNumerosity();
+            double t = ((Base_XCS_Agent)a).getFitnessNumerosity();
             if(best == null || t > best_fit) {
                 best_fit = t;
-                best = ((Base_LCS_Agent)a).getClassifierSet();
+                best = ((Base_XCS_Agent)a).getClassifierSet();
             }
         }
         return best;
@@ -165,9 +161,14 @@ public class LCS_Engine {
      * movement
      */
     private void moveAgents(long gaTimestep) throws Exception {
-        BaseAgent.mark = false;
+        int goal_speed = (int)Configuration.getGoalAgentMovementSpeed();
 
-        int goal_speed = Configuration.getGoalAgentMovementSpeed();
+        double prop_one_more = Configuration.getGoalAgentMovementSpeed() - ((double)goal_speed);
+        if(prop_one_more > 0.0) {
+            if(Misc.nextDouble() <= prop_one_more) {
+                goal_speed++;
+            }
+        }
         ArrayList<BaseAgent> random_list = new ArrayList<BaseAgent>(agentList.size() + goal_speed);
 
         random_list.addAll(agentList);
@@ -185,7 +186,7 @@ public class LCS_Engine {
                 if(a.isGoalAgent() && goal_speed > 1) {
                     goal_speed--;
                     a.aquireNewSensorData();
-                    a.calculateNextMove(0);
+                    a.calculateNextMove(gaTimestep);
                     a.calculateReward(gaTimestep);
                 }
 
@@ -219,6 +220,6 @@ public class LCS_Engine {
         Log.log("iteration " + currentTimestep);
         Log.log("# -------------------------\n");
         Log.log("# grid");
-        Log.log(LCS_Agent.grid.getGridString());
+        Log.log(SXCS_Agent.grid.getGridString());
     }
 }

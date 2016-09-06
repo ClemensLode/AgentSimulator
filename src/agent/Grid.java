@@ -306,14 +306,18 @@ public class Grid extends BaseGrid {
         }
     }
 
-    public void maybeRemoveAgentDirections(final BaseAgent a, ArrayList<Integer> available_directions, double probability) {
+    public void maybeRemoveAgentDirections(final BaseAgent a, ArrayList<Integer> available_directions, double probability_reward, double probability_sight) {
         boolean[] direction_agent_in_sight_list = getDirectionAgentInSightList(a.getPosition(), a.getID());
         for (int i = 0; i < Action.MAX_DIRECTIONS; i++) {
-            if (Misc.nextDouble() < probability && direction_agent_in_sight_list[2*i]) {
+            if (Misc.nextDouble() < probability_reward && direction_agent_in_sight_list[2*i+1]) {
+                available_directions.remove(new Integer(i));
+            }
+            if (Misc.nextDouble() < probability_sight && direction_agent_in_sight_list[2*i]) {
                 available_directions.remove(new Integer(i));
             }
         }
     }
+
 
     public void maybeRemoveObstacleDirections(final BaseAgent a, ArrayList<Integer> available_directions, double probability) {
         boolean[] direction_obstacle_in_sight_list = getDirectionObstacleInSightList(a.getPosition(), a.getID());
@@ -617,6 +621,12 @@ public class Grid extends BaseGrid {
     private double getWastedMovements() {
         double movements = ((double)BaseGrid.invalidActions) / ((double)Configuration.getMaxAgents());
         BaseGrid.invalidActions = 0;
+        return movements;
+    }
+
+    private double getGoalJumps() {
+        double movements = BaseGrid.goalJumps;
+        BaseGrid.goalJumps = 0;
         return movements;
     }
 

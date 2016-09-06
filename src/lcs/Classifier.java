@@ -28,7 +28,7 @@ public class Classifier {
     /**
      * Number of time this classifier was updated
      */
-    private double experience = 1.0;
+    private double experience = 0.0;
     /**
      * The action set size estimate of the classifier.
      */
@@ -70,10 +70,10 @@ public class Classifier {
      * @see MainClassifierSet#coverAllValidActions
      * @throws java.lang.Exception if there was an error setting prediction, fitness or action set size
      */
-    public Classifier(final Sensors state, final Action action, final long gaTimestamp, double action_set_size) throws Exception {
+    public Classifier(final Sensors state, final Action action, final long gaTimestamp, double action_set_size, double average_prediction) throws Exception {
         setGaTimestamp(gaTimestamp);
 
-        setPrediction(Configuration.getPredictionInitialization());
+        setPrediction(average_prediction);
         setPredictionError(Configuration.getPredictionErrorInitialization());
         setFitness(Configuration.getFitnessInitialization());
         // will later (in the actionClassifierSet) be resetted to the actual value
@@ -139,7 +139,7 @@ public class Classifier {
     public Classifier clone(ClassifierSet cs) throws Exception{
         Classifier new_cl = new Classifier(this);
         new_cl.setNumerosity(getNumerosity());
-        new_cl.experience = experience;
+        new_cl.experience = getExperience();
         new_cl.addParent(cs);
         return new_cl;
     }

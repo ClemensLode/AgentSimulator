@@ -167,6 +167,7 @@ public class AppliedClassifierSet {
      */
     private int bestActionWinner() {
         int ret = 0;
+        // TODO randomize Reihenfolge!
         for (int i = 1; i < predictionFitnessProductSum.length; i++) {
             if (predictionFitnessProductSum[ret] < predictionFitnessProductSum[i]) {
                 ret = i;
@@ -210,16 +211,14 @@ Proc. Genetic and Evol. Comput., pp. 1857–1869.
      * @return
      */
     private int tournamentActionWinner() {
-        int[] array = new int[Action.MAX_DIRECTIONS];
-        for(int i = 0; i < Action.MAX_DIRECTIONS; i++) {
-            array[i] = i;
-        }
+        int[] array = Misc.getRandomArray(Action.MAX_DIRECTIONS);
 
         while(array.length > 1) {
-            int ret = 0;
+            int ret = -1;
             int j = 0;
+            //last change, check nontorus scenario
             for(int i = 0; i < array.length; i++) {
-                if (predictionFitnessProductSum[ret] < predictionFitnessProductSum[array[i]]) {
+                if (ret == -1 || predictionFitnessProductSum[ret] < predictionFitnessProductSum[array[i]]) {
                     ret = array[i];
                     j = i;
                 }
@@ -227,7 +226,7 @@ Proc. Genetic and Evol. Comput., pp. 1857–1869.
             if(Misc.nextDouble() <= Configuration.getTournamentProbability()) {
                 return ret;
             }
-            
+
             int[] new_array = new int[array.length-1];
             for(int i = 0; i < j; i++) {
                 new_array[i] = array[i];

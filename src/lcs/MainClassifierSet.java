@@ -48,6 +48,14 @@ public class MainClassifierSet extends ClassifierSet {
         for (Classifier c : getClassifiers()) {
             action_covered[c.getDirection()] = true;
         }
+
+        double prediction_initialization;
+        if(Configuration.isPredictionInitializationAdaption()) {
+            prediction_initialization = getAveragePrediction();
+        } else {
+            prediction_initialization = Configuration.getPredictionInitialization();
+        }
+
         /**
          * loop until all actions are covered 
          */
@@ -55,7 +63,7 @@ public class MainClassifierSet extends ClassifierSet {
         do {
             for (int i = 0; i < action_covered.length; i++) {
                 if (!action_covered[i]) {
-                    Classifier newCl = new Classifier(state, new Action(i), gaTime, getNumerositySum()+1);
+                    Classifier newCl = new Classifier(state, new Action(i), gaTime, getNumerositySum()+1, prediction_initialization);
                     addClassifier(newCl);
                     // newCl.setMatchingActions(action_covered, state); TODO maybe optimize....
                     // wenn ein neuer Classifier spaeter gepruefte actions schon abdeckt, muessen insgesamt weniger Classifier hinzugefuegt werden
@@ -86,6 +94,8 @@ public class MainClassifierSet extends ClassifierSet {
             }
         } while (!all_actions_covered);
     }
+
+
 
     /**
      * Creates and adds children to the classifier set, constructed out of the parents
@@ -206,6 +216,24 @@ public class MainClassifierSet extends ClassifierSet {
             }
         }
         return null;
+    }
+
+    public double getAveragePrediction() throws Exception {
+        //return Configuration.getPredictionInitialization();
+        double pred = 0.0;
+        int count = 0;
+        for(Classifier c : getClassifiers()) {
+            //if(c.getExperience() < Configuration.getThetaSubsumer()) {
+            //    continue;
+            //}
+            pred += c.getPrediction();
+            count++;
+        }
+        if(count == 0) {
+            return Configuration.getPredictionInitialization();
+        }
+        pred /= ((double)count);
+        return pred;
     }
 
     /**

@@ -39,6 +39,7 @@ public class Main {
         // number of experiments with the same configuration
             long time = System.currentTimeMillis();
             BaseGrid.invalidActions = 0;
+            BaseGrid.goalJumps = 0;
             for (int experiment_nr = 1; experiment_nr <= Configuration.getNumberOfExperiments(); experiment_nr++) {
                 Log.initialize(false);
             

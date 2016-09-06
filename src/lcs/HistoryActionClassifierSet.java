@@ -1,15 +1,18 @@
 package lcs;
 
 import java.util.ArrayList;
-import lcs.AppliedClassifierSet;
 import agent.Sensors;
 
 /**
+ * This class provides extra memory to the action classifier set in order to 
+ * allow the late distribution of the reward
  *
  * @author Clemens Lode, 1151459, University Karlsruhe (TH)
  */
 public class HistoryActionClassifierSet {
+
     private class RewardHelper {
+
         public RewardHelper(double reward, double factor) {
             this.reward = reward;
             this.factor = factor;
@@ -25,7 +28,6 @@ public class HistoryActionClassifierSet {
     }
 
     public void addReward(double reward, double factor) {
-        // if reward == factor == 1 reward immediately
         this.reward.add(new RewardHelper(reward, factor));
     }
 
@@ -38,32 +40,35 @@ public class HistoryActionClassifierSet {
     }
 
     public void processReward(MainClassifierSet main, double max_prediction) throws Exception {
+        if (reward.isEmpty()) {
+            return;
+        }
+
         int calculatedAction = actionClassifierSet.getAction();
         Sensors lastState = actionClassifierSet.getLastState();
         AppliedClassifierSet lastMatchSet = new AppliedClassifierSet(lastState, main);
         actionClassifierSet = new ActionClassifierSet(lastState, lastMatchSet, calculatedAction);
-        
-        if(reward.isEmpty()) {
-            // empty results => Apply 0 reward
-            // so that no 0-reward needs to be distributed when no agent is in sight in the LCS Agent code
-            actionClassifierSet.updateReward(0.0, max_prediction, 1.0);
-        } else {
-            double max = 0.0;
-            double max_factor = 0.0;
-            for(RewardHelper r : reward) {
-                // we already gave reward for this case
-                if(r.reward == 1.0 && r.factor == 1.0) {
-                    return;
-               }
-               //actionClassifierSet.updateReward(r.reward, max_prediction, r.factor);
 
-                if(r.reward >= max && r.factor >= max_factor) {
-                    max = r.reward;
-                    max_factor = r.factor;
-                }
+
+        // empty results => Apply 0 reward
+        // so that no 0-reward needs to be distributed when no agent is in sight in the LCS Agent code
+        //    actionClassifierSet.updateReward(0.0, max_prediction, 1.0);
+        //} else {
+        double max = 0.0;
+        double max_factor = 0.0;
+        for (RewardHelper r : reward) {
+            // we already gave reward for this case
+            if (r.reward == 1.0 && r.factor == 1.0) {
+                return;
             }
-            actionClassifierSet.updateReward(max, max_prediction, 1.0);//max_factor);
+
+            if (r.reward * r.factor >= max_factor) {
+                max = r.reward;
+                max_factor = r.reward * r.factor;
+            }
         }
+        actionClassifierSet.updateReward(max, max_prediction, 1.0);
+    // }
     }
 
     public void evolutionaryAlgorithm(MainClassifierSet main_classifier_set, long gaTimestep) throws Exception {

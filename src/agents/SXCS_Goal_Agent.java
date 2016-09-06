@@ -11,50 +11,14 @@ import lcs.ActionClassifierSet;
 import lcs.AppliedClassifierSet;
 import lcs.Action;
 
-public class LCS_Goal_Agent extends LCS_Agent {
+public class SXCS_Goal_Agent extends SXCS_Agent {
 
-    public LCS_Goal_Agent(int n) throws Exception {
+    public SXCS_Goal_Agent(int n) throws Exception {
         super(n);
     }
 
     /**
-     * is called in each step, determines the current reward and checks if the
-     * reward has changed. If it has changed update the classifiers in the 
-     * action set appropriately
-     * @param gaTimestep
-     * @throws java.lang.Exception
-     */
-    @Override
-    public void calculateReward(final long gaTimestep) throws Exception {
-        boolean reward = checkRewardPoints();
-
-        // event?
-        if (reward != lastReward) {
-            if(Configuration.getExplorationMode() == Configuration.SWITCH_EXPLORATION_START_EXPLORE_MODE ||
-               Configuration.getExplorationMode() == Configuration.SWITCH_EXPLORATION_START_EXPLOIT_MODE) {
-            // new problem!
-                lastExplore = !lastExplore;
-            }
-
-            int start_index = historicActionSet.size() - 1;
-            collectReward(start_index, actionSetSize, reward, 1.0, true);
-            // remove all classifier sets
-            actionSetSize = 0;
-        }
-        // ausschliesslich
-        else if(actionSetSize >= Configuration.getMaxStackSize())
-        {
-            int start_index = Configuration.getMaxStackSize() / 2;
-            int length = actionSetSize - start_index;
-            collectReward(start_index, length, reward, 1.0, false);
-            actionSetSize = start_index;
-        }
-        lastReward = reward;
-        evolutionaryAlgorithm(gaTimestep);
-    }
-
-    /**
-     * @return true if the goal agent currently is not in sight
+     * @return true if the other agents currently is not in reward range
      */
     @Override
     public boolean checkRewardPoints() {
@@ -64,7 +28,7 @@ public class LCS_Goal_Agent extends LCS_Agent {
         boolean[] sensor_agent = lastState.getSensorAgent();
         boolean reward = true;
         for(int i = 0; i < Action.MAX_DIRECTIONS; i++) {
-            if(!sensor_agent[2*i+1]) {
+            if(sensor_agent[2*i+1]) {
                 reward = false;
             }
         }
@@ -96,7 +60,7 @@ public class LCS_Goal_Agent extends LCS_Agent {
         lastMatchSet = new AppliedClassifierSet(lastState, classifierSet);
         // Wir holen uns einen zufälligen / den besten Classifier
         boolean[] sensor_agent = lastState.getSensorAgent();
-        lastExplore = checkIfExplore(sensor_agent[0] || sensor_agent[1] || sensor_agent[2] || sensor_agent[3], lastExplore, gaTimestep);
+        lastExplore = checkIfExplore(!(sensor_agent[1] || sensor_agent[3] || sensor_agent[5] || sensor_agent[7]), lastExplore, gaTimestep);
 
         calculatedAction = lastMatchSet.chooseAbsoluteDirection(lastExplore);
 

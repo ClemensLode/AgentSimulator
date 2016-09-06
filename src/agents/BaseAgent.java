@@ -23,10 +23,6 @@ public abstract class BaseAgent {
 
     protected Sensors lastState = null;
 
-    /**
-     * temporary helper value to remember if the agents were already rewarded TODO
-     */
-    public static boolean mark = false;
 
     /**
      * statistical value
@@ -129,13 +125,12 @@ public abstract class BaseAgent {
         boolean[] sensor_goal = lastState.getSensorGoal();
         boolean reward = false;
         for(int i = 0; i < Action.MAX_DIRECTIONS; i++) {
-            if((sensor_goal[2*i]) && (!sensor_agent[2*i+1])) {
+            if((sensor_goal[2*i])) {// && (!sensor_agent[2*i+1])) {
+                //TODO
                 reward = true;
                 break;
             }
         }
-
-        //boolean reward = grid.isGoalAgentInRewardRange(this);
 
         // goal agent is in sight?
         if (grid.isGoalAgentInRewardRange(this)) {
