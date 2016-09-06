@@ -15,7 +15,7 @@ public class Condition extends GeneticData {
     private static final int AGENT_DISTANCE_INDEX = 1;
     private static final int GOAL_AGENT_DISTANCE_INDEX = 0;
     
-    public static final int WILDCARD = -1;
+    public static final int DONTCARE = -1;
 
     public Condition() {
         super(CONDITION_SIZE);
@@ -25,10 +25,14 @@ public class Condition extends GeneticData {
         super(data);
     }    
     
+    public Condition(Condition c) {
+        super(c.data);
+    }
+    
     @Override
     public Condition clone() {
-        Condition new_action = new Condition(data);
-        return new_action;
+        Condition new_condition = new Condition(data);
+        return new_condition;
     }    
     
     public void randomize() {
@@ -40,16 +44,42 @@ public class Condition extends GeneticData {
     }
     
     
-    public void mutate(double mutation_probability) {
-        for(int i = 0; i < Grid.MAX_DIRECTIONS; i++) {
-            if(Misc.nextDouble() < mutation_probability) {
-                data[i+AGENT_DISTANCE_INDEX] = Misc.nextInt(3) - 1;
+    /**
+     * Mutates the condition of the classifier. If one allele is mutated depends on the constant pM. 
+     * This mutation is a niche mutation. It assures that the resulting classifier
+     * still matches the current situation.
+     *
+     * @see XCSConstants#pM
+     * @param state The current situation/problem instance.
+     */
+    public boolean mutateCondition(Condition state)
+    {
+	boolean changed=false;
+        for(int i = 0; i < data.length; i++) {
+            if(Misc.nextDouble() < Configuration.getMutationProbability()) {
+                changed = true;
+                if(data[i] == DONTCARE) {
+                    data[i] = state.data[i];
+                } else {
+                    data[i] = DONTCARE;
+                }
             }
         }
-        if(Misc.nextDouble() < mutation_probability) {
-            data[GOAL_AGENT_DISTANCE_INDEX] = Misc.nextInt(2);
+        return changed;
+    }
+        
+    
+    public boolean isMoreGeneral(final Condition c) {
+        boolean ret = false;        
+        for(int i = 0; i < data.length; i++) {
+            if((data[i] != DONTCARE) && (data[i] != c.data[i])) {
+                return false;
+            } else if(data[i] != c.data[i]) {
+                ret = true;
+            } 
         }
-    }   
+        return ret;
+    }
     
    
     public boolean isMatched(double[] direction_agent_distance, int goal_agent_direction) {
@@ -64,7 +94,7 @@ public class Condition extends GeneticData {
                 boolean matched = true;
                 for(int j = 0; j < Grid.MAX_DIRECTIONS; j++) {
                     switch(data[AGENT_DISTANCE_INDEX + ((i + j)%Grid.MAX_DIRECTIONS)]) {
-                        case Condition.WILDCARD:break;
+                        case Condition.DONTCARE:break;
                         case 0:if(direction_agent_distance[i] <= Configuration.getSightRange()) {
                             matched = false;
                         }break;
@@ -85,7 +115,7 @@ public class Condition extends GeneticData {
             
             for(int j = 0; j < Grid.MAX_DIRECTIONS; j++) {
                 switch(data[AGENT_DISTANCE_INDEX + ((goal_agent_direction + j)%Grid.MAX_DIRECTIONS)]) {
-                    case Condition.WILDCARD:break;
+                    case Condition.DONTCARE:break;
                     case 0:if(direction_agent_distance[j] <= Configuration.getSightRange()) {
                         return false;
                     }break;
@@ -118,7 +148,7 @@ public class Condition extends GeneticData {
                 // flip some of the condition bits to # with a probability p
         for(int i = AGENT_DISTANCE_INDEX; i < condition.length; i++) {
             if(Misc.nextDouble() < wildcard_probability) {
-                condition[i] = Condition.WILDCARD;
+                condition[i] = Condition.DONTCARE;
             }
         }        
         return new Condition(condition);
@@ -129,7 +159,7 @@ public class Condition extends GeneticData {
         String output = new String();
         
         for(int i = 0; i < data.length; i++) {
-            if(data[i] == WILDCARD) {
+            if(data[i] == DONTCARE) {
                 output += "#";
             } else {
                 output += "" + data[i];
@@ -146,13 +176,13 @@ public class Condition extends GeneticData {
             
             output += Grid.shortDirectionString[i];
             
-            if(data[i + AGENT_DISTANCE_INDEX] == Condition.WILDCARD) {
+            if(data[i + AGENT_DISTANCE_INDEX] == Condition.DONTCARE) {
                 output += "#";
             } else {
                 output += data[i + AGENT_DISTANCE_INDEX];
             }
             
-            if(data[i + GOAL_AGENT_DISTANCE_INDEX] == Condition.WILDCARD) {
+            if(data[i + GOAL_AGENT_DISTANCE_INDEX] == Condition.DONTCARE) {
                 output += "#";
             } else {
                 output += data[i + GOAL_AGENT_DISTANCE_INDEX];

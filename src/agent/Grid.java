@@ -6,6 +6,7 @@
 package agent;
 import java.awt.Point;
 import java.util.ArrayList;
+import java.text.NumberFormat;
 
 /**
  *
@@ -25,15 +26,29 @@ public class Grid {
     
     private int[][] grid;
     private ArrayList<Agent> agent;
+    private int timeGoalAgentObserved;
+    private int totalTimeGoalAgentObserved;
     
     public Grid() {
         grid = new int[Configuration.getMaxX()][Configuration.getMaxY()];
+        timeGoalAgentObserved = 0;
+        totalTimeGoalAgentObserved = 0;
         for(int i = 0; i < Configuration.getMaxX(); i++) {
             for(int j = 0; j < Configuration.getMaxY(); j++) {
                 grid[i][j] = 0;
             }
         }
         agent = new ArrayList<Agent>();
+    }
+    
+    void checkGoalAgentInSight() {
+        totalTimeGoalAgentObserved++;
+        for(Agent a : agent) {
+            if(a.isGoalAgentInSight()) {
+                timeGoalAgentObserved++;
+                return;
+            }
+        }
     }
     
     // Punkt b relativ zu Punkt a
@@ -54,36 +69,36 @@ public class Grid {
     }
     
     public int getAbsoluteTorusDistanceX(int x1, int x2) {
-        int dx = x1 - x2;
-        if(dx < -Configuration.getMaxX()/2) {
-            dx += Configuration.getMaxX();
+        int tdx = x1 - x2;
+        if(tdx < -Configuration.getMaxX()/2) {
+            tdx += Configuration.getMaxX();
         }
-        else if(dx >= Configuration.getMaxX()/2) {
-            dx -= Configuration.getMaxX();
+        else if(tdx >= Configuration.getMaxX()/2) {
+            tdx -= Configuration.getMaxX();
         }
-        return dx;
+        return tdx;
     }
     
     public int getAbsoluteTorusDistanceY(int y1, int y2) {
-        int dy = y1 - y2;
-        if(dy < -Configuration.getMaxY()/2) {
-            dy += Configuration.getMaxY();
+        int tdy = y1 - y2;
+        if(tdy < -Configuration.getMaxY()/2) {
+           tdy += Configuration.getMaxY();
         }
-        else if(dy >= Configuration.getMaxY()/2) {
-            dy -= Configuration.getMaxY();
+        else if(tdy >= Configuration.getMaxY()/2) {
+            tdy -= Configuration.getMaxY();
         }
-        return dy;
+        return tdy;
     }    
     
     public int getAbsoluteTorusDirection(int a, int b) {
-        int dx = a - b;
-        if(dx < -Configuration.getMaxX()/2) {
+        int tdx = a - b;
+        if(tdx < -Configuration.getMaxX()/2) {
             return 0;
         }
-        else if(dx >= Configuration.getMaxX()/2) {
+        else if(tdx >= Configuration.getMaxX()/2) {
             return 1;
         } 
-        else if(dx < 0) {
+        else if(tdx < 0) {
             return 1;
         } else  {
             return 0;
@@ -91,9 +106,9 @@ public class Grid {
     }
     
     public double getAbsoluteTorusDistance(Point a, Point b) {
-        int dx = getAbsoluteTorusDistanceX(a.x, b.x);
-        int dy = getAbsoluteTorusDistanceY(a.y, b.y);
-        return Math.sqrt(dx*dx + dy*dy);
+        int tdx = getAbsoluteTorusDistanceX(a.x, b.x);
+        int tdy = getAbsoluteTorusDistanceY(a.y, b.y);
+        return Math.sqrt(tdx*tdx + tdy*tdy);
     }
     
     // wo steht b von der Sicht von a aus?
@@ -210,15 +225,58 @@ public class Grid {
         }
     }
     
-    public void printGrid() {
+    public String getInputStrings() throws Exception {
+        String input_strings = new String();
+        NumberFormat nf=NumberFormat.getInstance(); // Get Instance of NumberFormat
+        nf.setMinimumIntegerDigits(3);  // The minimum Digits required is 3
+        nf.setMaximumIntegerDigits(3); // The maximum Digits required is 3
+        
+        for(int i = 1; i < agent.size(); i++) {
+            String sb="ID " + (nf.format((long)i)) + " ";
+            input_strings += sb + agent.get(i).getInputString() + "\n";
+        }   
+        return input_strings;
+    }
+    
+    public String getGridString() {
         String grid_string = new String();
+        NumberFormat nf=NumberFormat.getInstance(); // Get Instance of NumberFormat
+        nf.setMinimumIntegerDigits(3);  // The minimum Digits required is 3
+        nf.setMaximumIntegerDigits(3); // The maximum Digits required is 3
+        
         for(int i = 0; i < Configuration.getMaxY(); i++) {
             for(int j = 0; j < Configuration.getMaxX(); j++) {
-                grid_string += grid[j][i];
+                grid_string += " " + (nf.format(grid[j][i]));
             }
             grid_string += "\n";
         }
         grid_string += "\n";
-        Log.gridLog(grid_string);
+        return grid_string;
+    }
+    
+    public String getAgentStrings() {
+        String agent_strings = new String();
+        NumberFormat nf=NumberFormat.getInstance(); // Get Instance of NumberFormat
+        nf.setMinimumIntegerDigits(3);  // The minimum Digits required is 3
+        nf.setMaximumIntegerDigits(3); // The maximum Digits required is 3
+        
+        for(int i = 1; i < agent.size(); i++) {
+            String sb="ID " + (nf.format((long)i)) + "\n";
+            agent_strings += sb + " " + agent.get(i).toString() + "\n\n";
+        }       
+        
+        return agent_strings;
+    }
+
+    public int getTimeGoalAgentObserved() {
+        return timeGoalAgentObserved;
+    }
+
+    public int getTotalTimeGoalAgentObserved() {
+        return totalTimeGoalAgentObserved;
+    }
+    
+    public double getPercentageGoalAgentObserved() {
+        return ((double)timeGoalAgentObserved) / ((double)totalTimeGoalAgentObserved);
     }
 }

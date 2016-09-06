@@ -15,6 +15,77 @@ import java.io.IOException;
  */
 public class Configuration {
 
+    public static boolean isEventDriven() {
+        return eventDriven;
+    }
+
+    public static int getTotalExperiments() {
+        return totalExperiments;
+    }
+    public static boolean isDoGASubsumption() {
+        return doGASubsumption;
+    }
+
+    public static double getMutationProbability() {
+        return mutationProbability;
+    }
+
+    public static double getThetaGA() {
+        return thetaGA;
+    }
+
+    public static double getAlpha() {
+        return alpha;
+    }
+
+    public static double getNu() {
+        return nu;
+    }
+
+    public static boolean isActionSetSubsumption() {
+        return actionSetSubsumption;
+    }
+
+    public static double getGamma() {
+        return gamma;
+    }
+
+    public static double getDelta() {
+        return delta;
+    }
+
+    public static double getDeltaDel() {
+        return deltaDel;
+    }
+
+    public static int getMaxPopSize() {
+        return maxPopSize;
+    }
+
+    public static double getPredictionInitialization() {
+        return predictionInitialization;
+    }
+
+    public static double getPredictionErrorInitialization() {
+        return predictionErrorInitialization;
+    }
+
+    public static double getFitnessInitialization() {
+        return fitnessInitialization;
+    }
+
+    public static double getBeta() {
+        return beta;
+    }
+
+    public static double getThetaSubsumer() {
+        return thetaSubsumer;
+    }
+
+    public static double getEpsilon0() {
+        return epsilon0;
+    }
+
     public static boolean isIsTorus() {
         return isTorus;
     }
@@ -75,11 +146,13 @@ public class Configuration {
         return doEvolutionaryAlgorithm;
     }
 
-    public static int getTotalSteps() {
-        return totalSteps;
+    public static int getTotalRuns() {
+        return totalRuns;
     }
     
-    private static int totalSteps = 500;
+    private static boolean eventDriven = true;
+    private static int totalExperiments = 10;
+    private static int totalRuns = 500;
     private static int gaSteps = 20;
     private static int maxX = 40;
     private static int maxY = 40;
@@ -96,6 +169,32 @@ public class Configuration {
     private static boolean doEvolutionaryAlgorithm = true;
     private static boolean isTorus = true;
     
+    private static double thetaSubsumer = 0.1;
+    private static double epsilon0 = 0.05;
+    private static double beta = 0.1;
+    
+    private static double predictionInitialization = 0.1;
+    private static double predictionErrorInitialization = 0.1;
+    private static double fitnessInitialization = 0.5;
+    
+    private static int maxPopSize = 32;
+    
+    private static double delta = 0.1;
+    private static double deltaDel = 0.1;
+    private static double gamma = 0.1;
+    
+    private static boolean actionSetSubsumption = false;
+    
+    private static double alpha = 0.1;
+    private static double nu = 0.1;
+    private static double thetaGA = 25.0;
+    
+    private static double predictionErrorReduction = 0.1;
+    private static double fitnessReduction = 0.1;
+    private static double mutationProbability = 0.1;
+    
+    private static boolean doGASubsumption = true;
+    
     static void initialize(String file_name) {
         // load old settings if file exists
         File my_file = new File(file_name);
@@ -103,8 +202,12 @@ public class Configuration {
 
             try {
                 BufferedReader p = new BufferedReader(new FileReader(my_file.getAbsoluteFile()));
-                totalSteps = Integer.valueOf(p.readLine());
+                
+                totalExperiments = Integer.valueOf(p.readLine());
+                totalRuns = Integer.valueOf(p.readLine());
                 gaSteps = Integer.valueOf(p.readLine());
+                
+                eventDriven = Boolean.valueOf(p.readLine());
                 
                 maxX = Integer.valueOf(p.readLine());
                 maxY = Integer.valueOf(p.readLine());
@@ -125,15 +228,49 @@ public class Configuration {
                 rewardUpdateFactor = Double.valueOf(p.readLine());
                 doEvolutionaryAlgorithm = Boolean.valueOf(p.readLine());
                 
+                thetaSubsumer = Double.valueOf(p.readLine());
+                epsilon0 = Double.valueOf(p.readLine());
+                beta = Double.valueOf(p.readLine());
+                
+                predictionInitialization = Double.valueOf(p.readLine());
+                predictionErrorInitialization = Double.valueOf(p.readLine());
+                fitnessInitialization = Double.valueOf(p.readLine());
+                
+                maxPopSize = Integer.valueOf(p.readLine());
+                
+                delta = Double.valueOf(p.readLine());
+                deltaDel = Double.valueOf(p.readLine());
+                gamma = Double.valueOf(p.readLine());
+                
+                actionSetSubsumption = Boolean.valueOf(p.readLine());
+                
+                alpha = Double.valueOf(p.readLine());
+                nu = Double.valueOf(p.readLine());
+                thetaGA = Double.valueOf(p.readLine());
+                
+                predictionErrorReduction = Double.valueOf(p.readLine());
+                fitnessReduction = Double.valueOf(p.readLine());
+                mutationProbability = Double.valueOf(p.readLine());
+                
+                doGASubsumption = Boolean.valueOf(p.readLine());
+                
                 p.close();
             } catch (IOException e) {
-                Log.errorLog("IO Exception: Error " + e + " reading from file " + my_file.getAbsoluteFile());
+                Log.errorLog("IO Exception: Error reading from file " + my_file.getAbsoluteFile(), e);
             } catch (NumberFormatException e) {
-                Log.errorLog("NumberFormatException: Error " + e + " reading from file " + my_file.getAbsoluteFile());
+                Log.errorLog("NumberFormatException: Error reading from file " + my_file.getAbsoluteFile(), e);
             } catch (Exception e) {
-                Log.errorLog("Exception: Error " + e);
+                Log.errorLog("Exception: Error ", e);
             }
         }
+    }
+
+    public static double getPredictionErrorReduction() {
+        return predictionErrorReduction;
+    }
+
+    public static double getFitnessReduction() {
+        return fitnessReduction;
     }
     
 }

@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package agent;
 
 import java.io.BufferedWriter;
@@ -15,11 +11,11 @@ import java.io.IOException;
 public class Log {
 
     private static BufferedWriter out;
-    private static BufferedWriter grid_out;
     private static BufferedWriter error_out;
     
-    private static boolean doLog;
+    private static boolean doLog = false;
     private static boolean errorLogInitialized = false;
+    private static boolean notFinalised = false;
 
     public static void initialize(boolean do_log) {
         doLog = do_log;
@@ -28,15 +24,16 @@ public class Log {
             return;
         }
         
+        if(notFinalised) {
+            finalise();
+        }        
+        notFinalised = true;
+        
         try {
             String filename = Misc.getFileName("agent") + ".log";
             out = new BufferedWriter(new FileWriter(filename));
-            String grid_filename = Misc.getFileName("grid") + ".txt";
-            grid_out = new BufferedWriter(new FileWriter(grid_filename));
         } catch (IOException e) {
-            errorLog("initialize failed: " + e);
-            System.err.print(e);
-            e.printStackTrace();
+            errorLog("initialize log failed: ", e);
         }
     }
 
@@ -47,8 +44,7 @@ public class Log {
         try {
             out.write(s);
         } catch (IOException e) {
-            System.err.print(e);
-            e.printStackTrace();
+            errorLog("Error writing log: ", e);
         }
     }
     public static void errorLog(String s) {
@@ -69,18 +65,23 @@ public class Log {
             System.err.print(e);
             e.printStackTrace();
         }
-    }  
-    public static void gridLog(String s) {
-        if(!doLog) {
-            return;
-        }
-        try {
-            grid_out.write(s);
-        } catch (IOException e) {
-            System.err.print(e);
-            e.printStackTrace();
-        }        
     }
+    
+    public static void errorLog(String s, Throwable e) {
+        StringBuilder error_string = new StringBuilder();
+        final String NEW_LINE = System.getProperty("line.separator");
+        
+        error_string.append(s);
+        error_string.append(e.toString());
+        error_string.append(NEW_LINE);
+        for(StackTraceElement ste : e.getStackTrace()) {
+            error_string.append(ste.toString());
+            error_string.append(NEW_LINE);
+        }
+        
+        errorLog(error_string.toString());
+    }
+    
 
     public static void finalise() {
         if(errorLogInitialized) {
@@ -100,12 +101,8 @@ public class Log {
         try {
             out.flush();
             out.close();
-            grid_out.flush();
-            grid_out.close();            
         } catch (IOException e) {
-            errorLog("finalise failed: " + e);
-            System.err.print(e);
-            e.printStackTrace();
+            errorLog("finalise failed: ", e);
         }
     }
 
@@ -125,11 +122,8 @@ public class Log {
         
         try {
             out.flush();
-            grid_out.flush();
         } catch (IOException e) {
-            errorLog("flush failed: " + e);
-            System.err.print(e);
-            e.printStackTrace();
+            errorLog("flush failed: ", e);
         }
     }
 }

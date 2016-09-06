@@ -26,6 +26,11 @@ public class Action extends GeneticData {
         super(ACTION_SIZE);
     }
     
+    public Action(int action) {
+        super(ACTION_SIZE);
+        data[0] = action;
+    }
+    
     public Action(int[] data) {
         super(data);
     }    
@@ -39,11 +44,26 @@ public class Action extends GeneticData {
     public void randomize() {
         data[0] = Misc.nextInt(MAX_ACTIONS);
     }
-
-    public void mutate(double mutation_probability) {
-        if(Misc.nextDouble() < mutation_probability) {
-            data[0] = Misc.nextInt(MAX_ACTIONS);
-        }
+    
+    /**
+     * Mutates the action of the classifier.
+     *
+     * @see XCSConstants#pM
+     * @param numberOfActions The number of actions/classifications possible in the environment.
+     */
+    public boolean mutateAction(int numberOfActions)
+    {
+	boolean changed=false;
+    
+	if(Misc.nextDouble()<Configuration.getMutationProbability()){
+	    int act=0;
+	    do{
+		act=(int)(Misc.nextDouble()*numberOfActions);
+	    }while(act==data[0]);
+	    data[0]=act;
+	    changed=true;
+	}
+	return changed;
     }
     
     public int getDirection() {

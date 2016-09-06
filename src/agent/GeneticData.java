@@ -12,7 +12,6 @@ package agent;
 public abstract class GeneticData {
     int[] data;
     public abstract void randomize();
-    public abstract void mutate(double mutation_probability);
     
     public GeneticData(int size) {
         data = new int[size];
@@ -48,6 +47,18 @@ public abstract class GeneticData {
         for(int i = 0; i < data.length; i++) {
             dest[i + index] = data[i];
         }
+    }
+    
+    public boolean equals(GeneticData g) {
+        if(getLength() != g.getLength()) {
+            return false;
+        }
+        for(int i = 0; i < data.length; i++) {
+            if(data[i] != g.data[i]) {
+                return false;
+            }
+        }
+        return true;
     }
     
     @Override
