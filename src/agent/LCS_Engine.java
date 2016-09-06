@@ -12,8 +12,8 @@ public class LCS_Engine {
     private ArrayList<Agent> agentList;
 
     public LCS_Engine() throws Exception {
-        Agent.goalAgent = new GoalAgent(new Point(Configuration.getMaxX() / 2, Configuration.getMaxY() / 2));
         Agent.grid = new Grid();
+        Agent.goalAgent = new GoalAgent(new Point(Configuration.getMaxX() / 2, Configuration.getMaxY() / 2));
 
         agentList = new ArrayList<Agent>();
 
@@ -25,12 +25,12 @@ public class LCS_Engine {
             agentList.add(new Agent(p));
         }
     }
-
+/*
     private void loadAIClassifiers(String file_name) {
         for (Agent a : agentList) {
             a.classifierSet.loadClassifiersFromFile(file_name);
         }
-    }
+    }*/
 
     private void moveGoalAgent() throws Exception {
         Agent.goalAgent.moveRandomly();
@@ -38,21 +38,21 @@ public class LCS_Engine {
     }
 
     private void evoluteAgents(long gaTimestep) throws Exception {
-        for (int i = 0; i < agentList.size(); i++) {
-            agentList.get(i).evolutionaryAlgorithm(gaTimestep);
+        for(Agent a : agentList) {
+            a.evolutionaryAlgorithm(gaTimestep);
         }
     }
 
     // "Fenster" über die letzten X classifier fahren lassen?
-    private void calculateReward() {
-        for (int i = 0; i < agentList.size(); i++) {
-            agentList.get(i).calculateReward();
+    private void calculateIndividualRewards() {
+        for(Agent a : agentList) {
+            a.calculateReward();
         }
     }
 
     private void calculateNextMove(boolean do_explore, long gaTimestep) throws Exception {
-        for (int i = 0; i < agentList.size(); i++) {
-            agentList.get(i).calculateNextMove(do_explore, gaTimestep);
+        for(Agent a : agentList) {
+            a.calculateNextMove(do_explore, gaTimestep);
         }
     }
 
@@ -78,6 +78,10 @@ public class LCS_Engine {
         for (int i = 0; i < Configuration.getNumberOfProblems(); i++) {
             // switch parameter for exploiting and exploring for each problem
             // TODO Literatur!?
+            
+            Log.log("# Problem Nr. " + (i+1));
+            System.out.println("Problem Nr."+(i+1));
+            
             do_explore = !do_explore;
             
             currentTimestep = doOneMultiStepProblem(do_explore, currentTimestep);
@@ -106,7 +110,7 @@ public class LCS_Engine {
             }
 
             try {
-                calculateReward();
+                calculateIndividualRewards();
             } catch (Exception e) {
                 Log.errorLog("Problem calculating reward:", e);
             }

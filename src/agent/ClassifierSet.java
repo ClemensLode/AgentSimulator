@@ -24,7 +24,8 @@ public class ClassifierSet {
      */
     private ClassifierSet parentSet = null;   
     
-    private ArrayList<Classifier> classifiers;
+    private ArrayList<Classifier> classifiers = new ArrayList<Classifier>();
+
         
     
     public void removeClassifier(Classifier c) { classifiers.remove(c); }    
@@ -37,7 +38,6 @@ public class ClassifierSet {
 
     
     public ClassifierSet() {
-        classifiers = new ArrayList<Classifier>();
     }
     
     /**
@@ -49,8 +49,6 @@ public class ClassifierSet {
     public ClassifierSet(ClassifierSet matchSet, int action)
     {
         parentSet=matchSet;
-        numerositySum=0;
-        classifiers.clear();
         for(Classifier c : matchSet.classifiers) {
             if(c.getNumerosity() > 0 && c.getAction().getDirection() == action ) {
                 addClassifier(c);
@@ -73,8 +71,6 @@ public class ClassifierSet {
     
     public ClassifierSet(final Condition state, ClassifierSet parent_pop, final long gaTime)
     {
-        classifiers = new ArrayList<Classifier>();
-        numerositySum = 0;
         parentSet = parent_pop;
         
         boolean[] actionCovered =  new boolean[Action.MAX_ACTIONS];
@@ -137,10 +133,11 @@ public class ClassifierSet {
         }while(again);
     }
     
-    public Action chooseAction(boolean do_explore, ClassifierSet matchSet, final int id, final Point position, final long gaTimestep) throws Exception {
+    public Action chooseAction(boolean do_explore, ClassifierSet matchSet, final Condition condition, final long gaTimestep) throws Exception {
         // determine all matching classifiers
         // create new classifiers if some or all actions were not matched
-        matchSet = new ClassifierSet(Condition(id, position), this, gaTimestep);
+
+        matchSet = new ClassifierSet(condition, this, gaTimestep);
         Classifier c;
 
         // choose random classifier from classifierArray randomly by fitness
@@ -150,15 +147,6 @@ public class ClassifierSet {
             c = matchSet.chooseBest();
         }
         return c.getAction();
-  
-//            double reward = env.executeAction( actionWinner );
-
-
-            
-		// prevActionSet.confirmClassifiersInSet(); => REWARD!
-		// prevActionSet.updateSet(predictionArray.getBestValue(), prevReward);
-                // prevActionSet.runGA(stepCounter+steps, prevState, env.getNrActions());
-                
     }
     
     public Classifier chooseBest() {
@@ -458,17 +446,52 @@ public class ClassifierSet {
  //   insertDiscoveredXClassifiers benutzen
    //         nicht ersetzen
             
-    public void evolutionaryAlgorithm() throws Exception {
-        int n = (int)(this.size() * Configuration.getElitistSelection());
-        ArrayList<Classifier> selected_classifiers = getRouletteSelectedClassifiers(n);
-        ArrayList<Classifier> replaced_classifiers = getInverseRouletteSelectedClassifiers(n, selected_classifiers);
-        Iterator<Classifier> i = replaced_classifiers.listIterator();
+    public void evolutionaryAlgorithm(Condition current_state, long gaTimestep) throws Exception {
         
-//        TODO remove replaced classifiers and create new classifiers
-        for(Classifier c : selected_classifiers) {
-            Classifier j = i.next();
-            j.copyAndMutate(c, Configuration.getEvolutionaryMutationProbability());
-        }
+    /**
+     * The Genetic Discovery in XCS takes place here. If a GA takes place, two classifiers are selected
+     * by roulette wheel selection, possibly crossed and mutated and then inserted.
+     *
+     * @see XCSConstants#theta_GA
+     * @see #selectXClassifierRW
+     * @see XClassifier#twoPointCrossover
+     * @see XClassifier#applyMutation
+     * @see XCSConstants#predictionErrorReduction
+     * @see XCSConstants#fitnessReduction
+     * @see #insertDiscoveredXClassifiers
+     * @param time  The actual number of instances the XCS learned from so far.
+     * @param state  The current situation/problem instance.
+     * @param numberOfActions The number of actions possible in the environment.
+     */ 
+        // Don't do a GA if the theta_GA threshold is not reached, yet
+        if(classifiers.isEmpty() || gaTimestep - getTimeStampAverage() < Configuration.getThetaGA()) {
+            return;
+        }        
+        // setTimeStamps(gaTimestep); ?? Warum werden GA Timestamps aller auf die aktuelle Zeit gesetzt?
+        // sollte nicht z.B. Experience auch eine Rolle spielen??
+        
+        int n = (int)(this.size() * Configuration.getElitistSelection());
+        
+     // Select two parent Classifiers with roulette Wheel Selection
+        Classifier cl1P = getRouletteSelectedClassifier();
+        Classifier cl2P = getRouletteSelectedClassifier();
+    // children
+        Classifier cl1 = new Classifier(cl1P);
+        Classifier cl2 = new Classifier(cl2P);
+    
+        Classifier.crossOverClassifiers(cl1, cl2);
+
+        cl1.applyMutation(current_state);
+        cl2.applyMutation(current_state);
+        
+        cl1.setPrediction((cl1.getPrediction() + cl2.getPrediction())/2.);
+        cl1.setPredictionError(Configuration.getPredictionErrorReduction() * (cl1.getPredictionError() + cl2.getPredictionError())/2.);
+        cl1.setFitness(Configuration.getFitnessReduction() * (cl1.getFitness() + cl2.getFitness())/2.);
+        cl2.setPrediction(cl1.getPrediction());
+        cl2.setPredictionError(cl1.getPredictionError());
+        cl2.setFitness(cl1.getFitness());
+   
+        insertDiscoveredClassifiers(cl1, cl2, cl1P, cl2P);
     }
     
     /**
@@ -616,16 +639,17 @@ public class ClassifierSet {
         }
       //  updateFitnessSet(); ?
 
-        if(Configuration.isActionSetSubsumption()) {
+        if(Configuration.isDoActionSetSubsumption()) {
             doActionSetSubsumption();
         }
     }
     
-    public void updateReward(double maxPrediction, double reward) {
-        double P=reward + Configuration.getGamma()*maxPrediction;
+    public void updateReward(double reward) {
+        // What is maxPrediction?
+        // double P=reward + Configuration.getGamma()*maxPrediction;
         for(Classifier c : classifiers) {
-            c.updatePreError(P);
-            c.updatePrediction(P);
+            c.updatePreError(reward);
+            c.updatePrediction(reward);
         }
         updateFitnessSet();
     }
@@ -655,55 +679,7 @@ public class ClassifierSet {
         }
     }
   
-    /**
-     * The Genetic Discovery in XCS takes place here. If a GA takes place, two classifiers are selected
-     * by roulette wheel selection, possibly crossed and mutated and then inserted.
-     *
-     * @see XCSConstants#theta_GA
-     * @see #selectXClassifierRW
-     * @see XClassifier#twoPointCrossover
-     * @see XClassifier#applyMutation
-     * @see XCSConstants#predictionErrorReduction
-     * @see XCSConstants#fitnessReduction
-     * @see #insertDiscoveredXClassifiers
-     * @param time  The actual number of instances the XCS learned from so far.
-     * @param state  The current situation/problem instance.
-     * @param numberOfActions The number of actions possible in the environment.
-     */ 
-    /*
-    public void runGA(long time, Condition state, int numberOfActions)
-    {
-        // Don't do a GA if the theta_GA threshold is not reached, yet
-        if(classifiers.isEmpty() || time - getTimeStampAverage() < Configuration.getThetaGA()) {
-            return;
-        }
-     * !! TODO
-
-        setTimeStamps(time);
-
-        double fitSum=getFitnessSum(); 
-        // Select two XClassifiers with roulette Wheel Selection
-        Classifier cl1P=selectClassifierRW(fitSum);
-        Classifier cl2P=selectClassifierRW(fitSum);
-    
-        Classifier cl1=new Classifier(cl1P);
-        Classifier cl2=new Classifier(cl2P);
-    
-//        cl1.twoPointCrossover(cl2);
-
-        cl1.applyMutation(state, numberOfActions);
-        cl2.applyMutation(state, numberOfActions);
-        
-        cl1.setPrediction((cl1.getPrediction() + cl2.getPrediction())/2.);
-        cl1.setPredictionError(Configuration.getPredictionErrorReduction() * (cl1.getPredictionError() + cl2.getPredictionError())/2.);
-        cl1.setFitness(Configuration.getFitnessReduction() * (cl1.getFitness() + cl2.getFitness())/2.);
-        cl2.setPrediction(cl1.getPrediction());
-        cl2.setPredictionError(cl1.getPredictionError());
-        cl2.setFitness(cl1.getFitness());
-   
-        insertDiscoveredClassifiers(cl1, cl2, cl1P, cl2P);
-    }*/
-    
+  
     /**
      * Inserts both discovered classifiers keeping the maximal size of the population and possibly doing GA subsumption.
      *
@@ -738,22 +714,7 @@ public class ClassifierSet {
         }
     } 
 
-    /**
-     * Selects one classifier using roulette wheel selection according to the fitnesses of the classifiers.
-     */
-    private Classifier selectClassifierRW(double fitSum)
-    {
-        double choiceP=Misc.nextDouble()*fitSum;
-        int i=0; 
-        double sum = 0.;
-        for(Classifier c : classifiers) {
-            sum += c.getFitness();
-            if(choiceP > sum) {
-                return c;
-            }
-        }
-        return null;
-    }
+
   
  
     /**

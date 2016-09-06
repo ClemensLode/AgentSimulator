@@ -51,14 +51,14 @@ public class Action extends GeneticData {
      * @see XCSConstants#pM
      * @param numberOfActions The number of actions/classifications possible in the environment.
      */
-    public boolean mutateAction(int numberOfActions)
+    public boolean mutateAction()
     {
 	boolean changed=false;
     
 	if(Misc.nextDouble()<Configuration.getMutationProbability()){
 	    int act=0;
 	    do{
-		act=(int)(Misc.nextDouble()*numberOfActions);
+		act=(int)(Misc.nextDouble() * MAX_ACTIONS);
 	    }while(act==data[0]);
 	    data[0]=act;
 	    changed=true;

@@ -14,6 +14,7 @@ public class Main {
         
         if(args.length == 0) {
             Log.errorLog("No configuration file provided!");
+            return;
         }
         Configuration.initialize(args[0]);
         

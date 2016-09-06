@@ -246,7 +246,11 @@ public class Grid {
         
         for(int i = 0; i < Configuration.getMaxY(); i++) {
             for(int j = 0; j < Configuration.getMaxX(); j++) {
-                grid_string += " " + (nf.format(grid[j][i]));
+                if(grid[j][i] == 0) {
+                    grid_string += "  0 ";
+                } else {
+                    grid_string += " " + (nf.format(grid[j][i]));
+                }
             }
             grid_string += "\n";
         }

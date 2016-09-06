@@ -15,10 +15,6 @@ import java.io.IOException;
  */
 public class Configuration {
 
-    public static int getMaxClassifiers() {
-        return maxClassifiers;
-    }
-
     public static boolean isEventDriven() {
         return eventDriven;
     }
@@ -55,8 +51,8 @@ public class Configuration {
         return nu;
     }
 
-    public static boolean isActionSetSubsumption() {
-        return actionSetSubsumption;
+    public static boolean isDoActionSetSubsumption() {
+        return doActionSetSubsumption;
     }
 
     public static double getGamma() {
@@ -67,8 +63,8 @@ public class Configuration {
         return delta;
     }
 
-    public static double getDeltaDel() {
-        return deltaDel;
+    public static double getThetaDel() {
+        return thetaDel;
     }
 
     public static int getMaxPopSize() {
@@ -173,14 +169,6 @@ public class Configuration {
      */    
     private static int numberOfSteps = 500;
     
-    /**
-     * The maximal number of (micro-)classifiers of one rule set of an agent
-     * If the maximum number is reached when a classifier was inserted determine which micro-classifier to delete
-     * A deletion can be a removal of a whole classifier with numerosity = 1 or the decrease of the numberosity of a classifier by 1
-     * 
-     */
-    private static int maxClassifiers = 100;
-    
     private static int maxX = 40;
     private static int maxY = 40;
     private static double rewardDistance = 4.0;
@@ -198,19 +186,39 @@ public class Configuration {
     
     private static double thetaSubsumer = 0.1;
     private static double epsilon0 = 0.05;
+    
+    /**
+     * The learning rate for updating fitness, prediction, prediction error, 
+     * and action set size estimate in XCS's classifiers.
+     */ 
     private static double beta = 0.1;
     
     private static double predictionInitialization = 0.1;
     private static double predictionErrorInitialization = 0.1;
     private static double fitnessInitialization = 0.5;
     
-    private static int maxPopSize = 32;
+    /**
+     * Total number of microclassifiers (sum of numerosity)
+     */
+    
+    /**
+     * The maximal number of (micro-)classifiers of one rule set of an agent
+     * If the maximum number is reached when a classifier was inserted determine which micro-classifier to delete
+     * A deletion can be a removal of a whole classifier with numerosity = 1 or the decrease of the numberosity of a classifier by 1
+     * 
+     */
+    
+    private static int maxPopSize = 800;
     
     private static double delta = 0.1;
-    private static double deltaDel = 0.1;
-    private static double gamma = 0.1;
+    private static int thetaDel = 20;
     
-    private static boolean actionSetSubsumption = false;
+    /**
+     * The discount rate in multi-step problems.
+     */    
+    private static double gamma = 0.95;
+    
+    private static boolean doActionSetSubsumption = false;
     
     private static double alpha = 0.1;
     private static double nu = 0.1;
@@ -237,8 +245,8 @@ public class Configuration {
                 numberOfExperiments = Integer.valueOf(p.readLine());
                 numberOfProblems = Integer.valueOf(p.readLine());
                 numberOfSteps = Integer.valueOf(p.readLine());
-                
-                maxClassifiers = Integer.valueOf(p.readLine());                
+
+                maxPopSize = Integer.valueOf(p.readLine());
                 
                 eventDriven = Boolean.valueOf(p.readLine());
                 
@@ -261,7 +269,7 @@ public class Configuration {
                 rewardUpdateFactor = Double.valueOf(p.readLine());
                 doEvolutionaryAlgorithm = Boolean.valueOf(p.readLine());
                 
-                thetaSubsumer = Double.valueOf(p.readLine());
+                thetaSubsumer = Integer.valueOf(p.readLine());
                 epsilon0 = Double.valueOf(p.readLine());
                 beta = Double.valueOf(p.readLine());
                 
@@ -269,13 +277,11 @@ public class Configuration {
                 predictionErrorInitialization = Double.valueOf(p.readLine());
                 fitnessInitialization = Double.valueOf(p.readLine());
                 
-                maxPopSize = Integer.valueOf(p.readLine());
-                
                 delta = Double.valueOf(p.readLine());
-                deltaDel = Double.valueOf(p.readLine());
+                thetaDel = Integer.valueOf(p.readLine());
                 gamma = Double.valueOf(p.readLine());
                 
-                actionSetSubsumption = Boolean.valueOf(p.readLine());
+                doActionSetSubsumption = Boolean.valueOf(p.readLine());
                 
                 alpha = Double.valueOf(p.readLine());
                 nu = Double.valueOf(p.readLine());

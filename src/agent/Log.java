@@ -15,6 +15,7 @@ public class Log {
     
     private static boolean doLog = false;
     private static boolean errorLogInitialized = false;
+    private static String errorLogFileName = null;
     private static boolean notFinalised = false;
 
     public static void initialize(boolean do_log) {
@@ -50,20 +51,39 @@ public class Log {
     public static void errorLog(String s) {
         if(!errorLogInitialized) {
             try {
-                String error_filename = Misc.getFileName("error") + ".txt";
-                error_out = new BufferedWriter(new FileWriter(error_filename));
+                if(errorLogFileName == null) {
+                    errorLogFileName = Misc.getFileName("error") + ".txt";
+                }
+                error_out = new BufferedWriter(new FileWriter(errorLogFileName, true));
                 errorLogInitialized = true;
             } catch (IOException e) {
                 System.err.print(e);
                 e.printStackTrace();
                 return;
             }
+        
         }
+        
         try {
             error_out.write(s);
         } catch (IOException e) {
             System.err.print(e);
             e.printStackTrace();
+        }
+        
+        closeErrorLog();
+    }
+    
+    private static void closeErrorLog() {
+        if(errorLogInitialized) {
+            try {
+                error_out.flush();
+                error_out.close();
+                errorLogInitialized = false;                
+            } catch (IOException e) {
+                System.err.print(e);
+                e.printStackTrace();
+            }
         }
     }
     
@@ -71,28 +91,22 @@ public class Log {
         StringBuilder error_string = new StringBuilder();
         final String NEW_LINE = System.getProperty("line.separator");
         
-        error_string.append(s);
-        error_string.append(e.toString());
+        error_string.append("- " + s);
+        error_string.append(NEW_LINE);
+        error_string.append("  ( " + e.toString() + " )");
         error_string.append(NEW_LINE);
         for(StackTraceElement ste : e.getStackTrace()) {
             error_string.append(ste.toString());
             error_string.append(NEW_LINE);
         }
+        error_string.append(NEW_LINE);
         
         errorLog(error_string.toString());
     }
     
 
     public static void finalise() {
-        if(errorLogInitialized) {
-            try {
-                error_out.flush();
-                error_out.close();
-            } catch (IOException e) {
-                System.err.print(e);
-                e.printStackTrace();
-            }
-        }
+        closeErrorLog();        
         
         if(!doLog) {
             return;
@@ -105,8 +119,8 @@ public class Log {
             errorLog("finalise failed: ", e);
         }
     }
-
-    public static void flush() {
+    
+    private static void flushErrorLog() {
         if(errorLogInitialized) {
             try {
                 error_out.flush();
@@ -114,7 +128,11 @@ public class Log {
                 System.err.print(e);
                 e.printStackTrace();
             }
-        }
+        }        
+    }
+
+    public static void flush() {
+        flushErrorLog();
         
         if(!doLog) {
             return;

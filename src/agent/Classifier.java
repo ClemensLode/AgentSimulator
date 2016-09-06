@@ -88,39 +88,6 @@ public class Classifier {
         this.action = action.clone();
     }
     
-    /*
-    public Classifier(int[] condition, int[] action, long gaTimestamp) {
-        reset();
-        
-        setCondition(condition);
-        setAction(action);
-        setGaTimestamp(gaTimestamp);
-    }
-    
-    public Classifier(int[] condition, int[] action, double predictedPayoff, double error, double avgNicheSize, long gaTimestamp) {
-        setCondition(condition);
-        setAction(action);
-        
-        resetStats();
-        
-        setPrediction(predictedPayoff);
-        setPredictionError(error);
-        setAvgNicheSize(avgNicheSize);
-        setGaTimestamp(gaTimestamp);
-    }
-    
-    public Classifier(Condition condition, Action action, double predictedPayoff, double error, double avgNicheSize, long gaTimestamp) {
-        this.condition = condition;
-        this.action = action;
-        
-        resetStats();
-        
-        setPrediction(predictedPayoff);
-        setPredictionError(error);
-        setAvgNicheSize(avgNicheSize);        
-        setGaTimestamp(gaTimestamp);
-    }*/
-    
     /**
      * Constructs an identical XClassifier.
      * However, the experience of the copy is set to 0 and the numerosity is set to 1 since this is indeed 
@@ -201,13 +168,54 @@ public class Classifier {
         setAction(new_action);
     }
     
-    public static void crossOverGeneticData(Classifier childA, Classifier childB) {
+    /**
+     * Applies two point crossover and returns if the classifiers changed.
+     *
+     * @see XCSConstants#pX
+     * @param cl The second classifier for the crossover application.
+     */
+   /* public boolean twoPointCrossover(XClassifier cl)
+    {
+	boolean changed=false;
+	if(cons.drand()<cons.pX){
+	    int length=condition.length();
+	    int sep1=(int)(cons.drand()*(length));
+	    int sep2=(int)(cons.drand()*(length))+1;
+	    if(sep1>sep2){
+		int help=sep1;
+		sep1=sep2;
+		sep2=help;
+	    }else if(sep1==sep2){
+		sep2++;
+	    }
+	    char[] cond1=condition.toCharArray();
+	    char[] cond2=cl.condition.toCharArray();
+	    for(int i=sep1; i<sep2; i++){
+		if(cond1[i]!=cond2[i]){
+		    changed=true;
+		    char help=cond1[i];
+		    cond1[i]=cond2[i];
+		    cond2[i]=help;
+		}
+	    }
+	    if(changed){
+		condition=new String(cond1);
+		cl.condition=new String(cond2);
+	    }
+	}
+	return changed;
+    }*/
+    
+    
+    public static void crossOverClassifiers(Classifier childA, Classifier childB) {
         // combine condition and action parts of classifier to form strings
         int[] childAStr = childA.createGeneticString();
         int[] childBStr = childB.createGeneticString();
         
         // assume childAStr.length() == childBStr.length()
-        int crossoverIndex = 1 + Misc.nextInt(childAStr.length - 2);
+        // only use index 1: so far 2 genes (goal and other agents)
+        // add another point at Index 5 later (obstacles)
+        int crossoverIndex = 1;// + Misc.nextInt(childAStr.length - 2);
         
         // do the crossover
         int[] newChildAStr = new int[childAStr.length];
@@ -225,26 +233,7 @@ public class Classifier {
         childA.setGeneticData(newChildAStr);
         childB.setGeneticData(newChildBStr);
     }
-        
-    /*
-    public static void crossoverClassifiers(Classifier childA, Classifier childB) {
-        // do some crossover
-        double avgChildPredictedPayoff = (childA.getPrediction() + childB.getPrediction()) * 0.5;
-        double avgChildError = (childA.getPredictionError() + childB.getPredictionError()) * 0.5;
-        double avgChildNicheSize = (childA.getAvgNicheSize() + childB.getAvgNicheSize()) * 0.5;
 
-        // set the strengths to the mean of the strengths prior to crossover
-        childA.setPrediction(avgChildPredictedPayoff);
-        childB.setPrediction(avgChildPredictedPayoff);
-        
-        childA.setPredictionError(avgChildError);
-        childB.setPredictionError(avgChildError);
-        
-        childA.setAvgNicheSize(avgChildNicheSize);
-        childB.setAvgNicheSize(avgChildNicheSize);
-        
-        crossOverGeneticData(childA, childB);
-    }    */
     
     public boolean isMatched(final Condition condition) {
         return this.condition.equals(condition);
@@ -305,7 +294,7 @@ public class Classifier {
      */
     public double getDelProp(double mean_fitness)
     {
-	if(fitness/numerosity >= Configuration.getDelta()*mean_fitness || experience < Configuration.getDeltaDel()) {
+	if(fitness/numerosity >= Configuration.getDelta()*mean_fitness || experience < Configuration.getThetaDel()) {
 	    return getActionSetSize() * numerosity;
         }
 	return getActionSetSize()*numerosity*mean_fitness / ( fitness/numerosity);
@@ -417,12 +406,11 @@ public class Classifier {
      * if at least one bit or the action was mutated.
      *
      * @param state The current situation/problem instance
-     * @param numberOfActions The maximal number of actions possible in the environment.
      */
-    public boolean applyMutation(Condition state, int numberOfActions)
+    public boolean applyMutation(Condition state)
     {
-	boolean changed=condition.mutateCondition(state);
-	if(action.mutateAction(numberOfActions)) {
+	boolean changed = condition.mutateCondition(state);
+	if(action.mutateAction()) {
 	    changed=true;
         }
 	return changed;			
