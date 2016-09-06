@@ -17,7 +17,7 @@ import gif.*;
  * @author Clemens Lode, 1151459, University Karlsruhe (TH)
  */
 public class BaseGrid {
-    
+    public static long invalidActions = 0;
     protected Field [][] grid;
 
     private Gif89Encoder gifenc;
@@ -64,6 +64,9 @@ public class BaseGrid {
         }
 
         if (isDirectionInvalid(a.getPosition(), action)) {
+            if((!a.isGoalAgent()) && isDirectionNonGoalInvalid(a.getPosition(), action)) {
+                invalidActions++;
+            }
             return false;
         }
 
@@ -144,6 +147,12 @@ public class BaseGrid {
         return grid[x][y].isOccupied();
     }
 
+    protected boolean isDirectionNonGoalInvalid(final Point position, final int direction) {
+        int x = Geometry.correctX[128 + position.x + Action.dx[direction]];
+        int y = Geometry.correctY[128 + position.y + Action.dy[direction]];
+        return (!grid[x][y].isOccupiedByGoal());
+    }
+
     /**
      *
      * INVALID: introduced knowledge to the LCS Agent which it normally doesn't have (distance)
@@ -153,19 +162,19 @@ public class BaseGrid {
      * @return A boolean array where the invalid actions are marked (true)
      * @throws java.lang.Exception
      */
-    protected boolean[] getInvalidActions(final Point position) throws Exception {
+    /*protected boolean[] getInvalidActions(final Point position) throws Exception {
         boolean[] invalid_actions = new boolean[Action.MAX_DIRECTIONS];
         for(int i = 0; i < Action.MAX_DIRECTIONS; i++) {
             invalid_actions[i] = isDirectionInvalid(position, i);
         }
         return invalid_actions;
-    }
+    }*/
 
     /**
      * @param p The position of the agent in question
      * @return An array of directions in which the agent can move
      */
-    /*public ArrayList<Integer> getAvailableDirections(final Point p) {
+    public ArrayList<Integer> getAvailableDirections(final Point p) {
         ArrayList<Integer> list = new ArrayList<Integer>(Action.MAX_DIRECTIONS);
         for(int i = 0; i < Action.MAX_DIRECTIONS; i++) {
             if(!isDirectionInvalid(p, i)) {
@@ -173,19 +182,16 @@ public class BaseGrid {
             }
         }
         return list;
-    }*/
+    }
 
     /**
-     * @param p The position of the agent in question
-     * @return An array of directions in which the agent can move
+     * @return An array of directions in which an agent can move
      */
     // TODO
-    public ArrayList<Integer> getAvailableDirections(final Point p) {
+    public ArrayList<Integer> getAllDirections() {
         ArrayList<Integer> list = new ArrayList<Integer>(Action.MAX_DIRECTIONS);
         for(int i = 0; i < Action.MAX_DIRECTIONS; i++) {
-//            if(!isDirectionInvalid(position(), i)) {
-                list.add(new Integer(i));
-//            }
+            list.add(new Integer(i));
         }
         return list;
     }
@@ -238,7 +244,9 @@ public class BaseGrid {
     protected boolean randomJumpAgent(BaseAgent a) {
         Point p;
         if(Configuration.getGoalAgentMovementType() == Configuration.TOTAL_RANDOM_MOVEMENT) {
-            p = new Point(Misc.nextInt(Configuration.getMaxX()), Misc.nextInt(Configuration.getMaxY()));
+            do {
+                p = new Point(Misc.nextInt(Configuration.getMaxX()), Misc.nextInt(Configuration.getMaxY()));
+            } while(grid[p.x][p.y].isOccupied());
         } else {
             p = getFreeFieldNear(a.getPosition());
         }
@@ -250,6 +258,9 @@ public class BaseGrid {
      * @return A random empty neighbor of the bas epoint, null if all neighbors are occupied
      */
     protected Point getFreeFieldNear(Point p) {
+        if(!grid[p.x][p.y].isOccupied()) {
+            return new Point(p.x, p.y);
+        }
         for(int j = 3; j < Configuration.getHalfMaxX();j++) {
             for(int i = 0; i < 9; i++) {
                 int x = Geometry.correctX[128 + Misc.nextInt(1+2*j) - j + p.x];

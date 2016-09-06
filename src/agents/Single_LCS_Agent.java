@@ -120,7 +120,7 @@ public class Single_LCS_Agent extends BaseAgent {
         if(!is_event && Configuration.isUseMaxPrediction()) {
             max_prediction = historicActionSet.get(start_index+1).getMatchSet().getBestValue();
         }
-        double corrected_reward = reward?1.0:0.0;
+        double corrected_reward = reward ? 1.0 : 0.0;
 
         for(int i = 0; i < action_set_size; i++) {
             if(is_event) {

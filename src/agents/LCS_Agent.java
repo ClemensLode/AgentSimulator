@@ -135,6 +135,13 @@ public class LCS_Agent extends Base_LCS_Agent {
         if(!is_event && Configuration.isUseMaxPrediction()) {
             max_prediction = historicActionSet.get(start_index+1).getMatchSet().getBestValue();
         }
+        boolean first = false;
+        int action_winner = 0;
+        if(!is_event) {
+            action_winner = historicActionSet.get(start_index+1).getAction();
+        } else {
+            first = true;
+        }
         double corrected_reward = reward?1.0:0.0;
 
         for(int i = 0; i < action_set_size; i++) {
@@ -144,6 +151,13 @@ public class LCS_Agent extends Base_LCS_Agent {
 
             ActionClassifierSet action_classifier_set = historicActionSet.get(start_index - i);
             action_classifier_set.updateReward(corrected_reward, max_prediction, factor);
+
+            if(!first) {
+                lastPredictionError += Math.abs(action_classifier_set.getMatchSet().getValue(action_winner) * Configuration.getGamma() + corrected_reward - max_prediction);
+            }
+            first = false;
+            action_winner = historicActionSet.get(start_index - i).getAction();
+
             if(is_event) {
                 if(Configuration.isUseMaxPrediction()) {
                     max_prediction = action_classifier_set.getMatchSet().getBestValue();
@@ -152,6 +166,8 @@ public class LCS_Agent extends Base_LCS_Agent {
         }
 
         }
+
+
 
     /**
      * resets the historic action set and initialized lastReward

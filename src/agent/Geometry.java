@@ -13,6 +13,8 @@ public class Geometry {
 
     public static ArrayList<Point> sightPoints;
 
+    public static int maxRewardCoverage = 0;
+
     public static class SavedLine {
         public ArrayList<Point> torus_line;
     }
@@ -31,6 +33,7 @@ public class Geometry {
     public static void fillSightPoints() {
         int max = (int) Configuration.getSightRange();
         sightPoints = new ArrayList<Point>(max*max);
+        maxRewardCoverage = 0;
 
         for (int i = max; i >= 1; i--) {
             for (int x = -i; x <= i; x++) {
@@ -52,6 +55,9 @@ public class Geometry {
                     }
                     if (found) {
                         continue;
+                    }
+                    if(dist <= Configuration.getRewardDistance()) {
+                        maxRewardCoverage++;
                     }
                     sightPoints.add(p);
                 }

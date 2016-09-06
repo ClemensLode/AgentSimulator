@@ -49,7 +49,8 @@ public class AppliedClassifierSet {
         initValues();
     }
 
-    public double getValue(int action) {
+    public double getValue(int action) throws Exception {
+        initValues();
         return predictionFitnessProductSum[action];
     }
 
@@ -215,7 +216,7 @@ Proc. Genetic and Evol. Comput., pp. 1857–1869.
             array[i] = i;
         }
 
-        double p = 0.9;
+        double p = 0.6;
         while(array.length > 1) {
             int ret = 0;
             int j = 0;
@@ -228,8 +229,7 @@ Proc. Genetic and Evol. Comput., pp. 1857–1869.
             if(Misc.nextDouble() <= p) {
                 return ret;
             }
-
-            p = p * (1.0-p);
+            
             int[] new_array = new int[array.length-1];
             for(int i = 0; i < j; i++) {
                 new_array[i] = array[i];

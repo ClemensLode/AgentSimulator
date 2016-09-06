@@ -69,7 +69,7 @@ public class LCS_Engine {
         // number of problems for the same population
         for (int i = 0; i < Configuration.getNumberOfProblems(); i++) {
 
-            Log.log("# Problem Nr. " + (i + 1));
+            //Log.log("# Problem Nr. " + (i + 1));
 
             /**
              * creates a new grid and deploys agents and goal at random positions
@@ -95,7 +95,7 @@ public class LCS_Engine {
     private int doOneMultiStepProblem(int stepCounter) throws Exception {
         // number of steps a problem should last
         int steps_next_problem = Configuration.getNumberOfSteps() + stepCounter;
-        System.out.println(stepCounter);
+        //System.out.println(stepCounter);
         for (int currentTimestep = stepCounter; currentTimestep < steps_next_problem; currentTimestep++) {
             BaseAgent.grid.updateSight();
             // update the quality of the run
@@ -117,7 +117,7 @@ public class LCS_Engine {
                 rewardAgents(currentTimestep);
             }
 
-            moveAgents();
+            moveAgents(currentTimestep);
         }
         BaseAgent.grid.updateSight();
         rewardAgents(steps_next_problem);
@@ -135,6 +135,7 @@ public class LCS_Engine {
             a.calculateNextMove(gaTimestep);
         }
     }
+
     private ClassifierSet findBestAgent() throws Exception {
         ClassifierSet best = null;
         switch(Configuration.getAgentType()) {
@@ -163,7 +164,7 @@ public class LCS_Engine {
      * Calculate the matchings and the action set of each agent and execute the
      * movement
      */
-    private void moveAgents() throws Exception {
+    private void moveAgents(long gaTimestep) throws Exception {
         BaseAgent.mark = false;
 
         int goal_speed = Configuration.getGoalAgentMovementSpeed();
@@ -180,9 +181,12 @@ public class LCS_Engine {
             BaseAgent a = random_list.get(array[i]);
             try {
                 a.doNextMove();
-                if(a.isGoalAgent()) {
+                // will there be another goal move?
+                if(a.isGoalAgent() && goal_speed > 1) {
+                    goal_speed--;
                     a.aquireNewSensorData();
                     a.calculateNextMove(0);
+                    a.calculateReward(gaTimestep);
                 }
 
             } catch (Exception e) {

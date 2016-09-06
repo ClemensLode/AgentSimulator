@@ -91,6 +91,7 @@ public class LCS_Goal_Agent extends LCS_Agent {
             historicActionSet.removeFirst();
         }
 
+
         if(BaseAgent.grid.getAvailableDirections(getPosition()).isEmpty()) {
             calculatedAction = Action.DO_JUMP;
             System.out.println("DO_JUMP called");

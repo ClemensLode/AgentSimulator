@@ -66,6 +66,7 @@ public class Statistics {
             double spread_goal_agent_distance,
             double covered_area_factor,
             double wasted_coverage,
+            double wasted_movements,
             double average_individual_points,
             double spread_individual_total_points,
             double average_prediction_error) throws Exception {
@@ -80,6 +81,7 @@ public class Statistics {
                 spread_goal_agent_distance,
                 covered_area_factor,
                 wasted_coverage,
+                wasted_movements,
                 average_individual_points,
                 spread_individual_total_points,
                 average_prediction_error);
@@ -213,7 +215,8 @@ public class Statistics {
         entry += average_average_stat.getAverageGoalAgentDistance() + "\n";
         entry += average_average_stat.getAveragePredictionError() + "\n";
         entry += average_average_stat.getCoveredAreaFactor() + "\n";
-        entry += average_average_stat.getWastedCoverage() + "\n";
+        entry += average_average_stat.getWastedCoverage()*100.0 + "\n";
+        entry += average_average_stat.getWastedMovements()*100.0 + "\n";
         entry += average_average_stat.getGoalAgentObserved()*100.0 + "\n";
         Log.customLog(entry);
         Log.closeCustomLog();
@@ -239,6 +242,7 @@ public class Statistics {
         entry += average_average_stat.getAveragePredictionError() + "\n";
         entry += average_average_stat.getCoveredAreaFactor() + "\n";
         entry += average_average_stat.getWastedCoverage()*100.0 + "\n";
+        entry += average_average_stat.getWastedMovements() * 100.0 + "\n";
         entry += average_average_stat.getGoalAgentObserved()*100.0 + "\n";
         Log.customLog(entry);
         Log.closeCustomLog();

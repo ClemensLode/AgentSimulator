@@ -518,6 +518,7 @@ public class Grid extends BaseGrid {
                 getSpreadGoalAgentDistance(average_goal_distance),
                 getCoveredAreaFactor()*100.0,
                 getWastedCoverage(),
+                getWastedMovements(),
                 average_points,
                 getSpreadIndividualTotalPoints(average_points),
                 getAveragePredictionError());
@@ -612,6 +613,12 @@ public class Grid extends BaseGrid {
         return 0.0;
     }
 
+    private double getWastedMovements() {
+        double movements = ((double)BaseGrid.invalidActions) / ((double)Configuration.getMaxAgents());
+        BaseGrid.invalidActions = 0;
+        return movements;
+    }
+
     private double getWastedCoverage() {
 
         int max_x = Configuration.getMaxX();
@@ -634,7 +641,7 @@ public class Grid extends BaseGrid {
 
         int max_x = Configuration.getMaxX();
         int max_y = Configuration.getMaxY();
-        double max_covered = Math.PI * Configuration.getRewardDistance() * Configuration.getRewardDistance() * agentList.size();
+        double max_covered = Geometry.maxRewardCoverage * agentList.size();
         double total_cells = max_x * max_y;
         double free_percentage = 1.0 - ((double) (obstacleList.size() + agentList.size())) / total_cells;
         double max_cells = free_percentage * total_cells;
@@ -686,17 +693,14 @@ public class Grid extends BaseGrid {
     }
 
     public double getAveragePredictionError() {
-        int count = 0;
         double average_prediction_error = 0.0;
         for (BaseAgent a : agentList) {
             if (a.isGoalAgent()) {
                 continue;
             }
             average_prediction_error += a.getLastPredictionError();
-            count++;
         }
-        average_prediction_error /= (double) count;
-
+        average_prediction_error /= (double)(agentList.size()-1);
         return average_prediction_error;
     }
 

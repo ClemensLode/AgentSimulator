@@ -20,6 +20,7 @@ public class Stat {
         spreadGoalAgentDistance = 0;
         coveredAreaFactor = 0;
         wastedCoverage = 0;
+        wastedMovements = 0;
         spreadIndividualTotalPoints = 0;
         averageIndividualTotalPoints = 0;
         averagePredictionError = 0.0;
@@ -36,6 +37,7 @@ public class Stat {
             double spread_goal_agent_distance,
             double covered_area_factor,
             double wasted_coverage,
+            double wasted_movements,
             double average_individual_points,
             double spread_individual_total_points,
             double average_prediction_error) throws Exception {
@@ -52,6 +54,7 @@ public class Stat {
         spreadGoalAgentDistance = spread_goal_agent_distance;
         coveredAreaFactor = covered_area_factor;
         wastedCoverage = wasted_coverage;
+        wastedMovements = wasted_movements;
         spreadIndividualTotalPoints = spread_individual_total_points;
         averageIndividualTotalPoints = average_individual_points;
         averagePredictionError = average_prediction_error;
@@ -70,6 +73,7 @@ public class Stat {
         spreadGoalAgentDistance += s.spreadGoalAgentDistance;
         coveredAreaFactor += s.coveredAreaFactor;
         wastedCoverage += s.wastedCoverage;
+        wastedMovements += s.wastedMovements;
         spreadIndividualTotalPoints += s.spreadIndividualTotalPoints;
         averageIndividualTotalPoints += s.averageIndividualTotalPoints;
         averagePredictionError += s.averagePredictionError;
@@ -83,6 +87,7 @@ public class Stat {
         spreadGoalAgentDistance /= d;
         coveredAreaFactor /= d;
         wastedCoverage /= d;
+        wastedMovements /= d;
         spreadIndividualTotalPoints /= d;
         averageIndividualTotalPoints /= d;
         averagePredictionError /= d;
@@ -98,7 +103,7 @@ public class Stat {
                 averageGoalAgentDistance,
                 spreadGoalAgentDistance,
                 coveredAreaFactor,
-                wastedCoverage,
+                wastedCoverage,getWastedMovements(),
                 averageIndividualTotalPoints,
                 spreadIndividualTotalPoints,
                 averagePredictionError);
@@ -137,6 +142,11 @@ public class Stat {
      * Amount of field that are covered by more than one agents at the same time
      */
     private double wastedCoverage;
+
+    /**
+     * Percentage of movements that failed
+     */
+    private double wastedMovements;
 
     /**
      * average prediction error (all agents)
@@ -195,5 +205,12 @@ public class Stat {
      */
     public double getAveragePredictionError() {
         return averagePredictionError;
+    }
+
+    /**
+     * @return the wastedMovements
+     */
+    public double getWastedMovements() {
+        return wastedMovements;
     }
 };

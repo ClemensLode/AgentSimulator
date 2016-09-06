@@ -112,6 +112,8 @@ public class MainClassifierSet extends ClassifierSet {
         cl2.setPredictionError(cl1.getPredictionError());
         cl2.setFitness(cl1.getFitness());
 
+        // TODO crossover wieder rein!!!!
+
         /**
          * Inserts both discovered classifiers keeping the maximal size of the population and possibly doing GA subsumption.
          */

@@ -206,4 +206,8 @@ public class ActionClassifierSet extends ClassifierSet {
     public AppliedClassifierSet getMatchSet() {
         return matchSet;
     }
+
+    public int getAction() {
+        return action;
+    }
 }

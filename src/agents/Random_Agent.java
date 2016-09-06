@@ -57,8 +57,8 @@ public class Random_Agent extends BaseAgent {
             return;
         }
         
-        ArrayList<Integer> available_actions = BaseAgent.grid.getAvailableDirections(getPosition());
-        if(!available_actions.isEmpty()) {
+        ArrayList<Integer> available_actions = BaseAgent.grid.getAllDirections();
+
             switch(movementType) {
                 case Configuration.RANDOM_MOVEMENT:
                     break;
@@ -67,21 +67,15 @@ public class Random_Agent extends BaseAgent {
                         available_actions.remove(opposing_dir);
                     break;
                 case Configuration.INTELLIGENT_MOVEMENT_OPEN:
-                    BaseAgent.grid.maybeRemoveAgentDirections(this, available_actions, 1.5);
+                    BaseAgent.grid.maybeRemoveAgentDirections(this, available_actions, 0.5);
                     BaseAgent.grid.maybeRemoveObstacleDirections(this, available_actions, 0.2);
-                    if(available_actions.isEmpty()) {
-                        available_actions = BaseAgent.grid.getAvailableDirections(getPosition());
-                    }
-                    
+                   
                     // move away from agents
                     // tend to move away from walls
                     break;
                 case Configuration.INTELLIGENT_MOVEMENT_HIDE:
-                    BaseAgent.grid.maybeRemoveAgentDirections(this, available_actions, 1.5);
+                    BaseAgent.grid.maybeRemoveAgentDirections(this, available_actions, 0.5);
                     BaseAgent.grid.maybeRemoveOpenDirections(this, available_actions, 0.2);
-                    if(available_actions.isEmpty()) {
-                        available_actions = BaseAgent.grid.getAvailableDirections(getPosition());
-                    }
                     // move away from agents
                     // tend to move to walls
                     break;
@@ -99,17 +93,16 @@ public class Random_Agent extends BaseAgent {
                     break;
                 case Configuration.RANDOM_HIDE:
                     BaseAgent.grid.maybeRemoveOpenDirections(this, available_actions, 0.5);
-                    if(available_actions.isEmpty()) {
-                        available_actions = BaseAgent.grid.getAvailableDirections(getPosition());
-                    }
                     // tend to move to walls
                     break;
             }
+
+        if(available_actions.isEmpty()) {
+            available_actions = BaseAgent.grid.getAllDirections();
         }
 
-        if(!available_actions.isEmpty()) {
-            calculatedAction = available_actions.get(Misc.nextInt(available_actions.size()));
-        }
+        calculatedAction = available_actions.get(Misc.nextInt(available_actions.size()));
+
         if(movementType != Configuration.ALWAYS_SAME_DIRECTION) {
             lastDirection = calculatedAction;
         }

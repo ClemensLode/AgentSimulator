@@ -47,6 +47,10 @@ public class Field {
     public boolean isOccupied() {
         return content != EMPTY;
     }
+    
+    public boolean isOccupiedByGoal() {
+        return content == GOAL_AGENT_ID;
+    }
 
     public Field() {
         content = EMPTY;

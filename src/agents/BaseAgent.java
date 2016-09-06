@@ -122,6 +122,9 @@ public abstract class BaseAgent {
      * @return true if the goal agent currently is in sight
      */
     public boolean checkRewardPoints() {
+        if(lastState == null) {
+            return false;
+        }
         boolean[] sensor_agent = lastState.getSensorAgent();
         boolean[] sensor_goal = lastState.getSensorGoal();
         boolean reward = false;

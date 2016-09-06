@@ -36,6 +36,14 @@ abstract public class Base_LCS_Agent extends BaseAgent {
         classifierSet = new MainClassifierSet(n);
     }
 
+
+    @Override
+    public double getLastPredictionError() {
+        double value = lastPredictionError;
+        lastPredictionError = 0.0;
+        return value;
+    }
+
     /**
      * number of entries in the action set since the last event
      */
@@ -57,8 +65,7 @@ abstract public class Base_LCS_Agent extends BaseAgent {
     protected ActionClassifierSet lastActionSet = null;
 
     protected double lastPrediction = 0.0;
-
-    private double predictionError = 0.0;
+    public double lastPredictionError = 0.0;
 
     protected void tryToExchangeRuleWithNeighbor() throws Exception {
         if(!Configuration.isExchangeClassifiers()) {
@@ -142,6 +149,7 @@ abstract public class Base_LCS_Agent extends BaseAgent {
         lastExplore = lastReward;
         lastMatchSet = null;
         lastActionSet = null;
+        lastPredictionError = 0.0;
     }
 
 
@@ -213,10 +221,4 @@ abstract public class Base_LCS_Agent extends BaseAgent {
         Log.log(lastActionSet.toString());
     }
 
-    /**
-     * @return the predictionError
-     */
-    public double getPredictionError() {
-        return predictionError;
-    }
 }
