@@ -1,9 +1,5 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package agent;
+
 import java.awt.Point;
 import java.util.ArrayList;
 import java.text.NumberFormat;
@@ -15,16 +11,10 @@ import java.text.NumberFormat;
 public class Grid {
 
     
-    public static final int MAX_DIRECTIONS = 4;
     private static final int EMPTY = 0;
     
 
-    // direction starts at 0 degrees (vertical)
-    private static final int[] dx = {0, 1, 0, -1, 0};
-    private static final int[] dy = {-1, 0, 1, 0, 0};
-
-    public static String[] shortDirectionString = {"N","E","S","W","r","s"};
-    
+   
     private int[][] grid;
     private ArrayList<Agent> agentList;
     private int timeGoalAgentObserved;
@@ -160,8 +150,8 @@ public class Grid {
     }
     
     public double[] getDirectionAgentDistances(final Point position, int self_id) {
-        double[] min_distance = new double[MAX_DIRECTIONS];
-        for(int i = 0; i < MAX_DIRECTIONS; i++) {
+        double[] min_distance = new double[Action.MAX_DIRECTIONS];
+        for(int i = 0; i < Action.MAX_DIRECTIONS; i++) {
             min_distance[i] = Configuration.getMaxX() + Configuration.getMaxY();
         }
         
@@ -199,11 +189,11 @@ public class Grid {
             return false;
         }
         
-        if(direction < 0 || direction >= MAX_DIRECTIONS) {
+        if(direction < 0 || direction >= Action.MAX_DIRECTIONS) {
             Log.errorLog("Grid.isDirectionInvalid(): Direction " + direction + " of Agent " + a.getID() + " at " + a.getX() + "/" + a.getY() + " out of range.");
         }
-        int goal_x = a.getX() + dx[direction];
-        int goal_y = a.getY() + dy[direction];
+        int goal_x = a.getX() + Action.dx[direction];
+        int goal_y = a.getY() + Action.dy[direction];
         
         if(Configuration.isIsTorus()) {
             goal_x = correctTorusX(goal_x);
@@ -252,8 +242,8 @@ public class Grid {
             return false;
         }
        
-        int goal_x = a.getX() + dx[direction];
-        int goal_y = a.getY() + dy[direction];
+        int goal_x = a.getX() + Action.dx[direction];
+        int goal_y = a.getY() + Action.dy[direction];
 // TORUS        
         if(Configuration.isIsTorus()) {
             goal_x = correctTorusX(goal_x);

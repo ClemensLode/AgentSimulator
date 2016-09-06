@@ -26,6 +26,7 @@ public class LCS_Engine {
             agentList.add(new Agent(p));
         }
     }
+    // TODO reset oder so
 /*
     private void loadAIClassifiers(String file_name) {
         for (Agent a : agentList) {
@@ -101,8 +102,8 @@ public class LCS_Engine {
             // switch parameter for exploiting and exploring for each problem
             // TODO Literatur!?
             
-            Log.log("# Problem Nr. " + (i+1) + "\n");
-            System.out.println("Problem Nr."+(i+1));
+        //    Log.log("# Problem Nr. " + (i+1) + "\n");
+       //     System.out.println("Problem Nr."+(i+1));
             
             do_explore = !do_explore;
             

@@ -1,8 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package agent;
 
 import java.awt.Point;
@@ -12,7 +7,7 @@ import java.awt.Point;
  * @author Clemens Lode, 1151459, University Karlsruhe (TH)
  */
 public class Condition extends GeneticData {
-    public static final int CONDITION_SIZE = Grid.MAX_DIRECTIONS+1; // *4
+    public static final int CONDITION_SIZE = Action.MAX_DIRECTIONS+1; // *4
     
     private static final int AGENT_DISTANCE_INDEX = 1;
     private static final int GOAL_AGENT_DISTANCE_INDEX = 0;
@@ -44,11 +39,11 @@ public class Condition extends GeneticData {
         int goal_agent_direction = Agent.grid.getAgentDirectionRange(position, Agent.goalAgent.getPosition());   
         
              
-        for(int i = 0; i < Grid.MAX_DIRECTIONS; i++) {            
+        for(int i = 0; i < Action.MAX_DIRECTIONS; i++) {            
             if(direction_agent_distance[i] <= Configuration.getSightRange()) {
-                condition[(goal_agent_direction + i)%Grid.MAX_DIRECTIONS + AGENT_DISTANCE_INDEX] = 1;
+                condition[(goal_agent_direction + i)%Action.MAX_DIRECTIONS + AGENT_DISTANCE_INDEX] = 1;
             } else {
-                condition[(goal_agent_direction + i)%Grid.MAX_DIRECTIONS + AGENT_DISTANCE_INDEX] = 0;
+                condition[(goal_agent_direction + i)%Action.MAX_DIRECTIONS + AGENT_DISTANCE_INDEX] = 0;
             }
         }
         
@@ -86,7 +81,7 @@ public class Condition extends GeneticData {
     }    
     
     public void randomize() {
-        for(int i = 0; i < Grid.MAX_DIRECTIONS; i++) {
+        for(int i = 0; i < Action.MAX_DIRECTIONS; i++) {
             data[i+AGENT_DISTANCE_INDEX] = Misc.nextInt(3) - 1;
         }
         // goal agent in sight / not in sight
@@ -140,10 +135,10 @@ public class Condition extends GeneticData {
                 return false;
             }
 
-            for(int i = 0; i < Grid.MAX_DIRECTIONS; i++) {
+            for(int i = 0; i < Action.MAX_DIRECTIONS; i++) {
                 boolean matched = true;
-                for(int j = 0; j < Grid.MAX_DIRECTIONS; j++) {
-                    switch(data[AGENT_DISTANCE_INDEX + ((i + j)%Grid.MAX_DIRECTIONS)]) {
+                for(int j = 0; j < Action.MAX_DIRECTIONS; j++) {
+                    switch(data[AGENT_DISTANCE_INDEX + ((i + j)%Action.MAX_DIRECTIONS)]) {
                         case Condition.DONTCARE:break;
                         case 0:if(direction_agent_distance[i] <= Configuration.getSightRange()) {
                             matched = false;
@@ -163,8 +158,8 @@ public class Condition extends GeneticData {
                 return false;
             }
             
-            for(int j = 0; j < Grid.MAX_DIRECTIONS; j++) {
-                switch(data[AGENT_DISTANCE_INDEX + ((goal_agent_direction + j)%Grid.MAX_DIRECTIONS)]) {
+            for(int j = 0; j < Action.MAX_DIRECTIONS; j++) {
+                switch(data[AGENT_DISTANCE_INDEX + ((goal_agent_direction + j)%Action.MAX_DIRECTIONS)]) {
                     case Condition.DONTCARE:break;
                     case 0:if(direction_agent_distance[j] <= Configuration.getSightRange()) {
                         return false;
@@ -198,9 +193,9 @@ public class Condition extends GeneticData {
     public String toString() {
         String output = new String();
         
-        for(int i = 0; i < Grid.MAX_DIRECTIONS; i++) {
+        for(int i = 0; i < Action.MAX_DIRECTIONS; i++) {
             
-            output += Grid.shortDirectionString[i];
+            output += Action.shortDirectionString[i];
             
             if(data[i + AGENT_DISTANCE_INDEX] == Condition.DONTCARE) {
                 output += "#";
@@ -226,8 +221,8 @@ public class Condition extends GeneticData {
         }
         
       //  ???
-        for(int i = 0; i < Grid.MAX_DIRECTIONS; i++) {
-            if(direction_agent_distance[(i+goal_direction)%Grid.MAX_DIRECTIONS] <= Configuration.getSightRange()) {
+        for(int i = 0; i < Action.MAX_DIRECTIONS; i++) {
+            if(direction_agent_distance[(i+goal_direction)%Action.MAX_DIRECTIONS] <= Configuration.getSightRange()) {
                 input += "1";
             } else {
                 input += "0";

@@ -1,8 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package agent;
 
 import java.awt.Point;
@@ -97,14 +92,15 @@ public class Classifier {
      */
     public Classifier(Classifier old_classifier)
     {
-	condition=new Condition(old_classifier.condition);
+	condition = new Condition(old_classifier.condition);
 	action=old_classifier.action;	
 	this.prediction=old_classifier.prediction;
 	this.predictionError=old_classifier.predictionError;
 	// Here we should divide the fitness by the numerosity to get a accurate value for the new one!
-	this.fitness=old_classifier.fitness;
+	this.fitness=old_classifier.fitness / old_classifier.numerosity;
         this.actionSetSize = old_classifier.actionSetSize;
-	this.experience=0;
+        this.numerosity = 1;
+	this.experience = 0;
 	this.gaTimestamp=old_classifier.gaTimestamp;
     }    
     
@@ -129,6 +125,7 @@ public class Classifier {
         
         this.setActionSetSize(set_size);
     
+        this.numerosity = 1;
 	this.experience=0;
 	this.gaTimestamp=time;
     }    
@@ -430,6 +427,7 @@ public class Classifier {
         output += " " + Misc.round(getPredictionError(), 0.01);
         output += " " + Misc.round(getFitness(), 0.01);
         output += " " + getGaTimestamp();
+        output += " [" + getNumerosity() + "]";
         
         return output;
     }

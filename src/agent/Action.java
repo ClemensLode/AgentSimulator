@@ -1,8 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package agent;
 
 /**
@@ -11,7 +6,8 @@ package agent;
  */
 public class Action extends GeneticData {
     public static final int ACTION_SIZE = 1;
-    public static final int MAX_ACTIONS = Grid.MAX_DIRECTIONS + 1; //2;
+    public static final int MAX_DIRECTIONS = 4;
+    public static final int MAX_ACTIONS = MAX_DIRECTIONS + 1; //2;
     
     public static final int NORTH = 0;
     public static final int EAST = 1;
@@ -21,6 +17,13 @@ public class Action extends GeneticData {
     // public static final int RANDOM_DIRECTION = 5;    
     
     private static String[] actionString = {"North", "East", "South", "West", "No direction"};//, "Random"};
+    public static String[] shortDirectionString = {"N","E","S","W","-"};
+    
+    // direction starts at 0 degrees (vertical)
+    public static final int[] dx = {0, 1, 0, -1, 0};
+    public static final int[] dy = {-1, 0, 1, 0, 0};    
+
+    
     
     public Action() {
         super(ACTION_SIZE);
@@ -74,7 +77,7 @@ public class Action extends GeneticData {
     public String toString() {
         String output = new String();
         for(int i = 0; i < data.length; i++) {
-            output += "" + Grid.shortDirectionString[data[i]];//actionString[data[i]];
+            output += "" + Action.shortDirectionString[data[i]];//actionString[data[i]];
         }        
         return output;
     }

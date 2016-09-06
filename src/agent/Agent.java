@@ -1,8 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 //Speicherstellen in Aktion
 
 package agent;
@@ -106,7 +101,7 @@ public class Agent {
     }
     
     public void moveRandomly() throws Exception {
-        int rand_direction = Misc.nextInt(Grid.MAX_DIRECTIONS+1);
+        int rand_direction = Misc.nextInt(Action.MAX_ACTIONS);
         grid.moveAgent(this, rand_direction);
     }
     
@@ -126,13 +121,13 @@ public class Agent {
         
         
 
-    //    if (Configuration.isDoEvolutionaryAlgorithm()) { 
+        if (Configuration.isDoEvolutionaryAlgorithm()) { 
             // only copy, mutate and replace
             classifierSet.evolutionaryAlgorithm(getCurrentState(), gaTimeStamp);
-      //  } else {
+        } else {
             // parent selection, one-point crossing over (with obstacles later: two point crossing over)
       //      classifierSet.panmicticGeneticAlgorithm();
-        //}
+        }
     }
     
     private Condition getCurrentState() {
@@ -148,7 +143,9 @@ public class Agent {
         // TODO Zuordnung zu Classifierset oder so... muss ja vom Stack wieder auf das tatsächliche Objekt zurückgeführt werden ??
 
         lastActionSet = new ClassifierSet(lastMatchSet, calculatedAction.getDirection());
+        printAction();
         lastActionSet.updateSet();
+
                 
         // max steps in the past, ideally getMaxStackSize is infinite
         if(actionSet.size() >= Configuration.getMaxStackSize()) {
@@ -213,9 +210,7 @@ public class Agent {
             // TODO: maybe save action Set..., merge with history and timestamp it~
             actionSet.clear();
             lastReward = reward;
-        }
-            
-            
+        }   
     }       
     
     public void printMatching() {

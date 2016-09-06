@@ -17,6 +17,7 @@ public class Main {
             return;
         }
         Configuration.initialize(args[0]);
+        double avg = 0.0;
         
         // number of experiments with the same configuration
         for(int experiment_nr = 0; experiment_nr < Configuration.getNumberOfExperiments(); experiment_nr++) {
@@ -32,8 +33,10 @@ public class Main {
             } catch(Exception e) {
                 Log.errorLog("Error initializing agents: ", e);
             }
-            
             Log.log("# Quality of run: " + Agent.grid.getTimeGoalAgentObserved() + " / " + Agent.grid.getTotalTimeGoalAgentObserved() + " (" + Agent.grid.getPercentageGoalAgentObserved() + ")");
+            System.out.println("# Quality of run: " + Agent.grid.getTimeGoalAgentObserved() + " / " + Agent.grid.getTotalTimeGoalAgentObserved() + " (" + Agent.grid.getPercentageGoalAgentObserved() + ")");
+            avg += Agent.grid.getPercentageGoalAgentObserved();
+            System.out.println(avg / (double)(experiment_nr+1));
         }        
         
         Log.finalise();

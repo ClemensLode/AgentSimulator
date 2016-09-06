@@ -1,12 +1,6 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package agent;
+
 import java.util.ArrayList;
-import java.awt.Point;
-import java.util.Iterator;
 
 import java.io.*;
 /**
@@ -30,7 +24,6 @@ public class ClassifierSet {
     
     public void removeClassifier(Classifier c) { classifiers.remove(c); }    
     public void removeClassifier(int index) {classifiers.remove(index); }
-    public Iterator<Classifier> getSetIterator() { return classifiers.iterator(); }    
     public boolean isEmpty() { return classifiers.isEmpty(); }    
     public int size() { return classifiers.size(); }    
     
@@ -382,22 +375,22 @@ public class ClassifierSet {
         return degree;
     }
     
-    public Classifier getRouletteSelectedClassifier() {     
+    public Classifier getRouletteSelectedClassifier() throws Exception {     
         double roulettePoint = getSumFitness() * Misc.nextDouble();
         double currentRoulettePoint = 0.0;       
-        Classifier classifier;
-        for (Iterator<Classifier> i = getSetIterator(); i.hasNext();) {
-            classifier = i.next();
-            currentRoulettePoint = currentRoulettePoint + classifier.getFitness();
-            if(roulettePoint < currentRoulettePoint) {
-                return classifier;
+        
+        for(Classifier c : classifiers) {
+            currentRoulettePoint += c.getFitness();
+            if(roulettePoint <= currentRoulettePoint) {
+                return c;
             }
         }
+ 
+        throw new Exception("Could not find roulette classifier");
         // uh oh bad roulette wheel
-        return null;
     }  
-
-    public ArrayList<Classifier> getRouletteSelectedClassifiers(int n) {     
+/*
+    public ArrayList<Classifier> getRouletteSelectedClassifiers(int n) throws Exception {     
         ArrayList<Classifier> chosen_classifiers = new ArrayList<Classifier>();
         ClassifierSet temp = new ClassifierSet();
         temp.classifiers.addAll(classifiers);
@@ -406,6 +399,7 @@ public class ClassifierSet {
             double roulettePoint = getSumFitness() * Misc.nextDouble();
             double currentRoulettePoint = 0.0;       
             Classifier classifier;
+            for(Classifier c : classifiers) 
             for (Iterator<Classifier> i = getSetIterator(); i.hasNext();) {
                 classifier = i.next();
                 currentRoulettePoint = currentRoulettePoint + classifier.getFitness();
@@ -416,8 +410,12 @@ public class ClassifierSet {
                 }
             }
         }
+        if(chosen_classifiers.size() != n) {
+            throw new Exception("Could not find enough roulette classifiers.");
+        }
         return chosen_classifiers;
-    }  
+    }  */
+    // TODO
 
     
     /**
